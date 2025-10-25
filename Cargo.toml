@@ -9,7 +9,7 @@ repository = "https://github.com/lipish/fluix"
 homepage = "https://github.com/lipish/fluix"
 keywords = ["ui", "gui", "gpui", "components", "widgets"]
 categories = ["gui", "graphics"]
-readme = "docs/README.md"
+readme = "README.md"
 
 [dependencies]
 gpui = "0.2"

@@ -1,14 +1,14 @@
-# RUI - Rust UI Component Library
+# Fluix - Rust UI Component Library
 
 [![Rust](https://img.shields.io/badge/rust-1.75%2B-orange.svg)](https://www.rust-lang.org/)
 [![GPUI](https://img.shields.io/badge/GPUI-0.2-blue.svg)](https://github.com/zed-industries/zed)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Crates.io](https://img.shields.io/crates/v/rui.svg)](https://crates.io/crates/rui)
-[![Documentation](https://docs.rs/rui/badge.svg)](https://docs.rs/rui)
+[![Crates.io](https://img.shields.io/crates/v/fluix.svg)](https://crates.io/crates/fluix)
+[![Documentation](https://docs.rs/fluix/badge.svg)](https://docs.rs/fluix)
 
 一个基于 GPUI 0.2 的现代化 Rust UI 组件库，提供完整的、易用的组件集合。
 
-> ⚠️ **开发中**: RUI 目前处于早期开发阶段，API 可能会有变化。
+> ⚠️ **开发中**: Fluix 目前处于早期开发阶段，API 可能会有变化。
 
 ## ✨ 特性
 
@@ -21,64 +21,109 @@
 
 ## 📦 安装
 
-### 从 crates.io (推荐)
-
 ```toml
 [dependencies]
-rui = "0.1"
-gpui = "0.2"
-```
-
-### 从 Git 仓库
-
-```toml
-[dependencies]
-rui = { git = "https://github.com/yourusername/rui" }
-gpui = "0.2"
-```
-
-### 本地开发
-
-```toml
-[dependencies]
-rui = { path = "../rui" }
+fluix = "0.1"
 gpui = "0.2"
 ```
 
 ## 🚀 快速开始
 
+### Button Component
+
 ```rust
-use rui::prelude::*;
+use gpui::*;
+use fluix::{Button, ButtonVariant, ComponentSize, ButtonEvent};
 
 fn main() {
-    App::new().run(|window, cx| {
-        let input = cx.new(|cx| {
-            TextInput::new(cx)
-                .placeholder("输入文本...")
-        });
-
-        window.open_window(cx, |window, cx| {
-            cx.new(|cx| MyView { input })
-        });
+    let app = Application::new();
+    app.run(move |cx| {
+        cx.open_window(window_options, |window, cx| {
+            cx.new(|cx| MyView::new(window, cx))
+        }).unwrap();
     });
 }
 
 struct MyView {
-    input: Entity<TextInput>,
+    button: Entity<Button>,
+}
+
+impl MyView {
+    fn new(window: &mut Window, cx: &mut Context<Self>) -> Self {
+        let button = cx.new(|_cx| {
+            Button::new("Click Me")
+                .variant(ButtonVariant::Primary)
+                .size(ComponentSize::Medium)
+        });
+        
+        cx.subscribe_in(&button, window, Self::on_click).detach();
+        
+        Self { button }
+    }
+    
+    fn on_click(&mut self, _: &Entity<Button>, _: &ButtonEvent, _: &mut Window, _: &mut Context<Self>) {
+        println!("Button clicked!");
+    }
 }
 
 impl Render for MyView {
-    fn render(&mut self, _window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
+    fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
         div()
             .p_4()
-            .child(self.input.clone())
+            .child(self.button.clone())
     }
 }
 ```
 
+### TextInput Component
+
+```rust
+use gpui::*;
+use fluix::{TextInput, TextInputEvent};
+
+let input = cx.new(|cx| {
+    TextInput::new(cx)
+        .placeholder("Enter your name...")
+        .max_length(50)
+});
+
+cx.subscribe_in(&input, window, |_, _, event: &TextInputEvent, _, _| {
+    match event {
+        TextInputEvent::Change(value) => println!("Value: {}", value),
+        TextInputEvent::Submit(value) => println!("Submitted: {}", value),
+        _ => {}
+    }
+}).detach();
+```
+
+### TextArea Component
+
+```rust
+use gpui::*;
+use fluix::{TextArea, TextAreaEvent};
+
+let textarea = cx.new(|cx| {
+    TextArea::new(cx)
+        .placeholder("Type your message...")
+        .min_height(80.0)
+        .max_height(200.0)
+});
+
+cx.subscribe_in(&textarea, window, |_, _, event: &TextAreaEvent, _, _| {
+    match event {
+        TextAreaEvent::Change(value) => println!("Content: {}", value),
+        TextAreaEvent::Submit(value) => println!("Submitted: {}", value),
+        _ => {}
+    }
+}).detach();
+```
+
 ## 📚 组件列表
 
-### ✅ 已实现 (2/46)
+### ✅ 已实现 (3/46)
+
+#### 基础组件
+- ✅ **Button** - 按钮组件
 
 #### 表单组件
 - ✅ **TextInput** - 单行文本输入
@@ -86,8 +131,7 @@ impl Render for MyView {
 
 ### 🔄 开发中
 
-#### 基础组件 (19)
-- [ ] Button - 按钮
+#### 基础组件 (18)
 - [ ] Icon - 图标
 - [ ] Badge - 徽章
 - [ ] Checkbox - 复选框
@@ -140,10 +184,10 @@ impl Render for MyView {
 
 ## 🎨 主题系统
 
-RUI 提供了灵活的主题系统：
+Fluix 提供了灵活的主题系统：
 
 ```rust
-use rui::theme::*;
+use fluix::theme::*;
 
 let theme = Theme::new();
 let colors = theme.colors;
@@ -174,13 +218,11 @@ BorderRadius::LG;        // 8.0
 运行示例项目：
 
 ```bash
-# 运行 TextInput 示例
-cargo run --example text_input_demo
-
-# 未来会添加更多示例
+# Button 组件示例
 cargo run --example button_demo
-cargo run --example form_demo
-cargo run --example showcase
+
+# TextInput 和 TextArea 示例
+cargo run --example text_input_demo
 ```
 
 ## 🗺️ 开发路线图
@@ -223,7 +265,7 @@ MIT License
 
 - [GPUI](https://github.com/zed-industries/zed) - 底层 UI 框架
 - [gpui-component](https://github.com/longbridge/gpui-component) - 参考实现
-- [文档](https://docs.rs/rui) - API 文档
+- [文档](https://docs.rs/fluix) - API 文档
 - [示例](examples/) - 示例代码
 
 ## 🙏 致谢
@@ -234,5 +276,5 @@ MIT License
 ---
 
 **当前版本**: v0.1.0-dev  
-**已实现组件**: 2/46 (4.3%)  
+**已实现组件**: 3/46 (6.5%)  
 **最后更新**: 2025-10-25

@@ -1,16 +1,20 @@
 use gpui::*;
-use rui::{TextInput, TextInputEvent, TextArea, TextAreaEvent};
+use fluix::{TextInput, TextInputEvent, TextArea, TextAreaEvent};
 
 // ============================================================================
 // Demo App
 // ============================================================================
 
 struct TextInputDemo {
-    // Different types of inputs
+    #[allow(dead_code)]
     basic_input: Entity<TextInput>,
+    #[allow(dead_code)]
     password_input: Entity<TextInput>,
+    #[allow(dead_code)]
     limited_input: Entity<TextInput>,
+    #[allow(dead_code)]
     validated_input: Entity<TextInput>,
+    #[allow(dead_code)]
     disabled_input: Entity<TextInput>,
     
     // TextArea
@@ -182,6 +186,7 @@ impl TextInputDemo {
         }
     }
 
+    #[allow(dead_code)]
     fn render_section(&self, title: &str, input: Entity<TextInput>, value: &str) -> impl IntoElement {
         let title = title.to_string();
         let value = value.to_string();

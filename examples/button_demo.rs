@@ -1,5 +1,5 @@
 use gpui::*;
-use rui::prelude::*;
+use fluix::{Button, ButtonVariant, ComponentSize, ButtonEvent};
 
 fn main() {
     env_logger::init();
@@ -118,13 +118,16 @@ impl ButtonDemo {
 impl Render for ButtonDemo {
     fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         div()
-            .flex()
-            .flex_col()
             .size_full()
-            .bg(rgb(0xF5F5F5))
-            .p_8()
-            .gap_8()
             .child(
+                div()
+                    .flex()
+                    .flex_col()
+                    .w_full()
+                    .bg(rgb(0xF5F5F5))
+                    .p_8()
+                    .gap_8()
+                    .child(
                 div()
                     .flex()
                     .flex_col()
@@ -161,6 +164,7 @@ impl Render for ButtonDemo {
                     .child(self.render_sizes_section(cx))
                     // Full Width
                     .child(self.render_full_width_section(cx))
+            )
             )
     }
 }

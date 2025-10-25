@@ -218,7 +218,7 @@ impl Render for Button {
                 this.border_1().border_color(color)
             })
             .when(!disabled && !loading, |this| {
-                this.on_mouse_down(MouseButton::Left, cx.listener(|this, _, _, cx| {
+                this.on_mouse_down(MouseButton::Left, cx.listener(|_this, _, _, cx| {
                     cx.emit(ButtonEvent::Click);
                 }))
             })
