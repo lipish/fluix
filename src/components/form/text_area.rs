@@ -40,6 +40,14 @@ pub struct TextArea {
     min_height: f32,
     /// Maximum height in pixels (None for unlimited)
     max_height: Option<f32>,
+    /// Custom background color
+    bg_color: Option<Rgba>,
+    /// Custom border color (None for default)
+    custom_border_color: Option<Rgba>,
+    /// Custom focus border color (None for default)
+    focus_border_color: Option<Rgba>,
+    /// Whether to show border
+    show_border: bool,
 }
 
 impl TextArea {
@@ -54,6 +62,10 @@ impl TextArea {
             max_length: None,
             min_height: 100.0,
             max_height: None,
+            bg_color: None,
+            custom_border_color: None,
+            focus_border_color: None,
+            show_border: true,
         }
     }
 
@@ -90,6 +102,30 @@ impl TextArea {
     /// Set maximum height
     pub fn max_height(mut self, height: f32) -> Self {
         self.max_height = Some(height);
+        self
+    }
+
+    /// Set custom background color
+    pub fn bg_color(mut self, color: Rgba) -> Self {
+        self.bg_color = Some(color);
+        self
+    }
+
+    /// Set custom border color
+    pub fn border_color(mut self, color: Rgba) -> Self {
+        self.custom_border_color = Some(color);
+        self
+    }
+
+    /// Set custom focus border color
+    pub fn focus_border_color(mut self, color: Rgba) -> Self {
+        self.focus_border_color = Some(color);
+        self
+    }
+
+    /// Remove border
+    pub fn no_border(mut self) -> Self {
+        self.show_border = false;
         self
     }
 
@@ -218,6 +254,21 @@ impl Render for TextArea {
         let value = self.value.clone();
         let cursor_pos = self.cursor_pos;
         let height = self.calculate_height();
+        
+        // Determine colors based on customization or defaults
+        let bg_color = if disabled {
+            self.bg_color.unwrap_or(rgb(0xF5F5F5))
+        } else {
+            self.bg_color.unwrap_or(rgb(0xFFFFFF))
+        };
+        
+        let border_color = if is_focused {
+            self.focus_border_color
+                .or(self.custom_border_color)
+                .unwrap_or(rgb(0x696FC7))
+        } else {
+            self.custom_border_color.unwrap_or(rgb(0xE0E0E0))
+        };
 
         div()
             .id("text-area")
@@ -255,16 +306,9 @@ impl Render for TextArea {
             .w_full()
             .min_h(px(height))
             .p_3()
-            .bg(if disabled {
-                rgb(0xF5F5F5)
-            } else {
-                rgb(0xFFFFFF)
-            })
-            .border_1()
-            .border_color(if is_focused {
-                rgb(0x696FC7)
-            } else {
-                rgb(0xE0E0E0)
+            .bg(bg_color)
+            .when(self.show_border, |this| {
+                this.border_1().border_color(border_color)
             })
             .rounded(px(6.))
             .when(!disabled, |this| {

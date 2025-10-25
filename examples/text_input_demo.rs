@@ -6,6 +6,7 @@ use fluix::{TextInput, TextInputEvent, TextArea, TextAreaEvent};
 // ============================================================================
 
 struct TextInputDemo {
+    scroll_handle: ScrollHandle,
     #[allow(dead_code)]
     basic_input: Entity<TextInput>,
     #[allow(dead_code)]
@@ -19,6 +20,8 @@ struct TextInputDemo {
     
     // TextArea
     text_area: Entity<TextArea>,
+    custom_styled_area: Entity<TextArea>,
+    borderless_area: Entity<TextArea>,
 
     // Display results
     basic_value: String,
@@ -30,6 +33,8 @@ struct TextInputDemo {
 
 impl TextInputDemo {
     fn new(window: &mut Window, cx: &mut Context<Self>) -> Self {
+        let scroll_handle = ScrollHandle::new();
+        
         // Basic text input
         let basic_input = cx.new(|cx| {
             TextInput::new(cx)
@@ -71,6 +76,25 @@ impl TextInputDemo {
                 .min_height(80.0)
                 .max_height(200.0)
         });
+        
+        // Custom styled text area
+        let custom_styled_area = cx.new(|cx| {
+            TextArea::new(cx)
+                .placeholder("Custom styled area...")
+                .min_height(60.0)
+                .bg_color(rgb(0xF0F9FF))
+                .border_color(rgb(0x3B82F6))
+                .focus_border_color(rgb(0x2563EB))
+        });
+        
+        // Borderless text area
+        let borderless_area = cx.new(|cx| {
+            TextArea::new(cx)
+                .placeholder("Borderless area...")
+                .min_height(60.0)
+                .bg_color(rgb(0xFAFAFA))
+                .no_border()
+        });
 
         // Subscribe to events
         cx.subscribe_in(&basic_input, window, Self::on_basic_change).detach();
@@ -80,12 +104,15 @@ impl TextInputDemo {
         cx.subscribe_in(&text_area, window, Self::on_textarea_change).detach();
 
         Self {
+            scroll_handle,
             basic_input,
             password_input,
             limited_input,
             validated_input,
             disabled_input,
             text_area,
+            custom_styled_area,
+            borderless_area,
             basic_value: String::new(),
             password_value: String::new(),
             limited_value: String::new(),
@@ -219,13 +246,23 @@ impl TextInputDemo {
 impl Render for TextInputDemo {
     fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
         div()
-            .flex()
-            .flex_col()
             .size_full()
-            .bg(rgb(0xF5F5F5))
-            .p_8()
-            .gap_8()
+            .overflow_hidden()
             .child(
+                div()
+                    .id("scroll-container")
+                    .track_scroll(&self.scroll_handle)
+                    .size_full()
+                    .overflow_y_scroll()
+                    .child(
+                        div()
+                            .flex()
+                            .flex_col()
+                            .w_full()
+                            .bg(rgb(0xF5F5F5))
+                            .p_8()
+                            .gap_8()
+                            .child(
                 div()
                     .flex()
                     .flex_col()
@@ -254,7 +291,7 @@ impl Render for TextInputDemo {
                             )
                     )
                     .child(
-                        // TextArea only
+                        // Default TextArea
                         div()
                             .flex()
                             .flex_col()
@@ -275,7 +312,7 @@ impl Render for TextInputDemo {
                                             .text_sm()
                                             .font_weight(FontWeight::SEMIBOLD)
                                             .text_color(rgb(0x333333))
-                                            .child("Multi-line Text Input")
+                                            .child("Default TextArea")
                                     )
                                     .child(
                                         div()
@@ -290,6 +327,80 @@ impl Render for TextInputDemo {
                                                 self.textarea_value.lines().count().max(1),
                                                 self.textarea_value.len()
                                             ))
+                                    )
+                            )
+                    )
+                    .child(
+                        // Custom Styled TextArea
+                        div()
+                            .flex()
+                            .flex_col()
+                            .gap_6()
+                            .bg(rgb(0xFFFFFF))
+                            .border_1()
+                            .border_color(rgb(0xE0E0E0))
+                            .rounded(px(8.))
+                            .p_6()
+                            .child(
+                                div()
+                                    .flex()
+                                    .flex_col()
+                                    .gap_2()
+                                    .w_full()
+                                    .child(
+                                        div()
+                                            .text_sm()
+                                            .font_weight(FontWeight::SEMIBOLD)
+                                            .text_color(rgb(0x333333))
+                                            .child("Custom Styled (Blue theme)")
+                                    )
+                                    .child(
+                                        div()
+                                            .w_full()
+                                            .child(self.custom_styled_area.clone())
+                                    )
+                                    .child(
+                                        div()
+                                            .text_xs()
+                                            .text_color(rgb(0x666666))
+                                            .child(".bg_color(rgb(0xF0F9FF)).border_color(rgb(0x3B82F6))")
+                                    )
+                            )
+                    )
+                    .child(
+                        // Borderless TextArea
+                        div()
+                            .flex()
+                            .flex_col()
+                            .gap_6()
+                            .bg(rgb(0xFFFFFF))
+                            .border_1()
+                            .border_color(rgb(0xE0E0E0))
+                            .rounded(px(8.))
+                            .p_6()
+                            .child(
+                                div()
+                                    .flex()
+                                    .flex_col()
+                                    .gap_2()
+                                    .w_full()
+                                    .child(
+                                        div()
+                                            .text_sm()
+                                            .font_weight(FontWeight::SEMIBOLD)
+                                            .text_color(rgb(0x333333))
+                                            .child("Borderless TextArea")
+                                    )
+                                    .child(
+                                        div()
+                                            .w_full()
+                                            .child(self.borderless_area.clone())
+                                    )
+                                    .child(
+                                        div()
+                                            .text_xs()
+                                            .text_color(rgb(0x666666))
+                                            .child(".bg_color(rgb(0xFAFAFA)).no_border()")
                                     )
                             )
                     )
@@ -331,6 +442,8 @@ impl Render for TextInputDemo {
                             )
                     )
             )
+            )
+            )
     }
 }
 
@@ -347,7 +460,7 @@ fn main() {
         let window_options = WindowOptions {
             window_bounds: Some(WindowBounds::Windowed(Bounds {
                 origin: point(px(100.), px(100.)),
-                size: size(px(700.), px(600.)),
+                size: size(px(700.), px(900.)),
             })),
             titlebar: Some(TitlebarOptions {
                 title: Some("RUI TextArea Demo".into()),

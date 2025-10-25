@@ -132,6 +132,24 @@ let textarea = cx.new(|cx| {
         .max_height(200.0)
 });
 
+// Custom styling
+let custom_textarea = cx.new(|cx| {
+    TextArea::new(cx)
+        .placeholder("Styled textarea...")
+        .min_height(60.0)
+        .bg_color(rgb(0xF0F9FF))          // Light blue background
+        .border_color(rgb(0x3B82F6))       // Blue border
+        .focus_border_color(rgb(0x2563EB)) // Darker blue on focus
+});
+
+// Borderless textarea
+let borderless = cx.new(|cx| {
+    TextArea::new(cx)
+        .placeholder("No border...")
+        .bg_color(rgb(0xFAFAFA))
+        .no_border()
+});
+
 cx.subscribe_in(&textarea, window, |_, _, event: &TextAreaEvent, _, _| {
     match event {
         TextAreaEvent::Change(value) => println!("Content: {}", value),
