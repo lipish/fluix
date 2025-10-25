@@ -1,8 +1,10 @@
 // Basic Components
 
 pub mod button;
+pub mod icon;
 
 pub use button::*;
+pub use icon::*;
 
 // TODO: Implement more basic components:
 // - button

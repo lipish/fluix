@@ -23,5 +23,9 @@ path = "examples/text_input_demo.rs"
 name = "button_demo"
 path = "examples/button_demo.rs"
 
+[[example]]
+name = "icon_demo"
+path = "examples/icon_demo.rs"
+
 [dev-dependencies]
 env_logger = "0.11"

@@ -75,6 +75,29 @@ impl Render for MyView {
 }
 ```
 
+### Icon Component
+
+```rust
+use gpui::*;
+use fluix::{Icon, IconName, IconSize};
+
+// Using predefined icon names
+let icon = Icon::new(IconName::Star)
+    .large()
+    .color(rgb(0xF59E0B));
+
+// Custom size and color
+let custom_icon = Icon::new(IconName::Heart)
+    .size(IconSize::Custom(28.0))
+    .color(rgb(0xEF4444));
+
+// Using custom SVG path
+let custom_svg = Icon::from_path("icons/my-icon.svg")
+    .medium();
+```
+
+Available icon names: `ArrowLeft`, `ArrowRight`, `ArrowUp`, `ArrowDown`, `Check`, `Close`, `Plus`, `Minus`, `Search`, `Settings`, `Home`, `User`, `Bell`, `Star`, `Heart`, `Menu`, `Info`, `Warning`, `Error`, `Success`
+
 ### TextInput Component
 
 ```rust
@@ -120,10 +143,11 @@ cx.subscribe_in(&textarea, window, |_, _, event: &TextAreaEvent, _, _| {
 
 ## 📚 组件列表
 
-### ✅ 已实现 (3/46)
+### ✅ 已实现 (4/46)
 
 #### 基础组件
 - ✅ **Button** - 按钮组件
+- ✅ **Icon** - 图标组件
 
 #### 表单组件
 - ✅ **TextInput** - 单行文本输入
@@ -131,8 +155,7 @@ cx.subscribe_in(&textarea, window, |_, _, event: &TextAreaEvent, _, _| {
 
 ### 🔄 开发中
 
-#### 基础组件 (18)
-- [ ] Icon - 图标
+#### 基础组件 (17)
 - [ ] Badge - 徽章
 - [ ] Checkbox - 复选框
 - [ ] Radio - 单选框
@@ -221,6 +244,9 @@ BorderRadius::LG;        // 8.0
 # Button 组件示例
 cargo run --example button_demo
 
+# Icon 组件示例  
+cargo run --example icon_demo
+
 # TextInput 和 TextArea 示例
 cargo run --example text_input_demo
 ```
@@ -275,6 +301,6 @@ MIT License
 
 ---
 
-**当前版本**: v0.1.0-dev  
-**已实现组件**: 3/46 (6.5%)  
+**当前版本**: v0.1.1  
+**已实现组件**: 4/46 (8.7%)  
 **最后更新**: 2025-10-25

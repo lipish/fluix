@@ -301,12 +301,20 @@ impl Render for TextArea {
                         // Find which line the cursor is on
                         for (idx, line) in lines.iter().enumerate() {
                             let line_len = line.chars().count();
-                            if chars_counted + line_len >= cursor_pos {
+                            // Check if cursor is within this line (including at the end)
+                            if cursor_pos <= chars_counted + line_len {
                                 cursor_line_idx = idx;
                                 cursor_col = cursor_pos - chars_counted;
                                 break;
                             }
-                            chars_counted += line_len + 1; // +1 for newline
+                            // +1 for the newline character
+                            chars_counted += line_len + 1;
+                            
+                            // If this is the last line and we haven't found the cursor yet
+                            if idx == lines.len() - 1 {
+                                cursor_line_idx = idx;
+                                cursor_col = line_len;
+                            }
                         }
                         
                         this.text_color(if disabled {
