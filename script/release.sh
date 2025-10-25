@@ -13,7 +13,7 @@ set -euo pipefail
 #   CARGO_REGISTRY_TOKEN=...      # crates.io token if not logged in via `cargo login`
 
 REMOTE="${REMOTE:-origin}"
-CRATE_NAME="${CRATE_NAME:-llm-connector}"
+CRATE_NAME="${CRATE_NAME:-fluix}"
 TOML_FILE="${TOML_FILE:-Cargo.toml}"
 
 have_cargo_edit() {
@@ -69,7 +69,7 @@ git_require_clean() {
 
 do_build_checks() {
   cargo build
-  cargo build --features streaming
+  cargo test
 }
 
 do_publish() {
