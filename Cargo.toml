@@ -1,12 +1,12 @@
 [package]
-name = "rui"
+name = "fluix"
 version = "0.1.0"
 edition = "2021"
-authors = ["RUI Contributors"]
+authors = ["Fluix Contributors"]
 description = "A comprehensive UI component library for GPUI 0.2 - Modern, performant, and type-safe"
 license = "MIT"
-repository = "https://github.com/lipish/rui"
-homepage = "https://github.com/lipish/rui"
+repository = "https://github.com/lipish/fluix"
+homepage = "https://github.com/lipish/fluix"
 keywords = ["ui", "gui", "gpui", "components", "widgets"]
 categories = ["gui", "graphics"]
 readme = "docs/README.md"
