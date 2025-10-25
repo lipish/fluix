@@ -1,15 +1,15 @@
 [package]
 name = "rui"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
 authors = ["RUI Contributors"]
 description = "A comprehensive UI component library for GPUI 0.2 - Modern, performant, and type-safe"
 license = "MIT"
-repository = "https://github.com/yourusername/rui"
-homepage = "https://github.com/yourusername/rui"
+repository = "https://github.com/lipish/rui"
+homepage = "https://github.com/lipish/rui"
 keywords = ["ui", "gui", "gpui", "components", "widgets"]
 categories = ["gui", "graphics"]
-readme = "README.md"
+readme = "docs/README.md"
 
 [dependencies]
 gpui = "0.2"
