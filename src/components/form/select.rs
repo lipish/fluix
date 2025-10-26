@@ -163,10 +163,6 @@ impl Select {
             .left_0()
             .right_0()
             .mt_1()  // Small margin from the trigger
-            // Close dropdown when clicking outside
-            .on_mouse_down_out(cx.listener(|this, _event: &MouseDownEvent, _window, cx| {
-                this.close_dropdown(cx);
-            }))
             .child(self.render_dropdown_menu(options, selected_value, size, &theme, cx))
     }
     
@@ -277,6 +273,12 @@ impl Render for Select {
                     .id("select-container")
                     .relative()
                     .w_full()
+                    // Close dropdown when clicking outside the entire select component
+                    .when(is_open, |this| {
+                        this.on_mouse_down_out(cx.listener(|this, _event: &MouseDownEvent, _window, cx| {
+                            this.close_dropdown(cx);
+                        }))
+                    })
                     .child(
                         // Trigger button
                         div()
@@ -323,16 +325,28 @@ impl Render for Select {
                                     .child(display_text)
                             )
                             .child(
-                                // Chevron icon - simple text-based arrow
+                                // Chevron icon - double arrows (unfold more)
                                 div()
                                     .flex()
+                                    .flex_col()
                                     .items_center()
                                     .justify_center()
                                     .w(px(20.))
                                     .h(px(20.))
                                     .text_color(theme.colors.text_secondary)
-                                    .text_sm()
-                                    .child(if is_open { "▲" } else { "▼" })
+                                    .gap(px(-4.))
+                                    .child(
+                                        div()
+                                            .text_xs()
+                                            .line_height(relative(1.0))
+                                            .child("▴")
+                                    )
+                                    .child(
+                                        div()
+                                            .text_xs()
+                                            .line_height(relative(1.0))
+                                            .child("▾")
+                                    )
                             )
                     )
             )
