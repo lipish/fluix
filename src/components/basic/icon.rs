@@ -22,6 +22,7 @@ pub enum IconName {
     Warning,
     Error,
     Success,
+    UnfoldMore,
 }
 
 impl IconName {
@@ -47,6 +48,7 @@ impl IconName {
             Self::Warning => "icons/warning.svg",
             Self::Error => "icons/error.svg",
             Self::Success => "icons/success.svg",
+            Self::UnfoldMore => "icons/unfold-more.svg",
         }
     }
 }

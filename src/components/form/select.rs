@@ -1,6 +1,7 @@
 use gpui::prelude::FluentBuilder;
 use gpui::*;
 use crate::theme::*;
+use crate::components::basic::icon::{Icon, IconName};
 
 // ============================================================================
 // Events
@@ -323,16 +324,10 @@ impl Render for Select {
                                     .child(display_text)
                             )
                             .child(
-                                // Chevron icon - SVG double arrows (unfold more)
-                                // Based on: <path d="M8.25 15 12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
-                                svg()
-                                    .size(px(20.))
-                                    .flex_none()
-                                    .text_color(theme.colors.text_secondary)
-                                    .path(
-                                        // Inline SVG path data for double chevron
-                                        "M8.25 15 12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9"
-                                    )
+                                // Chevron icon - using Icon component with UnfoldMore
+                                Icon::new(IconName::UnfoldMore)
+                                    .size(crate::components::basic::icon::IconSize::Medium)
+                                    .color(theme.colors.text_secondary)
                             )
                     )
             )
