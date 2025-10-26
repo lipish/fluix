@@ -337,11 +337,21 @@ impl Render for Select {
                                             .flex()
                                             .flex_col()
                                             .items_center()
-                                            .gap(px(-2.))
-                                            .text_xs()
-                                            .line_height(relative(0.8))
-                                            .child("⌃")  // Up chevron
-                                            .child("⌄")  // Down chevron
+                                            .gap(px(1.))
+                                            .child(
+                                                // Up chevron
+                                                div()
+                                                    .text_xs()
+                                                    .line_height(relative(1.0))
+                                                    .child("▴")
+                                            )
+                                            .child(
+                                                // Down chevron
+                                                div()
+                                                    .text_xs()
+                                                    .line_height(relative(1.0))
+                                                    .child("▾")
+                                            )
                                     )
                             )
                     )
