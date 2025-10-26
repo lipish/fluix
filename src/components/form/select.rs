@@ -176,19 +176,28 @@ impl Select {
         div()
             .occlude()
             .id("select-popup")
-            .max_h(px(240.))
+            .min_w(px(180.))
+            .max_h(px(300.))
             .overflow_y_scroll()
             .rounded(px(BorderRadius::LG))
             .border_1()
             .border_color(theme.colors.border)
             .bg(theme.colors.background)
-            .shadow(vec![BoxShadow {
-                color: rgba(0x00000018).into(),
-                offset: point(px(0.), px(4.)),
-                blur_radius: px(12.),
-                spread_radius: px(0.),
-            }])
-            .py(px(4.))
+            .shadow(vec![
+                BoxShadow {
+                    color: rgba(0x00000010).into(),
+                    offset: point(px(0.), px(4.)),
+                    blur_radius: px(16.),
+                    spread_radius: px(-2.),
+                },
+                BoxShadow {
+                    color: rgba(0x00000008).into(),
+                    offset: point(px(0.), px(2.)),
+                    blur_radius: px(8.),
+                    spread_radius: px(0.),
+                },
+            ])
+            .p(px(6.))
             // Prevent event bubbling to avoid closing the dropdown when clicking inside
             .on_mouse_down(MouseButton::Left, |_event, _window, _cx| {
                 // Stop propagation
@@ -202,24 +211,43 @@ impl Select {
 
                     div()
                         .id(("select-item", idx))
+                        .relative()
                         .flex()
                         .items_center()
+                        .justify_between()
+                        .w_full()
                         .px(px(12.))
                         .py(px(8.))
                         .cursor(CursorStyle::PointingHand)
                         .text_size(size.font_size())
+                        .rounded(px(BorderRadius::SM))
                         .map(|this| {
                             if is_selected {
                                 this.bg(theme.colors.primary)
                                     .text_color(rgb(0xFFFFFF))
                             } else {
                                 this.text_color(theme.colors.text)
+                                    .hover(|style| style.bg(theme.colors.background_hover))
                             }
                         })
                         .on_mouse_down(MouseButton::Left, cx.listener(move |this, _event: &MouseDownEvent, _window, cx| {
                             this.select_option(value.clone(), cx);
                         }))
-                        .child(label)
+                        .child(
+                            div()
+                                .flex()
+                                .items_center()
+                                .gap_2()
+                                .child(label)
+                        )
+                        // Show checkmark for selected item
+                        .when(is_selected, |this| {
+                            this.child(
+                                div()
+                                    .text_xs()
+                                    .child("✓")
+                            )
+                        })
                 })
             )
     }
@@ -295,12 +323,26 @@ impl Render for Select {
                                     .child(display_text)
                             )
                             .child(
-                                // Chevron icon
+                                // Chevron icon - double arrows (unfold more icon)
                                 div()
-                                    .text_sm()
+                                    .flex()
+                                    .flex_col()
+                                    .items_center()
+                                    .justify_center()
+                                    .w(px(20.))
+                                    .h(px(20.))
                                     .text_color(theme.colors.text_secondary)
-                                    .when(is_open, |this| this.child("▲"))
-                                    .when(!is_open, |this| this.child("▼"))
+                                    .child(
+                                        div()
+                                            .flex()
+                                            .flex_col()
+                                            .items_center()
+                                            .gap(px(-2.))
+                                            .text_xs()
+                                            .line_height(relative(0.8))
+                                            .child("⌃")  // Up chevron
+                                            .child("⌄")  // Down chevron
+                                    )
                             )
                     )
             )
