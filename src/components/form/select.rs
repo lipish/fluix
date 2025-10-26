@@ -1,7 +1,6 @@
 use gpui::prelude::FluentBuilder;
 use gpui::*;
 use crate::theme::*;
-use crate::components::basic::icon::{Icon, IconName};
 
 // ============================================================================
 // Events
@@ -324,10 +323,16 @@ impl Render for Select {
                                     .child(display_text)
                             )
                             .child(
-                                // Chevron icon - using Icon component with UnfoldMore
-                                Icon::new(IconName::UnfoldMore)
-                                    .size(crate::components::basic::icon::IconSize::Medium)
-                                    .color(theme.colors.text_secondary)
+                                // Chevron icon - simple text-based arrow
+                                div()
+                                    .flex()
+                                    .items_center()
+                                    .justify_center()
+                                    .w(px(20.))
+                                    .h(px(20.))
+                                    .text_color(theme.colors.text_secondary)
+                                    .text_sm()
+                                    .child(if is_open { "▲" } else { "▼" })
                             )
                     )
             )
