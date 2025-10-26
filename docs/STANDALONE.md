@@ -1,6 +1,6 @@
-# 将 RUI 独立为单独的 Crate
+# 将 Fluix 独立为单独的 Crate
 
-本指南说明如何将 RUI 从 z-agent 项目中独立出来作为单独的 crate。
+本指南说明如何将 Fluix 从 z-agent 项目中独立出来作为单独的 crate。
 
 ## 📋 准备工作
 
@@ -8,26 +8,26 @@
 
 ```bash
 # 在 GitHub 上创建新仓库
-# 名称: rui
+# 名称: fluix
 # 描述: A comprehensive UI component library for GPUI 0.2
 
 # 或者在本地初始化
 cd /path/to/new/location
-git init rui
-cd rui
+git init fluix
+cd fluix
 ```
 
-### 2. 复制 RUI 代码
+### 2. 复制 Fluix 代码
 
 ```bash
-# 从 z-agent 复制 rui 目录
-cp -r /Users/xinference/github/z-agent/crates/rui/* .
+# 从 z-agent 复制 fluix 目录
+cp -r /Users/xinference/github/z-agent/crates/fluix/* .
 
 # 或者使用 git subtree 分离历史记录
 cd /Users/xinference/github/z-agent
-git subtree split --prefix=crates/rui -b rui-standalone
-cd /path/to/new/rui
-git pull /Users/xinference/github/z-agent rui-standalone
+git subtree split --prefix=crates/fluix -b fluix-standalone
+cd /path/to/new/fluix
+git pull /Users/xinference/github/z-agent fluix-standalone
 ```
 
 ### 3. 清理独立项目
@@ -56,14 +56,14 @@ ls -la
 
 ```toml
 [package]
-name = "rui"
+name = "fluix"
 version = "0.1.0"
 edition = "2024"
 authors = ["Your Name <your.email@example.com>"]
 description = "A comprehensive UI component library for GPUI 0.2"
 license = "MIT"
-repository = "https://github.com/yourusername/rui"
-homepage = "https://github.com/yourusername/rui"
+repository = "https://github.com/yourusername/fluix"
+homepage = "https://github.com/yourusername/fluix"
 keywords = ["ui", "gui", "gpui", "components", "widgets"]
 categories = ["gui", "graphics"]
 readme = "README.md"
@@ -81,8 +81,8 @@ env_logger = "0.11"
 更新仓库链接和徽章：
 
 ```markdown
-[![Crates.io](https://img.shields.io/crates/v/rui.svg)](https://crates.io/crates/rui)
-[![Documentation](https://docs.rs/rui/badge.svg)](https://docs.rs/rui)
+[![Crates.io](https://img.shields.io/crates/v/fluix.svg)](https://crates.io/crates/fluix)
+[![Documentation](https://docs.rs/fluix/badge.svg)](https://docs.rs/fluix)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 ```
 
@@ -134,7 +134,7 @@ cargo publish
 
 ```toml
 [dependencies]
-rui = "0.1"
+fluix = "0.1"
 gpui = "0.2"
 ```
 
@@ -142,7 +142,7 @@ gpui = "0.2"
 
 ```toml
 [dependencies]
-rui = { git = "https://github.com/yourusername/rui" }
+fluix = { git = "https://github.com/yourusername/fluix" }
 gpui = "0.2"
 ```
 
@@ -150,24 +150,24 @@ gpui = "0.2"
 
 ```toml
 [dependencies]
-rui = { path = "../rui" }
+fluix = { path = "../fluix" }
 gpui = "0.2"
 ```
 
-## 📝 在 z-agent 中使用独立的 RUI
+## 📝 在 z-agent 中使用独立的 Fluix
 
 更新 z-agent 的 `Cargo.toml`:
 
 ```toml
 [dependencies]
 # 选项 1: 使用本地路径 (开发)
-rui = { path = "../../rui" }
+fluix = { path = "../../fluix" }
 
 # 选项 2: 使用 Git (发布后)
-# rui = { git = "https://github.com/yourusername/rui" }
+# fluix = { git = "https://github.com/yourusername/fluix" }
 
 # 选项 3: 使用 crates.io (发布后)
-# rui = "0.1"
+# fluix = "0.1"
 ```
 
 ## 🚀 持续开发
@@ -215,7 +215,7 @@ cargo doc --all-features --no-deps
 /// # Example
 /// 
 /// ```
-/// use rui::prelude::*;
+/// use fluix::prelude::*;
 /// 
 /// let button = Button::new("Click me")
 ///     .variant(ButtonVariant::Primary)
@@ -249,7 +249,7 @@ pub struct Button { }
 
 ## 📄 许可证
 
-确保 LICENSE 文件存在并正确。RUI 使用 MIT 许可证。
+确保 LICENSE 文件存在并正确。Fluix 使用 MIT 许可证。
 
 ---
 

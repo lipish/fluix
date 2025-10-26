@@ -1,4 +1,4 @@
-//! RUI - A GPUI-based UI Component Library
+//! Fluix - A GPUI-based UI Component Library
 //!
 //!
 //! ## Features
@@ -11,7 +11,7 @@
 //! ## Example
 //!
 //! ```rust,ignore
-//! use rui::prelude::*;
+//! use fluix::prelude::*;
 //!
 //! let input = TextInput::new(cx)
 //!     .placeholder("Enter text...")

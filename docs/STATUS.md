@@ -1,4 +1,4 @@
-# RUI 项目状态
+# Fluix 项目状态
 
 ## 📊 当前状态
 
@@ -179,4 +179,4 @@
 ---
 
 **下次更新**: 待定  
-**维护者**: RUI Contributors
+**维护者**: Fluix Contributors

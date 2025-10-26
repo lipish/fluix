@@ -13,7 +13,7 @@ fn main() {
                 size: size(px(800.), px(700.)),
             })),
             titlebar: Some(TitlebarOptions {
-                title: Some("RUI Button Demo".into()),
+                title: Some("Fluix Button Demo".into()),
                 appears_transparent: false,
                 ..Default::default()
             }),
@@ -28,6 +28,7 @@ fn main() {
 
 struct ButtonDemo {
     click_count: usize,
+    scroll_handle: ScrollHandle,
     primary_button: Entity<Button>,
     secondary_button: Entity<Button>,
     outline_button: Entity<Button>,
@@ -39,6 +40,7 @@ struct ButtonDemo {
 
 impl ButtonDemo {
     fn new(window: &mut Window, cx: &mut Context<Self>) -> Self {
+        let scroll_handle = ScrollHandle::new();
         let primary_button = cx.new(|_cx| {
             Button::new("Primary Button")
                 .variant(ButtonVariant::Primary)
@@ -92,6 +94,7 @@ impl ButtonDemo {
 
         Self {
             click_count: 0,
+            scroll_handle,
             primary_button,
             secondary_button,
             outline_button,
@@ -119,7 +122,14 @@ impl Render for ButtonDemo {
     fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         div()
             .size_full()
+            .overflow_hidden()
             .child(
+                div()
+                    .id("scroll-container")
+                    .size_full()
+                    .overflow_y_scroll()
+                    .track_scroll(&self.scroll_handle)
+                    .child(
                 div()
                     .flex()
                     .flex_col()
@@ -146,7 +156,7 @@ impl Render for ButtonDemo {
                                     .text_2xl()
                                     .font_weight(FontWeight::BOLD)
                                     .text_color(rgb(0x333333))
-                                    .child("RUI Button Component")
+                                    .child("Fluix Button Component")
                             )
                             .child(
                                 div()
@@ -164,6 +174,7 @@ impl Render for ButtonDemo {
                     .child(self.render_sizes_section(cx))
                     // Full Width
                     .child(self.render_full_width_section(cx))
+            )
             )
             )
     }

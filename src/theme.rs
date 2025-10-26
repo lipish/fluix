@@ -1,4 +1,4 @@
-// Theme system for RUI components
+// Theme system for Fluix components
 
 use gpui::*;
 

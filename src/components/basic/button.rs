@@ -114,38 +114,51 @@ impl Button {
     }
     
     /// Get the background color for the current variant
-    fn background_color(&self, theme: &Theme, is_hovered: bool) -> Rgba {
+    fn background_color(&self, theme: &Theme, is_hovered: bool, is_pressed: bool) -> Rgba {
         if self.disabled {
             return theme.colors.background_secondary;
         }
         
         match self.variant {
             ButtonVariant::Primary => {
-                if is_hovered {
-                    theme.colors.primary_hover
+                if is_pressed {
+                    crate::utils::darken(theme.colors.primary, 0.1)
+                } else if is_hovered {
+                    crate::utils::lighten(theme.colors.primary, 0.1)
                 } else {
                     theme.colors.primary
                 }
             }
             ButtonVariant::Danger => {
-                if is_hovered {
+                if is_pressed {
+                    crate::utils::darken(theme.colors.error, 0.1)
+                } else if is_hovered {
                     crate::utils::lighten(theme.colors.error, 0.1)
                 } else {
                     theme.colors.error
                 }
             }
-            ButtonVariant::Secondary | ButtonVariant::Outline => {
-                if is_hovered {
+            ButtonVariant::Secondary => {
+                if is_pressed {
+                    crate::utils::darken(theme.colors.background_hover, 0.05)
+                } else if is_hovered {
                     theme.colors.background_hover
                 } else {
-                    rgb(0xFFFFFF)
+                    theme.colors.background
+                }
+            }
+            ButtonVariant::Outline => {
+                if is_pressed || is_hovered {
+                    rgba(0x00000005)
+                } else {
+                    rgba(0x00000000)  // Transparent, not black
                 }
             }
             ButtonVariant::Text => {
-                if is_hovered {
-                    theme.colors.background_hover
+                if is_pressed || is_hovered {
+                    rgba(0x00000008)
                 } else {
-                    rgb(0x00000000) // Transparent
+                    rgba(0x00000000)  // Transparent, not black
                 }
             }
         }
@@ -158,11 +171,34 @@ impl Button {
         }
         
         match self.variant {
-            ButtonVariant::Primary | ButtonVariant::Danger => rgb(0xFFFFFF),
-            ButtonVariant::Secondary | ButtonVariant::Outline | ButtonVariant::Text => {
+            ButtonVariant::Primary => {
+                // Primary buttons always use white text for better contrast
+                rgb(0xFFFFFF)
+            }
+            ButtonVariant::Danger => {
+                // Danger buttons always use white text
+                rgb(0xFFFFFF)
+            }
+            ButtonVariant::Secondary => {
+                // Secondary buttons check background brightness
+                let bg = self.background_color(theme, false, false);
+                if self.is_dark_background(bg) {
+                    rgb(0xFFFFFF)
+                } else {
+                    theme.colors.text
+                }
+            }
+            ButtonVariant::Outline | ButtonVariant::Text => {
                 theme.colors.text
             }
         }
+    }
+    
+    /// Check if a color is dark (needs light text)
+    fn is_dark_background(&self, color: Rgba) -> bool {
+        // Using perceived luminance formula
+        let luminance = 0.299 * color.r + 0.587 * color.g + 0.114 * color.b;
+        luminance < 0.6  // Increased threshold for better readability
     }
     
     /// Get the border color for the current variant
@@ -172,9 +208,31 @@ impl Button {
         }
         
         match self.variant {
-            ButtonVariant::Primary | ButtonVariant::Text => None,
+            ButtonVariant::Primary | ButtonVariant::Danger | ButtonVariant::Text => None,
             ButtonVariant::Secondary | ButtonVariant::Outline => Some(theme.colors.border),
-            ButtonVariant::Danger => None,
+        }
+    }
+
+    /// Get shadow style for the button
+    fn shadow_style(&self) -> Option<BoxShadow> {
+        if self.disabled {
+            return None;
+        }
+
+        match self.variant {
+            ButtonVariant::Primary => Some(BoxShadow {
+                color: rgba(0x00000018).into(),
+                offset: point(px(0.), px(1.)),
+                blur_radius: px(2.),
+                spread_radius: px(0.),
+            }),
+            ButtonVariant::Secondary => Some(BoxShadow {
+                color: rgba(0x0000000A).into(),
+                offset: point(px(0.), px(1.)),
+                blur_radius: px(2.),
+                spread_radius: px(0.),
+            }),
+            _ => None,
         }
     }
 }
@@ -191,46 +249,45 @@ impl Render for Button {
         let loading = self.loading;
         let size = self.size;
         let (padding_y, padding_x) = size.padding();
+        let text_color = self.text_color(&theme);
+        let bg_color = self.background_color(&theme, false, false);
         
         div()
+            .id("button")
+            .relative()
             .flex()
+            .flex_shrink_0()
             .items_center()
             .justify_center()
+            .gap_2()
             .py(padding_y)
             .px(padding_x)
-            .rounded(px(BorderRadius::MD))
+            .rounded(px(BorderRadius::LG))
             .text_size(size.font_size())
             .font_weight(FontWeight::MEDIUM)
+            .bg(bg_color)
             .when(self.full_width, |this| this.w_full())
-            .when(!self.full_width, |this| this.flex_shrink_0())
             .when(!disabled && !loading, |this| {
                 this.cursor(CursorStyle::PointingHand)
             })
             .when(disabled || loading, |this| {
-                this.opacity(0.6)
-            })
-            .map(|this| {
-                let is_hovered = false; // TODO: Track hover state
-                this.bg(self.background_color(&theme, is_hovered))
-                    .text_color(self.text_color(&theme))
+                this.opacity(0.64)
             })
             .when_some(self.border_color(&theme), |this, color| {
                 this.border_1().border_color(color)
             })
-            .when(!disabled && !loading, |this| {
-                this.on_mouse_down(MouseButton::Left, cx.listener(|_this, _, _, cx| {
-                    cx.emit(ButtonEvent::Click);
-                }))
+            .when_some(self.shadow_style(), |this, shadow| {
+                this.shadow(vec![shadow])
             })
-            .child(
-                div()
-                    .flex()
-                    .items_center()
-                    .gap_2()
-                    .when(loading, |this| {
-                        this.child("⏳") // TODO: Replace with proper loading indicator
-                    })
-                    .child(label)
-            )
+            .on_mouse_down(MouseButton::Left, cx.listener(|this, _event: &MouseDownEvent, _window, cx| {
+                if !this.disabled && !this.loading {
+                    cx.emit(ButtonEvent::Click);
+                }
+            }))
+            .text_color(text_color)
+            .when(loading, |this| {
+                this.child("⏳ ")
+            })
+            .child(label)
     }
 }

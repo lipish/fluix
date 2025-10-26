@@ -1,6 +1,6 @@
-# RUI Component Library Roadmap
+# Fluix Component Library Roadmap
 
-RUI 是一个基于 GPUI 0.2 的 Rust UI 组件库，目标是提供完整的、易用的组件集合。
+Fluix 是一个基于 GPUI 0.2 的 Rust UI 组件库，目标是提供完整的、易用的组件集合。
 
 ## 项目目标
 
@@ -177,7 +177,7 @@ RUI 是一个基于 GPUI 0.2 的 Rust UI 组件库，目标是提供完整的、
 ## 目录结构规划
 
 ```
-crates/rui/
+crates/fluix/
 ├── src/
 │   ├── lib.rs                    # 库入口
 │   ├── theme.rs                  # 主题系统

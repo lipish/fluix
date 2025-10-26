@@ -281,7 +281,7 @@ impl Render for TextInputDemo {
                                     .text_2xl()
                                     .font_weight(FontWeight::BOLD)
                                     .text_color(rgb(0x333333))
-                                    .child("RUI TextArea Demo")
+                                    .child("Fluix TextArea Demo")
                             )
                             .child(
                                 div()
@@ -463,7 +463,7 @@ fn main() {
                 size: size(px(700.), px(900.)),
             })),
             titlebar: Some(TitlebarOptions {
-                title: Some("RUI TextArea Demo".into()),
+                title: Some("Fluix TextArea Demo".into()),
                 appears_transparent: false,
                 ..Default::default()
             }),

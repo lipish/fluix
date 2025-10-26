@@ -1,6 +1,6 @@
-# RUI 快速开始
+# Fluix 快速开始
 
-5 分钟内开始使用 RUI！
+5 分钟内开始使用 Fluix！
 
 ## 🚀 安装
 
@@ -17,7 +17,7 @@ cd my-app
 
 ```toml
 [dependencies]
-rui = "0.1"
+fluix = "0.1"
 gpui = "0.2"
 env_logger = "0.11"
 ```
@@ -28,7 +28,7 @@ env_logger = "0.11"
 
 ```rust
 use gpui::*;
-use rui::prelude::*;
+use fluix::prelude::*;
 
 fn main() {
     env_logger::init();
@@ -41,7 +41,7 @@ fn main() {
                 size: size(px(600.), px(400.)),
             })),
             titlebar: Some(TitlebarOptions {
-                title: Some("My First RUI App".into()),
+                title: Some("My First Fluix App".into()),
                 ..Default::default()
             }),
             ..Default::default()
@@ -120,7 +120,7 @@ cargo run
 ### TextInput 示例
 
 ```rust
-use rui::prelude::*;
+use fluix::prelude::*;
 
 // 创建文本输入
 let input = cx.new(|cx| {
@@ -218,7 +218,7 @@ Button::new("Loading...")
 ## 🎨 使用主题
 
 ```rust
-use rui::theme::*;
+use fluix::theme::*;
 
 // 获取主题
 let theme = Theme::default();
@@ -280,8 +280,8 @@ A: 修改状态后调用 `cx.notify()` 触发重新渲染。
 - 探索更多组件
 - 自定义主题
 - 创建复杂布局
-- 为 RUI 贡献代码！
+- 为 Fluix 贡献代码！
 
 ---
 
-**需要帮助?** 查看 [GitHub Issues](https://github.com/yourusername/rui/issues)
+**需要帮助?** 查看 [GitHub Issues](https://github.com/yourusername/fluix/issues)
