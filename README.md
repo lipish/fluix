@@ -159,6 +159,16 @@ cx.subscribe_in(&textarea, window, |_, _, event: &TextAreaEvent, _, _| {
 }).detach();
 ```
 
+**Keyboard Shortcuts:**
+- `Cmd+A` / `Ctrl+A` - Select all text
+- `Shift+Enter` - Insert newline
+- `Enter` - Submit
+- `Backspace` - Delete character or selected text
+
+**Mouse Actions:**
+- `Double-click` - Select all text
+- `Single-click` - Focus and position cursor
+
 ## 📚 组件列表
 
 ### ✅ 已实现 (4/46)

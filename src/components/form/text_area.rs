@@ -26,8 +26,12 @@ pub enum TextAreaEvent {
 pub struct TextArea {
     /// Current text value
     value: String,
-    /// Cursor position (byte index)
+    /// Cursor position (character index)
     cursor_pos: usize,
+    /// Selection start position (character index, None if no selection)
+    selection_start: Option<usize>,
+    /// Selection end position (character index, None if no selection)
+    selection_end: Option<usize>,
     /// Placeholder text when empty
     placeholder: String,
     /// Focus handle for keyboard input
@@ -56,6 +60,8 @@ impl TextArea {
         Self {
             value: String::new(),
             cursor_pos: 0,
+            selection_start: None,
+            selection_end: None,
             placeholder: String::new(),
             focus_handle: cx.focus_handle(),
             disabled: false,
@@ -160,10 +166,54 @@ impl TextArea {
     pub fn focus(&self, window: &mut Window) {
         self.focus_handle.focus(window);
     }
+    
+    /// Select all text
+    pub fn select_all(&mut self, cx: &mut Context<Self>) {
+        if !self.value.is_empty() {
+            self.selection_start = Some(0);
+            self.selection_end = Some(self.value.chars().count());
+            cx.notify();
+        }
+    }
+    
+    /// Clear selection
+    fn clear_selection(&mut self) {
+        self.selection_start = None;
+        self.selection_end = None;
+    }
+    
+    /// Check if there is an active selection
+    fn has_selection(&self) -> bool {
+        self.selection_start.is_some() && self.selection_end.is_some()
+    }
+    
+    /// Delete selected text and return the new cursor position
+    fn delete_selection(&mut self) -> usize {
+        if let (Some(start), Some(end)) = (self.selection_start, self.selection_end) {
+            let (sel_start, sel_end) = if start <= end {
+                (start, end)
+            } else {
+                (end, start)
+            };
+            
+            let before = self.value.chars().take(sel_start).collect::<String>();
+            let after = self.value.chars().skip(sel_end).collect::<String>();
+            self.value = format!("{}{}", before, after);
+            self.clear_selection();
+            sel_start
+        } else {
+            self.cursor_pos
+        }
+    }
 
     fn handle_input(&mut self, text: &str, cx: &mut Context<Self>) {
         if self.disabled {
             return;
+        }
+        
+        // If there's a selection, delete it first
+        if self.has_selection() {
+            self.cursor_pos = self.delete_selection();
         }
 
         // Insert text at cursor position
@@ -185,7 +235,19 @@ impl TextArea {
     }
 
     fn handle_backspace(&mut self, cx: &mut Context<Self>) {
-        if self.disabled || self.cursor_pos == 0 {
+        if self.disabled {
+            return;
+        }
+        
+        // If there's a selection, delete it
+        if self.has_selection() {
+            self.cursor_pos = self.delete_selection();
+            cx.emit(TextAreaEvent::Change(self.value.clone()));
+            cx.notify();
+            return;
+        }
+        
+        if self.cursor_pos == 0 {
             return;
         }
 
@@ -254,6 +316,8 @@ impl Render for TextArea {
         let value = self.value.clone();
         let cursor_pos = self.cursor_pos;
         let height = self.calculate_height();
+        let selection_start = self.selection_start;
+        let selection_end = self.selection_end;
         
         // Determine colors based on customization or defaults
         let bg_color = if disabled {
@@ -278,6 +342,21 @@ impl Render for TextArea {
                     return;
                 }
 
+                // Handle keyboard shortcuts
+                let modifiers = &event.keystroke.modifiers;
+                // On macOS use platform (Cmd), on others use control (Ctrl)
+                let is_cmd_or_ctrl = if cfg!(target_os = "macos") {
+                    modifiers.platform
+                } else {
+                    modifiers.control
+                };
+                
+                // Check for Cmd/Ctrl + A (Select All)
+                if is_cmd_or_ctrl && event.keystroke.key.as_str() == "a" {
+                    this.select_all(cx);
+                    return;
+                }
+
                 // Handle special keys
                 match event.keystroke.key.as_str() {
                     "backspace" => {
@@ -295,10 +374,21 @@ impl Render for TextArea {
                     }
                 }
             }))
-            .on_mouse_down(MouseButton::Left, cx.listener(|_this, _, window, cx| {
+            .on_mouse_down(MouseButton::Left, cx.listener(|this, event: &MouseDownEvent, window, cx| {
                 cx.emit(TextAreaEvent::Focus);
                 cx.focus_self(window);
-                // Ensure cursor is visible on focus
+                
+                // Check for double-click to select all
+                if event.click_count == 2 && !this.disabled {
+                    this.select_all(cx);
+                } else if !this.disabled {
+                    // Single click: clear selection and position cursor at click
+                    this.clear_selection();
+                    // For now, just move cursor to end on click
+                    // (Precise click positioning would require pixel-to-char calculation)
+                    this.cursor_pos = this.value.chars().count();
+                }
+                
                 cx.notify();
             }))
             .flex()
@@ -336,6 +426,18 @@ impl Render for TextArea {
                         )
                     })
                     .when(!show_placeholder && !value.is_empty(), |this| {
+                        // Calculate selection range if exists
+                        let has_selection = selection_start.is_some() && selection_end.is_some();
+                        let (sel_start, sel_end) = if let (Some(start), Some(end)) = (selection_start, selection_end) {
+                            if start <= end {
+                                (start, end)
+                            } else {
+                                (end, start)
+                            }
+                        } else {
+                            (0, 0)
+                        };
+                        
                         // Split text into lines and find cursor position
                         let lines: Vec<&str> = value.split('\n').collect();
                         let mut chars_counted = 0;
@@ -375,9 +477,64 @@ impl Render for TextArea {
                                 .children(
                                     lines.iter().enumerate().map(|(line_idx, line)| {
                                         let line_str = line.to_string();
+                                        let mut line_chars_before = 0;
                                         
-                                        if line_idx == cursor_line_idx {
-                                            // This line contains the cursor
+                                        // Calculate character count before this line
+                                        for (idx, l) in lines.iter().enumerate() {
+                                            if idx < line_idx {
+                                                line_chars_before += l.chars().count() + 1; // +1 for newline
+                                            }
+                                        }
+                                        
+                                        let line_start = line_chars_before;
+                                        let line_end = line_start + line_str.chars().count();
+                                        
+                                        // Check if this line has selection
+                                        let line_has_selection = has_selection && 
+                                            !(sel_end <= line_start || sel_start >= line_end);
+                                        
+                                        if line_has_selection {
+                                            // This line has selection
+                                            let sel_start_in_line = if sel_start > line_start {
+                                                sel_start - line_start
+                                            } else {
+                                                0
+                                            };
+                                            let sel_end_in_line = if sel_end < line_end {
+                                                sel_end - line_start
+                                            } else {
+                                                line_str.chars().count()
+                                            };
+                                            
+                                            let before_sel = line_str.chars().take(sel_start_in_line).collect::<String>();
+                                            let selected = line_str.chars().skip(sel_start_in_line).take(sel_end_in_line - sel_start_in_line).collect::<String>();
+                                            let after_sel = line_str.chars().skip(sel_end_in_line).collect::<String>();
+                                            
+                                            div()
+                                                .flex()
+                                                .flex_row()
+                                                .items_start()
+                                                .when(!before_sel.is_empty(), |el| el.child(before_sel))
+                                                .when(!selected.is_empty(), |el| {
+                                                    el.child(
+                                                        div()
+                                                            .bg(rgb(0x4A90E2))
+                                                            .text_color(rgb(0xFFFFFF))
+                                                            .child(selected)
+                                                    )
+                                                })
+                                                .when(!after_sel.is_empty(), |el| el.child(after_sel))
+                                                .when(line_idx == cursor_line_idx && is_focused && !disabled, |el| {
+                                                    el.child(
+                                                        div()
+                                                            .w(px(2.))
+                                                            .h(px(20.))
+                                                            .bg(rgb(0x333333))
+                                                            .flex_shrink_0()
+                                                    )
+                                                })
+                                        } else if line_idx == cursor_line_idx {
+                                            // This line contains the cursor but no selection
                                             let before = line_str.chars().take(cursor_col).collect::<String>();
                                             let after = line_str.chars().skip(cursor_col).collect::<String>();
                                             
@@ -397,7 +554,7 @@ impl Render for TextArea {
                                                 })
                                                 .child(after)
                                         } else {
-                                            // Regular line without cursor
+                                            // Regular line without cursor or selection
                                             div()
                                                 .flex()
                                                 .flex_row()
