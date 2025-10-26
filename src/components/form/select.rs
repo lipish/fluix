@@ -323,35 +323,15 @@ impl Render for Select {
                                     .child(display_text)
                             )
                             .child(
-                                // Chevron icon - double arrows (unfold more icon)
-                                div()
-                                    .flex()
-                                    .flex_col()
-                                    .items_center()
-                                    .justify_center()
-                                    .w(px(20.))
-                                    .h(px(20.))
+                                // Chevron icon - SVG double arrows (unfold more)
+                                // Based on: <path d="M8.25 15 12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
+                                svg()
+                                    .size(px(20.))
+                                    .flex_none()
                                     .text_color(theme.colors.text_secondary)
-                                    .child(
-                                        div()
-                                            .flex()
-                                            .flex_col()
-                                            .items_center()
-                                            .gap(px(1.))
-                                            .child(
-                                                // Up chevron
-                                                div()
-                                                    .text_xs()
-                                                    .line_height(relative(1.0))
-                                                    .child("▴")
-                                            )
-                                            .child(
-                                                // Down chevron
-                                                div()
-                                                    .text_xs()
-                                                    .line_height(relative(1.0))
-                                                    .child("▾")
-                                            )
+                                    .path(
+                                        // Inline SVG path data for double chevron
+                                        "M8.25 15 12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9"
                                     )
                             )
                     )
