@@ -21,11 +21,13 @@
 //! ```
 
 // Core modules
+pub mod assets;
 pub mod components;
 pub mod theme;
 pub mod utils;
 
 // Re-exports for convenience
+pub use assets::Assets;
 pub use components::*;
 pub use theme::*;
 pub use utils::*;

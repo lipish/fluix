@@ -7,6 +7,7 @@ pub enum IconName {
     ArrowUp,
     ArrowDown,
     Check,
+    ChevronUpDown,
     Close,
     Plus,
     Minus,
@@ -26,6 +27,8 @@ pub enum IconName {
 }
 
 impl IconName {
+    /// Get the SVG file path for the icon
+    /// Following Zed's pattern: IconName::path() returns the asset path
     pub fn path(self) -> &'static str {
         match self {
             Self::ArrowLeft => "icons/arrow-left.svg",
@@ -33,6 +36,7 @@ impl IconName {
             Self::ArrowUp => "icons/arrow-up.svg",
             Self::ArrowDown => "icons/arrow-down.svg",
             Self::Check => "icons/check.svg",
+            Self::ChevronUpDown => "icons/chevron-up-down.svg",
             Self::Close => "icons/close.svg",
             Self::Plus => "icons/plus.svg",
             Self::Minus => "icons/minus.svg",
@@ -83,7 +87,7 @@ impl Default for IconSize {
 }
 
 pub struct Icon {
-    path: SharedString,
+    name: IconName,
     size: IconSize,
     color: Option<Rgba>,
 }
@@ -91,15 +95,7 @@ pub struct Icon {
 impl Icon {
     pub fn new(name: IconName) -> Self {
         Self {
-            path: name.path().into(),
-            size: IconSize::default(),
-            color: None,
-        }
-    }
-
-    pub fn from_path(path: impl Into<SharedString>) -> Self {
-        Self {
-            path: path.into(),
+            name,
             size: IconSize::default(),
             color: None,
         }
@@ -145,9 +141,12 @@ impl RenderOnce for Icon {
     fn render(self, _window: &mut Window, _cx: &mut App) -> impl IntoElement {
         let size = self.size.px();
         let color = self.color.unwrap_or(rgb(0x333333));
+        let path = self.name.path();
 
+        // Use svg().path() to load SVG from embedded assets
+        // The path is relative to the assets/ folder
         svg()
-            .path(self.path)
+            .path(path)
             .size(size)
             .text_color(color)
             .flex_none()

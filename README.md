@@ -10,6 +10,8 @@
 
 > ⚠️ **开发中**: Fluix 目前处于早期开发阶段，API 可能会有变化。
 
+> 💡 **重要**: 使用 Fluix 时，必须在应用启动时调用 `.with_assets(fluix::Assets)` 来加载 SVG 图标资源！详见[快速开始](#-快速开始)。
+
 ## ✨ 特性
 
 - 🎨 **丰富的组件** - 46+ 个精心设计的 UI 组件
@@ -29,14 +31,18 @@ gpui = "0.2"
 
 ## 🚀 快速开始
 
-### Button Component
+### 重要：注册资源
+
+使用 Fluix 之前，**必须**注册资源加载器：
 
 ```rust
 use gpui::*;
-use fluix::{Button, ButtonVariant, ComponentSize, ButtonEvent};
+use fluix::*;
 
 fn main() {
-    let app = Application::new();
+    let app = Application::new()
+        .with_assets(fluix::Assets);  // ← 必须！加载 SVG 图标等资源
+
     app.run(move |cx| {
         cx.open_window(window_options, |window, cx| {
             cx.new(|cx| MyView::new(window, cx))

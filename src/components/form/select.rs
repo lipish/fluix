@@ -1,6 +1,7 @@
 use gpui::prelude::FluentBuilder;
 use gpui::*;
 use crate::theme::*;
+use crate::components::basic::icon::{Icon, IconName};
 
 // ============================================================================
 // Events
@@ -9,8 +10,10 @@ use crate::theme::*;
 /// Events emitted by the Select component
 #[derive(Clone, Debug)]
 pub enum SelectEvent {
-    /// Selection changed with the selected value
+    /// Single selection changed with the selected value
     Changed(String),
+    /// Multiple selection changed with all selected values
+    MultiChanged(Vec<String>),
 }
 
 impl EventEmitter<SelectEvent> for Select {}
@@ -35,14 +38,30 @@ impl SelectOption {
     }
 }
 
+/// A group of options in the select dropdown
+#[derive(Clone, Debug)]
+pub struct SelectOptionGroup {
+    pub label: String,
+    pub options: Vec<SelectOption>,
+}
+
+impl SelectOptionGroup {
+    pub fn new(label: impl Into<String>, options: Vec<SelectOption>) -> Self {
+        Self {
+            label: label.into(),
+            options,
+        }
+    }
+}
+
 // ============================================================================
 // Component
 // ============================================================================
 
 /// A select/dropdown component
-/// 
+///
 /// # Example
-/// 
+///
 /// ```rust,ignore
 /// let select = cx.new(|cx| {
 ///     Select::new(cx)
@@ -53,18 +72,23 @@ impl SelectOption {
 ///             SelectOption::new("angular", "Angular"),
 ///         ])
 /// });
-/// 
+///
 /// cx.subscribe(&select, |this, select, event: &SelectEvent, cx| {
 ///     match event {
 ///         SelectEvent::Changed(value) => println!("Selected: {}", value),
+///         SelectEvent::MultiChanged(values) => println!("Selected: {:?}", values),
 ///     }
 /// });
 /// ```
 pub struct Select {
-    /// Available options
+    /// Available options (flat list)
     options: Vec<SelectOption>,
-    /// Currently selected value
+    /// Grouped options
+    option_groups: Vec<SelectOptionGroup>,
+    /// Currently selected value (single select)
     selected_value: Option<String>,
+    /// Currently selected values (multi select)
+    selected_values: Vec<String>,
     /// Placeholder text
     placeholder: String,
     /// Whether the dropdown is open
@@ -73,6 +97,10 @@ pub struct Select {
     disabled: bool,
     /// Size of the select
     size: ComponentSize,
+    /// Whether to allow multiple selection
+    multiple: bool,
+    /// Flag to prevent closing when clicking inside menu
+    clicking_menu: bool,
 }
 
 impl Select {
@@ -80,48 +108,85 @@ impl Select {
     pub fn new(_cx: &mut Context<Self>) -> Self {
         Self {
             options: Vec::new(),
+            option_groups: Vec::new(),
             selected_value: None,
+            selected_values: Vec::new(),
             placeholder: "Select...".to_string(),
             is_open: false,
             disabled: false,
             size: ComponentSize::Medium,
+            multiple: false,
+            clicking_menu: false,
         }
     }
-    
+
     /// Set the options
     pub fn options(mut self, options: Vec<SelectOption>) -> Self {
         self.options = options;
         self
     }
-    
+
+    /// Set the option groups
+    pub fn option_groups(mut self, groups: Vec<SelectOptionGroup>) -> Self {
+        self.option_groups = groups;
+        self
+    }
+
     /// Set the placeholder text
     pub fn placeholder(mut self, placeholder: impl Into<String>) -> Self {
         self.placeholder = placeholder.into();
         self
     }
-    
-    /// Set the selected value
+
+    /// Set the selected value (single select)
     pub fn value(mut self, value: impl Into<String>) -> Self {
         self.selected_value = Some(value.into());
         self
     }
-    
+
+    /// Set the selected values (multi select)
+    pub fn values(mut self, values: Vec<String>) -> Self {
+        self.selected_values = values;
+        self
+    }
+
     /// Set the disabled state
     pub fn disabled(mut self, disabled: bool) -> Self {
         self.disabled = disabled;
         self
     }
-    
+
     /// Set the size
     pub fn size(mut self, size: ComponentSize) -> Self {
         self.size = size;
         self
     }
+
+    /// Enable multiple selection
+    pub fn multiple(mut self, multiple: bool) -> Self {
+        self.multiple = multiple;
+        self
+    }
     
+    /// Get all options (flat list from both options and groups)
+    fn all_options(&self) -> Vec<SelectOption> {
+        let mut all = self.options.clone();
+        for group in &self.option_groups {
+            all.extend(group.options.clone());
+        }
+        all
+    }
+
     /// Get the display text (selected label or placeholder)
     fn display_text(&self) -> String {
-        if let Some(value) = &self.selected_value {
-            self.options
+        if self.multiple {
+            if self.selected_values.is_empty() {
+                self.placeholder.clone()
+            } else {
+                format!("{} selected", self.selected_values.len())
+            }
+        } else if let Some(value) = &self.selected_value {
+            self.all_options()
                 .iter()
                 .find(|opt| &opt.value == value)
                 .map(|opt| opt.label.clone())
@@ -130,7 +195,7 @@ impl Select {
             self.placeholder.clone()
         }
     }
-    
+
     /// Toggle dropdown open/closed
     fn toggle_dropdown(&mut self) {
         if !self.disabled {
@@ -140,36 +205,70 @@ impl Select {
 
     /// Close the dropdown
     fn close_dropdown(&mut self, cx: &mut Context<Self>) {
-        self.is_open = false;
-        cx.notify();
+        // Don't close if we're clicking inside the menu in multi-select mode
+        if self.clicking_menu && self.multiple {
+            self.clicking_menu = false;
+            return;
+        }
+        if self.is_open {
+            self.is_open = false;
+            cx.notify();
+        }
     }
 
     /// Select an option
     fn select_option(&mut self, value: String, cx: &mut Context<Self>) {
-        self.selected_value = Some(value.clone());
-        self.is_open = false;
-        cx.emit(SelectEvent::Changed(value));
+        if self.multiple {
+            // Toggle selection in multi-select mode
+            if let Some(pos) = self.selected_values.iter().position(|v| v == &value) {
+                self.selected_values.remove(pos);
+            } else {
+                self.selected_values.push(value);
+            }
+            cx.emit(SelectEvent::MultiChanged(self.selected_values.clone()));
+        } else {
+            // Single select mode
+            self.selected_value = Some(value.clone());
+            self.is_open = false;
+            cx.emit(SelectEvent::Changed(value));
+        }
         cx.notify();
+    }
+
+    /// Remove a selected value (for multi-select tags)
+    fn remove_value(&mut self, value: String, cx: &mut Context<Self>) {
+        if let Some(pos) = self.selected_values.iter().position(|v| v == &value) {
+            self.selected_values.remove(pos);
+            cx.emit(SelectEvent::MultiChanged(self.selected_values.clone()));
+            cx.notify();
+        }
     }
     
     /// Render the dropdown overlay (positioning layer)
     /// This layer handles the absolute positioning of the dropdown menu
-    fn render_dropdown_overlay(&self, options: Vec<SelectOption>, selected_value: Option<String>, size: ComponentSize, cx: &Context<Self>) -> impl IntoElement {
+    fn render_dropdown_overlay(&self, cx: &Context<Self>) -> impl IntoElement {
         let theme = Theme::default();
 
         div()
             .absolute()
-            .top_full()  // Position below the trigger button
+            .top_full()
             .left_0()
             .right_0()
-            .mt_1()  // Small margin from the trigger
-            .child(self.render_dropdown_menu(options, selected_value, size, &theme, cx))
+            .mt_1()
+            .occlude()
+            .on_mouse_down(MouseButton::Left, cx.listener(|this, _event: &MouseDownEvent, _window, _cx| {
+                // Mark that we're clicking inside the menu
+                this.clicking_menu = true;
+            }))
+            .child(self.render_dropdown_menu(&theme, cx))
     }
     
     /// Render the dropdown menu (content and styles layer)
     /// This layer handles the visual appearance and content of the dropdown
-    fn render_dropdown_menu(&self, options: Vec<SelectOption>, selected_value: Option<String>, size: ComponentSize, theme: &Theme, cx: &Context<Self>) -> impl IntoElement {
-        div()
+    fn render_dropdown_menu(&self, theme: &Theme, cx: &Context<Self>) -> impl IntoElement {
+        let has_groups = !self.option_groups.is_empty();
+
+        let mut menu = div()
             .occlude()
             .id("select-popup")
             .min_w(px(180.))
@@ -193,59 +292,166 @@ impl Select {
                     spread_radius: px(0.),
                 },
             ])
-            .p(px(6.))
-            // Prevent event bubbling to avoid closing the dropdown when clicking inside
-            .on_mouse_down(MouseButton::Left, |_event, _window, _cx| {
-                // Stop propagation
-            })
-            .children(
-                options.iter().enumerate().map(|(idx, option)| {
-                    let value = option.value.clone();
-                    let label = option.label.clone();
-                    let is_selected = selected_value.as_ref() == Some(&value);
-                    let theme = Theme::default();
+            .p(px(6.));
 
+        // Render grouped or flat options
+        if has_groups {
+            let mut item_counter: usize = 0;
+            menu = menu.children(self.option_groups.iter().enumerate().map(|(_group_idx, group)| {
+                div()
+                    .flex()
+                    .flex_col()
+                    .gap_1()
+                    .child(
+                        // Group label
+                        div()
+                            .px(px(12.))
+                            .py(px(6.))
+                            .text_xs()
+                            .font_weight(FontWeight::SEMIBOLD)
+                            .text_color(theme.colors.text_secondary)
+                            .child(group.label.clone())
+                    )
+                    .children(group.options.iter().map(|option| {
+                        let id = ("select-group-item", item_counter);
+                        item_counter += 1;
+                        self.render_option(option, id, theme, cx)
+                    }))
+            }));
+        } else {
+            menu = menu.children(self.options.iter().enumerate().map(|(idx, option)| {
+                self.render_option(option, ("select-item", idx), theme, cx)
+            }));
+        }
+
+        menu
+    }
+
+    /// Render a single option item
+    fn render_option(&self, option: &SelectOption, id: impl Into<ElementId>, theme: &Theme, cx: &Context<Self>) -> impl IntoElement {
+        let value = option.value.clone();
+        let label = option.label.clone();
+        let multiple = self.multiple;
+        let size = self.size;
+
+        let is_selected = if multiple {
+            self.selected_values.contains(&value)
+        } else {
+            self.selected_value.as_ref() == Some(&value)
+        };
+
+        div()
+            .id(id)
+            .relative()
+            .flex()
+            .items_center()
+            .justify_between()
+            .w_full()
+            .px(px(12.))
+            .py(px(8.))
+            .cursor(CursorStyle::PointingHand)
+            .text_size(size.font_size())
+            .rounded(px(BorderRadius::SM))
+            .map(|this| {
+                if is_selected && !multiple {
+                    this.bg(theme.colors.primary)
+                        .text_color(rgb(0xFFFFFF))
+                } else {
+                    this.text_color(theme.colors.text)
+                        .hover(|style| style.bg(theme.colors.background_hover))
+                }
+            })
+            .on_mouse_down(MouseButton::Left, cx.listener(move |this, _event: &MouseDownEvent, _window, cx| {
+                this.select_option(value.clone(), cx);
+            }))
+            .child(
+                div()
+                    .flex()
+                    .items_center()
+                    .gap_2()
+                    // Checkbox for multi-select
+                    .when(multiple, |this| {
+                        this.child(self.render_checkbox(is_selected, theme))
+                    })
+                    .child(label)
+            )
+            // Show checkmark for single select
+            .when(is_selected && !multiple, |this| {
+                this.child(
                     div()
-                        .id(("select-item", idx))
-                        .relative()
+                        .text_xs()
+                        .child("✓")
+                )
+            })
+    }
+
+    /// Render a checkbox for multi-select
+    fn render_checkbox(&self, checked: bool, theme: &Theme) -> impl IntoElement {
+        div()
+            .flex()
+            .items_center()
+            .justify_center()
+            .w(px(16.))
+            .h(px(16.))
+            .rounded(px(4.))
+            .border_1()
+            .border_color(if checked { theme.colors.primary } else { theme.colors.border })
+            .bg(if checked { theme.colors.primary } else { rgb(0xFFFFFF) })
+            .when(checked, |this| {
+                this.child(
+                    div()
+                        .text_xs()
+                        .text_color(rgb(0xFFFFFF))
+                        .child("✓")
+                )
+            })
+    }
+
+    /// Render selected tags for multi-select
+    fn render_selected_tags(&self, theme: &Theme, cx: &Context<Self>) -> Vec<impl IntoElement> {
+        let all_options = self.all_options();
+
+        self.selected_values.iter().map(|value| {
+            let label = all_options
+                .iter()
+                .find(|opt| &opt.value == value)
+                .map(|opt| opt.label.clone())
+                .unwrap_or_else(|| value.clone());
+
+            let value_for_remove = value.clone();
+
+            div()
+                .flex()
+                .items_center()
+                .gap_1()
+                .px(px(8.))
+                .py(px(4.))
+                .rounded(px(6.))
+                .bg(theme.colors.primary)
+                .text_color(rgb(0xFFFFFF))
+                .text_xs()
+                .child(label)
+                .child(
+                    // Remove button
+                    div()
                         .flex()
                         .items_center()
-                        .justify_between()
-                        .w_full()
-                        .px(px(12.))
-                        .py(px(8.))
+                        .justify_center()
+                        .w(px(14.))
+                        .h(px(14.))
+                        .rounded(px(7.))
                         .cursor(CursorStyle::PointingHand)
-                        .text_size(size.font_size())
-                        .rounded(px(BorderRadius::SM))
-                        .map(|this| {
-                            if is_selected {
-                                this.bg(theme.colors.primary)
-                                    .text_color(rgb(0xFFFFFF))
-                            } else {
-                                this.text_color(theme.colors.text)
-                                    .hover(|style| style.bg(theme.colors.background_hover))
-                            }
-                        })
+                        .hover(|style| style.bg(rgba(0xFFFFFF20)))
                         .on_mouse_down(MouseButton::Left, cx.listener(move |this, _event: &MouseDownEvent, _window, cx| {
-                            this.select_option(value.clone(), cx);
+                            this.remove_value(value_for_remove.clone(), cx);
                         }))
                         .child(
                             div()
-                                .flex()
-                                .items_center()
-                                .gap_2()
-                                .child(label)
+                                .text_xs()
+                                .child("×")
                         )
-                        // Show checkmark for selected item
-                        .when(is_selected, |this| {
-                            this.child(
-                                div()
-                                    .text_xs()
-                                    .child("✓")
-                            )
-                        })
-                })
-            )
+                )
+        }).collect()
     }
 }
 
@@ -256,29 +462,31 @@ impl Select {
 impl Render for Select {
     fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let theme = Theme::default();
-        let display_text = self.display_text();
-        let is_placeholder = self.selected_value.is_none();
         let disabled = self.disabled;
         let is_open = self.is_open;
+        let multiple = self.multiple;
         let (padding_y, padding_x) = self.size.padding();
-        let options = self.options.clone();
-        let selected_value = self.selected_value.clone();
-        let size = self.size;
-        
+
+        let is_placeholder = if multiple {
+            self.selected_values.is_empty()
+        } else {
+            self.selected_value.is_none()
+        };
+
         div()
             .id("select-wrapper")
             .w_full()
+            // Close dropdown when clicking outside (only for single select, multi-select uses backdrop)
+            .when(is_open && !multiple, |this| {
+                this.on_mouse_down_out(cx.listener(|this, _event: &MouseDownEvent, _window, cx| {
+                    this.close_dropdown(cx);
+                }))
+            })
             .child(
                 div()
                     .id("select-container")
                     .relative()
                     .w_full()
-                    // Close dropdown when clicking outside the entire select component
-                    .when(is_open, |this| {
-                        this.on_mouse_down_out(cx.listener(|this, _event: &MouseDownEvent, _window, cx| {
-                            this.close_dropdown(cx);
-                        }))
-                    })
                     .child(
                         // Trigger button
                         div()
@@ -308,55 +516,51 @@ impl Render for Select {
                             .when(disabled, |this| {
                                 this.opacity(0.64)
                             })
-                            .when(is_placeholder, |this| {
-                                this.text_color(theme.colors.text_secondary)
-                            })
-                            .when(!is_placeholder, |this| {
-                                this.text_color(theme.colors.text)
-                            })
                             .on_mouse_down(MouseButton::Left, cx.listener(|this, _event: &MouseDownEvent, _window, cx| {
                                 this.toggle_dropdown();
                                 cx.notify();
                             }))
                             .child(
+                                // Content area
                                 div()
                                     .flex()
+                                    .flex_1()
                                     .items_center()
-                                    .child(display_text)
+                                    .gap_1()
+                                    .overflow_hidden()
+                                    .when(multiple && !self.selected_values.is_empty(), |this| {
+                                        // Show tags for multi-select
+                                        this.children(self.render_selected_tags(&theme, cx))
+                                    })
+                                    .when(!multiple || self.selected_values.is_empty(), |this| {
+                                        // Show single value or placeholder
+                                        this.child(
+                                            div()
+                                                .when(is_placeholder, |this| {
+                                                    this.text_color(theme.colors.text_secondary)
+                                                })
+                                                .when(!is_placeholder, |this| {
+                                                    this.text_color(theme.colors.text)
+                                                })
+                                                .child(self.display_text())
+                                        )
+                                    })
                             )
                             .child(
-                                // Chevron icon - double arrows (unfold more)
-                                div()
-                                    .flex()
-                                    .flex_col()
-                                    .items_center()
-                                    .justify_center()
-                                    .w(px(20.))
-                                    .h(px(20.))
-                                    .text_color(theme.colors.text_secondary)
-                                    .gap(px(-4.))
-                                    .child(
-                                        div()
-                                            .text_xs()
-                                            .line_height(relative(1.0))
-                                            .child("▴")
-                                    )
-                                    .child(
-                                        div()
-                                            .text_xs()
-                                            .line_height(relative(1.0))
-                                            .child("▾")
-                                    )
+                                // Chevron up/down icon
+                                Icon::new(IconName::ChevronUpDown)
+                                    .small()
+                                    .color(rgb(0x666666))
                             )
                     )
+                    // Use deferred() to render dropdown overlay at the end, ensuring it's on top
+                    .children(if is_open && !disabled {
+                        Some(deferred(
+                            self.render_dropdown_overlay(cx).into_any_element()
+                        ))
+                    } else {
+                        None
+                    })
             )
-            // Use deferred() to render dropdown overlay at the end, ensuring it's on top
-            .children(if is_open && !disabled {
-                Some(deferred(
-                    self.render_dropdown_overlay(options, selected_value, size, cx).into_any_element()
-                ))
-            } else {
-                None
-            })
     }
 }

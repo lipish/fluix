@@ -4,7 +4,7 @@ use fluix::{Icon, IconName};
 fn main() {
     env_logger::init();
 
-    let app = Application::new();
+    let app = Application::new().with_assets(fluix::Assets);
 
     app.run(move |cx| {
         let window_options = WindowOptions {
@@ -26,11 +26,15 @@ fn main() {
     });
 }
 
-struct IconDemo {}
+struct IconDemo {
+    scroll_handle: ScrollHandle,
+}
 
 impl IconDemo {
     fn new(_window: &mut Window, _cx: &mut Context<Self>) -> Self {
-        Self {}
+        Self {
+            scroll_handle: ScrollHandle::new(),
+        }
     }
 }
 
@@ -38,7 +42,14 @@ impl Render for IconDemo {
     fn render(&mut self, _: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
         div()
             .size_full()
+            .overflow_hidden()
             .child(
+                div()
+                    .id("scroll-container")
+                    .size_full()
+                    .overflow_y_scroll()
+                    .track_scroll(&self.scroll_handle)
+                    .child(
                 div()
                     .flex()
                     .flex_col()
@@ -77,6 +88,7 @@ impl Render for IconDemo {
                             .child(self.render_color_section())
                             .child(self.render_icon_grid())
                     )
+                )
             )
     }
 }
@@ -327,7 +339,7 @@ impl IconDemo {
                         div()
                             .text_sm()
                             .text_color(rgb(0x666666))
-                            .child("20 built-in icons ready to use")
+                            .child("22 built-in icons ready to use")
                     )
             )
             .child(
@@ -340,6 +352,7 @@ impl IconDemo {
                     .child(self.render_icon_item(IconName::ArrowUp, "ArrowUp"))
                     .child(self.render_icon_item(IconName::ArrowDown, "ArrowDown"))
                     .child(self.render_icon_item(IconName::Check, "Check"))
+                    .child(self.render_icon_item(IconName::ChevronUpDown, "ChevronUpDown"))
                     .child(self.render_icon_item(IconName::Close, "Close"))
                     .child(self.render_icon_item(IconName::Plus, "Plus"))
                     .child(self.render_icon_item(IconName::Minus, "Minus"))
@@ -355,6 +368,7 @@ impl IconDemo {
                     .child(self.render_icon_item(IconName::Warning, "Warning"))
                     .child(self.render_icon_item(IconName::Error, "Error"))
                     .child(self.render_icon_item(IconName::Success, "Success"))
+                    .child(self.render_icon_item(IconName::UnfoldMore, "UnfoldMore"))
             )
     }
 

@@ -1,6 +1,6 @@
 [package]
 name = "fluix"
-version = "0.1.6"
+version = "0.1.7"
 edition = "2021"
 authors = ["Fluix Contributors"]
 description = "A comprehensive UI component library for GPUI 0.2 - Modern, performant, and type-safe"
@@ -14,6 +14,7 @@ readme = "README.md"
 [dependencies]
 gpui = "0.2"
 anyhow = "1.0"
+rust-embed = "8"
 
 [[example]]
 name = "text_input_demo"
