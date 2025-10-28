@@ -87,13 +87,21 @@ Select::new(cx)
 
 ### Can I customize component colors?
 
-Yes! For icons:
+Yes!
 
+**For Icons**:
 ```rust
 Icon::new(IconName::Star).color(rgb(0xF59E0B))
 ```
 
-For other components, you can wrap them in styled containers or modify the theme.
+**For Select background** (NEW!):
+```rust
+Select::new(cx)
+    .bg_color(rgb(0xEFF6FF))  // Light blue background
+    .options(vec![...])
+```
+
+**For other components**, you can wrap them in styled containers or modify the theme.
 
 ### How do I handle button clicks?
 

@@ -298,6 +298,38 @@ Select::new(cx)
     .options(vec![...])
 ```
 
+### Custom Background Color (New!)
+
+You can now customize the background color:
+
+```rust
+// Light blue background
+Select::new(cx)
+    .placeholder("Choose option")
+    .bg_color(rgb(0xEFF6FF))  // Light blue
+    .options(vec![...])
+
+// Light green background (success theme)
+Select::new(cx)
+    .placeholder("Status")
+    .bg_color(rgb(0xDCFCE7))  // Light green
+    .options(vec![...])
+
+// Light yellow background (warning theme)
+Select::new(cx)
+    .placeholder("Priority")
+    .bg_color(rgb(0xFEFCE8))  // Light yellow
+    .options(vec![...])
+
+// Combine all customizations
+Select::new(cx)
+    .placeholder("Fully customized")
+    .size(ComponentSize::Large)      // Custom size
+    .font_size(px(12.))               // Custom font
+    .bg_color(rgb(0xEFF6FF))          // Custom background
+    .options(vec![...])
+```
+
 ### Pre-selected Values
 
 ```rust

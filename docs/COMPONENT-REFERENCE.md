@@ -143,7 +143,8 @@ Select::new(id: impl Into<SharedString>) -> Self
 |--------|------|-------------|
 | `.placeholder()` | `impl Into<SharedString>` | Set placeholder text |
 | `.size()` | `ComponentSize` | Set component size |
-| `.font_size()` | `Pixels` | Set custom font size (independent of component size) ⭐ NEW |
+| `.font_size()` | `Pixels` | Set custom font size (independent of component size) |
+| `.bg_color()` | `Rgba` | Set custom background color ⭐ NEW |
 | `.multiple()` | `bool` | Enable multiple selection |
 | `.options()` | `Vec<SelectOption>` | Set options |
 | `.option_groups()` | `Vec<SelectOptionGroup>` | Set grouped options |
@@ -234,6 +235,24 @@ let large_with_small_font = cx.new(|cx| {
     Select::new(cx)
         .size(ComponentSize::Large)  // 44px height
         .font_size(px(12.))           // But 12px font
+        .options(vec![...])
+});
+
+// Custom background color (NEW!)
+let blue_bg_select = cx.new(|cx| {
+    Select::new(cx)
+        .placeholder("Select option")
+        .bg_color(rgb(0xEFF6FF))  // Light blue background
+        .options(vec![...])
+});
+
+// Combine all customizations
+let fully_custom_select = cx.new(|cx| {
+    Select::new(cx)
+        .placeholder("Fully customized")
+        .size(ComponentSize::Large)      // Custom size
+        .font_size(px(12.))               // Custom font size
+        .bg_color(rgb(0xF0FDF4))          // Light green background
         .options(vec![...])
 });
 ```

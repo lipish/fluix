@@ -99,6 +99,8 @@ pub struct Select {
     size: ComponentSize,
     /// Custom font size (overrides size.font_size() if set)
     custom_font_size: Option<Pixels>,
+    /// Custom background color
+    custom_bg_color: Option<Rgba>,
     /// Whether to allow multiple selection
     multiple: bool,
     /// Flag to prevent closing when clicking inside menu
@@ -118,6 +120,7 @@ impl Select {
             disabled: false,
             size: ComponentSize::Medium,
             custom_font_size: None,
+            custom_bg_color: None,
             multiple: false,
             clicking_menu: false,
         }
@@ -169,6 +172,12 @@ impl Select {
     /// This allows you to change the text size without affecting the component height
     pub fn font_size(mut self, size: Pixels) -> Self {
         self.custom_font_size = Some(size);
+        self
+    }
+
+    /// Set custom background color
+    pub fn bg_color(mut self, color: Rgba) -> Self {
+        self.custom_bg_color = Some(color);
         self
     }
 
@@ -512,7 +521,7 @@ impl Render for Select {
                             .rounded(px(BorderRadius::LG))
                             .border_1()
                             .border_color(theme.colors.border)
-                            .bg(theme.colors.background)
+                            .bg(self.custom_bg_color.unwrap_or(theme.colors.background))
                             .text_size(self.custom_font_size.unwrap_or(self.size.font_size()))
                             .shadow(vec![BoxShadow {
                                 color: rgba(0x0000000A).into(),
