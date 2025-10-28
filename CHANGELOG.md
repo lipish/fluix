@@ -5,6 +5,53 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.12] - 2025-10-28
+
+### Added
+- **Send Icon** 📤
+  - New `IconName::Send` icon for send/submit actions
+  - Perfect for message sending, form submission, email
+  - Available in all sizes (XSmall to XLarge)
+  - SVG asset: `assets/icons/send.svg`
+
+### Fixed
+- **Demo Scrolling** 📜
+  - Fixed `icon_send_demo.rs` - now supports scrolling
+  - All content is accessible regardless of window size
+  - Verified all 9 main demos have scrolling support
+
+### Documentation
+- **Icon Reference** 📚
+  - Add [ICON_REFERENCE.md](docs/ICON_REFERENCE.md) - Complete icon reference
+  - All 23 icons documented with examples
+  - Usage guidelines and color palette
+  - Technical details and customization guide
+
+- **Demo Best Practices** 📋
+  - Add [DEMO-BEST-PRACTICES.md](docs/DEMO-BEST-PRACTICES.md)
+  - Scrolling pattern guidelines
+  - Complete demo template
+  - Common mistakes and fixes
+  - Testing checklist
+
+- **Component Reference Updates**
+  - Update icon count: 22 → 23 icons
+  - Add Send icon to Actions category
+  - Clarify icons are square by default
+
+### Examples
+- Add `icon_send_demo.rs` - Send icon demonstration with scrolling
+
+### Technical Details
+- Icons are square by default (equal width and height)
+- `.size()` method sets both width and height
+- All demos follow three-layer scrolling pattern
+
+### Quality Improvements
+- All main demos verified for scrolling support
+- Consistent demo structure across examples
+- Better documentation for contributors
+
 ## [0.1.11] - 2025-10-28
 
 ### Added

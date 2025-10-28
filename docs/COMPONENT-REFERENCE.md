@@ -75,7 +75,7 @@ cx.subscribe_in(&button, window, |_, _, event, _, _| {
 
 ## Icon
 
-SVG icon component with 22 built-in icons.
+SVG icon component with 23 built-in icons. **Icons are square by default** (equal width and height).
 
 ### Constructor
 
@@ -101,8 +101,8 @@ Icon::new(name: IconName) -> Self
 - `ArrowLeft`, `ArrowRight`, `ArrowUp`, `ArrowDown`
 - `ChevronUpDown`, `UnfoldMore`
 
-**Actions** (5):
-- `Check`, `Close`, `Plus`, `Minus`, `Search`
+**Actions** (6):
+- `Check`, `Close`, `Plus`, `Minus`, `Search`, `Send` ⭐ NEW
 
 **UI** (7):
 - `Settings`, `Home`, `User`, `Bell`
@@ -114,12 +114,17 @@ Icon::new(name: IconName) -> Self
 ### Example
 
 ```rust
-// Basic icon
+// Basic icon (square by default)
 Icon::new(IconName::Star)
     .large()
     .color(rgb(0xF59E0B))
 
-// Custom size
+// Send icon (NEW!)
+Icon::new(IconName::Send)
+    .medium()
+    .color(rgb(0x3B82F6))
+
+// Custom size (still square)
 Icon::new(IconName::Search)
     .size(IconSize::Custom(48.0))
     .color(rgb(0x666666))

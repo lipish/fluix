@@ -24,6 +24,7 @@ pub enum IconName {
     Error,
     Success,
     UnfoldMore,
+    Send,
 }
 
 impl IconName {
@@ -53,6 +54,7 @@ impl IconName {
             Self::Error => "icons/error.svg",
             Self::Success => "icons/success.svg",
             Self::UnfoldMore => "icons/unfold-more.svg",
+            Self::Send => "icons/send.svg",
         }
     }
 }
@@ -145,6 +147,7 @@ impl RenderOnce for Icon {
 
         // Use svg().path() to load SVG from embedded assets
         // The path is relative to the assets/ folder
+        // .size() makes it square (equal width and height)
         svg()
             .path(path)
             .size(size)
