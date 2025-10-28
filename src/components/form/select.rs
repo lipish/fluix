@@ -58,6 +58,25 @@ pub enum DropdownAlignment {
     Center,
 }
 
+/// Width of dropdown menu
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum DropdownWidth {
+    /// Match trigger width (default)
+    MatchTrigger,
+    /// Custom fixed width
+    Fixed(Pixels),
+    /// Minimum width
+    MinWidth(Pixels),
+    /// Maximum width
+    MaxWidth(Pixels),
+}
+
+impl Default for DropdownWidth {
+    fn default() -> Self {
+        Self::MatchTrigger
+    }
+}
+
 /// An option in the select dropdown
 #[derive(Clone, Debug)]
 pub struct SelectOption {
@@ -139,6 +158,8 @@ pub struct Select {
     dropdown_direction: DropdownDirection,
     /// Dropdown alignment
     dropdown_alignment: DropdownAlignment,
+    /// Dropdown width
+    dropdown_width: DropdownWidth,
     /// Custom font size (overrides size.font_size() if set)
     custom_font_size: Option<Pixels>,
     /// Custom background color
@@ -174,6 +195,7 @@ impl Select {
             variant: SelectVariant::Default,
             dropdown_direction: DropdownDirection::Down,
             dropdown_alignment: DropdownAlignment::Left,
+            dropdown_width: DropdownWidth::MatchTrigger,
             custom_font_size: None,
             custom_bg_color: None,
             custom_text_color: None,
@@ -286,6 +308,30 @@ impl Select {
     /// Center align dropdown (convenience method)
     pub fn align_center(mut self) -> Self {
         self.dropdown_alignment = DropdownAlignment::Center;
+        self
+    }
+
+    /// Set dropdown width
+    pub fn dropdown_width(mut self, width: DropdownWidth) -> Self {
+        self.dropdown_width = width;
+        self
+    }
+
+    /// Set fixed dropdown width (convenience method)
+    pub fn fixed_width(mut self, width: Pixels) -> Self {
+        self.dropdown_width = DropdownWidth::Fixed(width);
+        self
+    }
+
+    /// Set minimum dropdown width (convenience method)
+    pub fn min_width(mut self, width: Pixels) -> Self {
+        self.dropdown_width = DropdownWidth::MinWidth(width);
+        self
+    }
+
+    /// Set maximum dropdown width (convenience method)
+    pub fn max_width(mut self, width: Pixels) -> Self {
+        self.dropdown_width = DropdownWidth::MaxWidth(width);
         self
     }
 
@@ -447,7 +493,24 @@ impl Select {
         let mut menu = div()
             .occlude()
             .id("select-popup")
-            .min_w(px(180.))
+            .map(|this| match self.dropdown_width {
+                DropdownWidth::MatchTrigger => {
+                    // Default: no width constraint, will match trigger
+                    this
+                }
+                DropdownWidth::Fixed(width) => {
+                    this.w(width)
+                }
+                DropdownWidth::MinWidth(width) => {
+                    this.min_w(width)
+                }
+                DropdownWidth::MaxWidth(width) => {
+                    this.max_w(width)
+                }
+            })
+            .when(matches!(self.dropdown_width, DropdownWidth::MatchTrigger), |this| {
+                this.min_w(px(180.))  // Default minimum width
+            })
             .max_h(px(300.))
             .overflow_y_scroll()
             .rounded(px(BorderRadius::LG))

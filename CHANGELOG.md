@@ -5,6 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.14] - 2025-10-28
+
+### Added - Select Component
+- **Dropdown Width Control** 📏
+  - Match trigger width: Default behavior
+  - Fixed width: `.fixed_width(px(n))`
+  - Minimum width: `.min_width(px(n))`
+  - Maximum width: `.max_width(px(n))`
+  - Full control with `.dropdown_width(DropdownWidth)`
+  - Four width modes: MatchTrigger, Fixed, MinWidth, MaxWidth
+
+### Examples
+- Add `select_width_demo.rs` - Dropdown width demonstration
+  - Shows all width modes
+  - Demonstrates combinations with compact and alignment
+
+### Documentation
+- Update [SELECT-IMPROVEMENTS.md](docs/SELECT-IMPROVEMENTS.md)
+  - Add dropdown width section
+  - Add usage examples
+- Update [COMPONENT-REFERENCE.md](docs/COMPONENT-REFERENCE.md)
+  - Add new width methods
+  - Add width examples
+
+### Technical Details
+- Select: Add `DropdownWidth` enum (MatchTrigger, Fixed, MinWidth, MaxWidth)
+- Select: Add `dropdown_width: DropdownWidth` field
+- Select: Add `.dropdown_width()`, `.fixed_width()`, `.min_width()`, `.max_width()` methods
+- Select: Width-based rendering logic for dropdown menu
+
+### Use Cases
+- Narrow action menus: `.fixed_width(px(100.))`
+- Wide detailed options: `.fixed_width(px(400.))`
+- Responsive design: `.min_width(px(200.))`
+- Constrained layouts: `.max_width(px(300.))`
+- Combined: `.fixed_width(px(100.)).compact().align_right()`
+
 ## [0.1.13] - 2025-10-28
 
 ### Added - Icon Component

@@ -1,6 +1,6 @@
 [package]
 name = "fluix"
-version = "0.1.13"
+version = "0.1.14"
 edition = "2021"
 authors = ["Fluix Contributors"]
 description = "A comprehensive UI component library for GPUI 0.2 - Modern, performant, and type-safe"

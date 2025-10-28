@@ -14,7 +14,7 @@ Welcome to the Fluix tutorial series! These step-by-step guides will help you ma
 
 2. **[Working with Components](./02-COMPONENTS.md)**
    - Button component
-   - Icon component (22 SVG icons)
+   - Icon component (23 SVG icons)
    - Select component (single/multiple)
    - TextInput component
    - Checkbox component
@@ -30,19 +30,34 @@ Welcome to the Fluix tutorial series! These step-by-step guides will help you ma
 
 ### Intermediate
 
-4. **[Event Handling](./04-EVENTS.md)** (Coming Soon)
+4. **[Icon Backgrounds](./04-ICON-BACKGROUNDS.md)** ⭐ NEW
+   - Square backgrounds
+   - Rectangular backgrounds
+   - Border radius and styling
+   - Common use cases (buttons, badges, status indicators)
+   - Complete examples
+
+5. **[Select Advanced Features](./05-SELECT-ADVANCED.md)** ⭐ NEW
+   - Compact mode for long lists
+   - Dropdown alignment (left, right, center)
+   - Visual variants (Default, Ghost, Outline)
+   - Dropdown direction (up, down)
+   - Combining features
+   - Real-world examples
+
+6. **[Event Handling](./06-EVENTS.md)** (Coming Soon)
    - Component events
    - Event subscription
    - Custom events
    - Event bubbling
 
-5. **[Building Forms](./05-FORMS.md)** (Coming Soon)
+7. **[Building Forms](./07-FORMS.md)** (Coming Soon)
    - Form layout
    - Validation
    - Form state management
    - Submit handling
 
-6. **[Layout Patterns](./06-LAYOUTS.md)** (Coming Soon)
+8. **[Layout Patterns](./08-LAYOUTS.md)** (Coming Soon)
    - Flexbox layouts
    - Grid patterns
    - Responsive design
@@ -50,19 +65,19 @@ Welcome to the Fluix tutorial series! These step-by-step guides will help you ma
 
 ### Advanced
 
-7. **[State Management](./07-STATE.md)** (Coming Soon)
+9. **[State Management](./09-STATE.md)** (Coming Soon)
    - Component state
    - Shared state
    - Context and providers
    - State patterns
 
-8. **[Custom Components](./08-CUSTOM-COMPONENTS.md)** (Coming Soon)
-   - Creating custom components
-   - Component composition
-   - Reusable patterns
-   - Publishing components
+10. **[Custom Components](./10-CUSTOM-COMPONENTS.md)** (Coming Soon)
+    - Creating custom components
+    - Component composition
+    - Reusable patterns
+    - Publishing components
 
-9. **[Performance Optimization](./09-PERFORMANCE.md)** (Coming Soon)
+11. **[Performance Optimization](./11-PERFORMANCE.md)** (Coming Soon)
    - Rendering optimization
    - Memory management
    - Profiling
@@ -77,14 +92,14 @@ Perfect for getting up and running quickly.
 2. [Working with Components](./02-COMPONENTS.md) (45 min)
 3. Build something! (30 min)
 
-### Path 2: Complete Beginner (4-6 hours)
+### Path 2: Complete Beginner (6-8 hours)
 Comprehensive introduction to Fluix.
 
 1. [Getting Started](./01-GETTING-STARTED.md)
 2. [Working with Components](./02-COMPONENTS.md)
 3. [Styling and Theming](./03-STYLING.md)
-4. [Event Handling](./04-EVENTS.md)
-5. [Building Forms](./05-FORMS.md)
+4. [Icon Backgrounds](./04-ICON-BACKGROUNDS.md) ⭐ NEW
+5. [Select Advanced Features](./05-SELECT-ADVANCED.md) ⭐ NEW
 6. Build a complete app!
 
 ### Path 3: Master Fluix (10+ hours)
@@ -103,7 +118,11 @@ Complete all tutorials + build multiple projects
 ### Examples
 - [Button Demo](../../examples/button_demo.rs)
 - [Icon Demo](../../examples/icon_demo.rs)
+- [Icon Send Demo](../../examples/icon_send_demo.rs) ⭐ NEW
 - [Select Demo](../../examples/select_demo.rs)
+- [Select Compact Demo](../../examples/select_compact_demo.rs) ⭐ NEW
+- [Select Alignment Demo](../../examples/select_alignment_demo.rs) ⭐ NEW
+- [Select Variants Demo](../../examples/select_variants_demo.rs)
 - [Text Input Demo](../../examples/text_input_demo.rs)
 
 ### External Resources
@@ -166,6 +185,8 @@ Track your learning progress:
 - [ ] Getting Started
 - [ ] Working with Components
 - [ ] Styling and Theming
+- [ ] Icon Backgrounds ⭐ NEW
+- [ ] Select Advanced Features ⭐ NEW
 - [ ] Event Handling
 - [ ] Building Forms
 - [ ] Layout Patterns

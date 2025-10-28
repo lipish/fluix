@@ -59,7 +59,50 @@ Select::new(cx)
     .options(vec![...])
 ```
 
-### 2.5. 下拉对齐控制 (Dropdown Alignment) ⭐ NEW
+### 2.5. 下拉宽度控制 (Dropdown Width) ⭐ NEW
+
+添加了 `DropdownWidth` 枚举，支持自定义下拉菜单宽度：
+
+```rust
+pub enum DropdownWidth {
+    MatchTrigger,      // 匹配触发器宽度（默认）
+    Fixed(Pixels),     // 固定宽度
+    MinWidth(Pixels),  // 最小宽度
+    MaxWidth(Pixels),  // 最大宽度
+}
+```
+
+#### 使用方法
+
+```rust
+// 匹配触发器宽度（默认）
+Select::new(cx)
+    .options(vec![...])
+
+// 固定宽度
+Select::new(cx)
+    .fixed_width(px(120.))
+    .options(vec![...])
+
+// 最小宽度
+Select::new(cx)
+    .min_width(px(300.))
+    .options(vec![...])
+
+// 最大宽度
+Select::new(cx)
+    .max_width(px(200.))
+    .options(vec![...])
+
+// 组合使用：窄宽度 + 紧凑 + 右对齐
+Select::new(cx)
+    .fixed_width(px(100.))
+    .compact()
+    .align_right()
+    .options(vec![...])
+```
+
+### 2.6. 下拉对齐控制 (Dropdown Alignment)
 
 添加了 `DropdownAlignment` 枚举，支持左对齐、右对齐、居中对齐：
 
@@ -184,9 +227,13 @@ Select::new(cx)
 | `.variant()` | `SelectVariant` | 设置视觉变体 |
 | `.dropdown_direction()` | `DropdownDirection` | 设置下拉方向 |
 | `.dropdown_alignment()` | `DropdownAlignment` | 设置下拉对齐 ⭐ NEW |
-| `.align_left()` | - | 左对齐（便捷方法） ⭐ NEW |
-| `.align_right()` | - | 右对齐（便捷方法） ⭐ NEW |
-| `.align_center()` | - | 居中对齐（便捷方法） ⭐ NEW |
+| `.dropdown_width()` | `DropdownWidth` | 设置下拉宽度 ⭐ NEW |
+| `.fixed_width()` | `Pixels` | 固定宽度（便捷方法） ⭐ NEW |
+| `.min_width()` | `Pixels` | 最小宽度（便捷方法） ⭐ NEW |
+| `.max_width()` | `Pixels` | 最大宽度（便捷方法） ⭐ NEW |
+| `.align_left()` | - | 左对齐（便捷方法） |
+| `.align_right()` | - | 右对齐（便捷方法） |
+| `.align_center()` | - | 居中对齐（便捷方法） |
 | `.border_color()` | `Rgba` | 设置边框颜色 |
 | `.no_border()` | - | 移除边框（便捷方法） |
 | `.no_shadow()` | - | 移除阴影（便捷方法） |

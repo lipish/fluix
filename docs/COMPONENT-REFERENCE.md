@@ -162,10 +162,14 @@ Select::new(id: impl Into<SharedString>) -> Self
 | `.border_color()` | `Rgba` | Set custom border color ⭐ NEW |
 | `.variant()` | `SelectVariant` | Set visual variant (Default, Ghost, Outline) |
 | `.dropdown_direction()` | `DropdownDirection` | Set dropdown direction (Down, Up, Auto) |
-| `.dropdown_alignment()` | `DropdownAlignment` | Set dropdown alignment (Left, Right, Center) ⭐ NEW |
-| `.align_left()` | - | Align dropdown to left (convenience method) ⭐ NEW |
-| `.align_right()` | - | Align dropdown to right (convenience method) ⭐ NEW |
-| `.align_center()` | - | Center align dropdown (convenience method) ⭐ NEW |
+| `.dropdown_alignment()` | `DropdownAlignment` | Set dropdown alignment (Left, Right, Center) |
+| `.align_left()` | - | Align dropdown to left (convenience method) |
+| `.align_right()` | - | Align dropdown to right (convenience method) |
+| `.align_center()` | - | Center align dropdown (convenience method) |
+| `.dropdown_width()` | `DropdownWidth` | Set dropdown width ⭐ NEW |
+| `.fixed_width()` | `Pixels` | Set fixed dropdown width (convenience method) ⭐ NEW |
+| `.min_width()` | `Pixels` | Set minimum dropdown width (convenience method) ⭐ NEW |
+| `.max_width()` | `Pixels` | Set maximum dropdown width (convenience method) ⭐ NEW |
 | `.no_border()` | - | Remove border (convenience method) |
 | `.no_shadow()` | - | Remove shadow (convenience method) |
 | `.transparent()` | - | Make background transparent (convenience method) |
@@ -347,11 +351,28 @@ let right_aligned = cx.new(|cx| {
         .options(vec![...])
 });
 
-// Center aligned + Up direction (NEW!)
+// Center aligned + Up direction
 let center_up = cx.new(|cx| {
     Select::new(cx)
         .align_center()                   // Center align
         .dropdown_direction(DropdownDirection::Up)
+        .options(vec![...])
+});
+
+// Fixed width dropdown (NEW!)
+let narrow_select = cx.new(|cx| {
+    Select::new(cx)
+        .fixed_width(px(120.))            // Fixed 120px width
+        .compact()
+        .align_right()
+        .options(vec![...])
+});
+
+// Min/Max width (NEW!)
+let constrained_select = cx.new(|cx| {
+    Select::new(cx)
+        .min_width(px(200.))              // At least 200px
+        .max_width(px(400.))              // At most 400px
         .options(vec![...])
 });
 ```
