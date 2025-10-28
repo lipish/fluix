@@ -46,6 +46,18 @@ pub enum DropdownDirection {
     Auto,
 }
 
+/// Alignment of dropdown menu relative to trigger
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub enum DropdownAlignment {
+    /// Align to left edge (default)
+    #[default]
+    Left,
+    /// Align to right edge
+    Right,
+    /// Center align
+    Center,
+}
+
 /// An option in the select dropdown
 #[derive(Clone, Debug)]
 pub struct SelectOption {
@@ -125,6 +137,8 @@ pub struct Select {
     variant: SelectVariant,
     /// Dropdown expansion direction
     dropdown_direction: DropdownDirection,
+    /// Dropdown alignment
+    dropdown_alignment: DropdownAlignment,
     /// Custom font size (overrides size.font_size() if set)
     custom_font_size: Option<Pixels>,
     /// Custom background color
@@ -137,6 +151,8 @@ pub struct Select {
     show_border: bool,
     /// Whether to show shadow
     show_shadow: bool,
+    /// Whether to use compact spacing for dropdown items
+    compact: bool,
     /// Whether to allow multiple selection
     multiple: bool,
     /// Flag to prevent closing when clicking inside menu
@@ -157,12 +173,14 @@ impl Select {
             size: ComponentSize::Medium,
             variant: SelectVariant::Default,
             dropdown_direction: DropdownDirection::Down,
+            dropdown_alignment: DropdownAlignment::Left,
             custom_font_size: None,
             custom_bg_color: None,
             custom_text_color: None,
             custom_border_color: None,
             show_border: true,
             show_shadow: true,
+            compact: false,
             multiple: false,
             clicking_menu: false,
         }
@@ -247,6 +265,30 @@ impl Select {
         self
     }
 
+    /// Set dropdown alignment
+    pub fn dropdown_alignment(mut self, alignment: DropdownAlignment) -> Self {
+        self.dropdown_alignment = alignment;
+        self
+    }
+
+    /// Align dropdown to left (convenience method)
+    pub fn align_left(mut self) -> Self {
+        self.dropdown_alignment = DropdownAlignment::Left;
+        self
+    }
+
+    /// Align dropdown to right (convenience method)
+    pub fn align_right(mut self) -> Self {
+        self.dropdown_alignment = DropdownAlignment::Right;
+        self
+    }
+
+    /// Center align dropdown (convenience method)
+    pub fn align_center(mut self) -> Self {
+        self.dropdown_alignment = DropdownAlignment::Center;
+        self
+    }
+
     /// Remove border (convenience method)
     pub fn no_border(mut self) -> Self {
         self.show_border = false;
@@ -270,6 +312,12 @@ impl Select {
         self.show_border = false;
         self.show_shadow = false;
         self.custom_bg_color = Some(rgba(0x00000000));
+        self
+    }
+
+    /// Use compact spacing for dropdown items (less padding)
+    pub fn compact(mut self) -> Self {
+        self.compact = true;
         self
     }
 
@@ -370,8 +418,19 @@ impl Select {
                     this.bottom_full().mb_1()
                 }
             })
-            .left_0()
-            .right_0()
+            .map(|this| match self.dropdown_alignment {
+                DropdownAlignment::Left => {
+                    this.left_0()
+                }
+                DropdownAlignment::Right => {
+                    this.right_0()
+                }
+                DropdownAlignment::Center => {
+                    // For center alignment, we'll use left_0 and right_0
+                    // and let the menu width determine centering
+                    this.left_0().right_0()
+                }
+            })
             .occlude()
             .on_mouse_down(MouseButton::Left, cx.listener(|this, _event: &MouseDownEvent, _window, _cx| {
                 // Mark that we're clicking inside the menu
@@ -421,16 +480,19 @@ impl Select {
                     .flex()
                     .flex_col()
                     .gap_1()
-                    .child(
-                        // Group label
+                    .child({
+                        // Group label with compact spacing
+                        let label_py = if self.compact { px(3.) } else { px(6.) };
+                        let label_px = if self.compact { px(8.) } else { px(12.) };
+
                         div()
-                            .px(px(12.))
-                            .py(px(6.))
+                            .px(label_px)
+                            .py(label_py)
                             .text_xs()
                             .font_weight(FontWeight::SEMIBOLD)
                             .text_color(theme.colors.text_secondary)
                             .child(group.label.clone())
-                    )
+                    })
                     .children(group.options.iter().map(|option| {
                         let id = ("select-group-item", item_counter);
                         item_counter += 1;
@@ -459,6 +521,10 @@ impl Select {
             self.selected_value.as_ref() == Some(&value)
         };
 
+        // Use compact spacing if enabled
+        let padding_y = if self.compact { px(4.) } else { px(8.) };
+        let padding_x = if self.compact { px(8.) } else { px(12.) };
+
         div()
             .id(id)
             .relative()
@@ -466,8 +532,8 @@ impl Select {
             .items_center()
             .justify_between()
             .w_full()
-            .px(px(12.))
-            .py(px(8.))
+            .px(padding_x)
+            .py(padding_y)
             .cursor(CursorStyle::PointingHand)
             .text_size(self.custom_font_size.unwrap_or(size.font_size()))
             .rounded(px(BorderRadius::SM))

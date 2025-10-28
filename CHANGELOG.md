@@ -5,6 +5,60 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.13] - 2025-10-28
+
+### Added - Icon Component
+- **Icon Background Support** 📦
+  - Square backgrounds: `.with_square_bg(color)`
+  - Rectangular backgrounds: `.with_rect_bg(width, height, color)`
+  - Border radius support: `.rounded(radius)`
+  - Background color customization: `.bg_color(color)`
+  - Three background modes: None (default), Square, Rectangle
+
+### Added - Select Component
+- **Compact Mode** 📏
+  - `.compact()` method for tighter spacing
+  - 50% less vertical space (4px vs 8px padding)
+  - Perfect for long lists and grouped options
+  - Applies to both items and group labels
+
+- **Dropdown Alignment** 📐
+  - Left alignment: `.align_left()` (default)
+  - Right alignment: `.align_right()`
+  - Center alignment: `.align_center()`
+  - Full control with `.dropdown_alignment(DropdownAlignment)`
+  - Combine with direction (Up/Down) for complete positioning
+
+### Examples
+- Add `select_compact_demo.rs` - Compact spacing demonstration
+- Add `select_alignment_demo.rs` - Alignment options demonstration
+- Update `icon_send_demo.rs` - Show background features
+
+### Documentation
+- Update [SELECT-IMPROVEMENTS.md](docs/SELECT-IMPROVEMENTS.md)
+  - Add compact mode section
+  - Add alignment control section
+- Update [ICON_REFERENCE.md](docs/ICON_REFERENCE.md)
+  - Add background support documentation
+  - Add usage examples for backgrounds
+- Update [COMPONENT-REFERENCE.md](docs/COMPONENT-REFERENCE.md)
+  - Add new Icon methods
+  - Add new Select methods
+
+### Technical Details
+- Icon: Add `IconBackground` enum (None, Square, Rectangle)
+- Icon: Add background rendering logic with padding
+- Select: Add `compact: bool` field for spacing control
+- Select: Add `DropdownAlignment` enum (Left, Right, Center)
+- Select: Add `dropdown_alignment` field
+- Select: Dynamic padding calculation based on compact mode
+- Select: Alignment-based positioning for dropdown overlay
+
+### Use Cases
+- Icon backgrounds: Buttons, badges, status indicators
+- Compact mode: Long lists (>10 items), grouped options, space-constrained UIs
+- Alignment: Right-side toolbars, bottom menus, table actions, centered dialogs
+
 ## [0.1.12] - 2025-10-28
 
 ### Added

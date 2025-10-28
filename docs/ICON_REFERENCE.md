@@ -5,10 +5,11 @@ Complete reference for all 23 built-in icons in Fluix.
 ## Features
 
 - ✅ **23 built-in SVG icons**
-- ✅ **Square by default** (equal width and height)
+- ✅ **Background support** (square or rectangular)
 - ✅ **5 predefined sizes** (XSmall to XLarge)
 - ✅ **Custom sizes** supported
 - ✅ **Customizable colors**
+- ✅ **Border radius** support
 - ✅ **Embedded assets** (no external files needed)
 
 ## Quick Start
@@ -17,15 +18,24 @@ Complete reference for all 23 built-in icons in Fluix.
 use fluix::*;
 use gpui::*;
 
-// Basic usage
+// Basic usage (no background)
 Icon::new(IconName::Send)
     .large()
     .color(rgb(0x3B82F6))
 
-// All icons are square (equal width and height)
-Icon::new(IconName::Star)
-    .size(IconSize::Custom(48.0))  // 48x48 pixels
-    .color(rgb(0xF59E0B))
+// With square background
+Icon::new(IconName::Send)
+    .medium()
+    .color(rgb(0xFFFFFF))
+    .with_square_bg(rgb(0x3B82F6))
+    .rounded(px(8.))
+
+// With rectangular background
+Icon::new(IconName::Send)
+    .medium()
+    .color(rgb(0x3B82F6))
+    .with_rect_bg(px(80.), px(40.), rgb(0xEFF6FF))
+    .rounded(px(8.))
 ```
 
 ## Icon Sizes
@@ -39,7 +49,38 @@ Icon::new(IconName::Star)
 | XLarge | 32×32 | `.xlarge()` | Hero sections |
 | Custom | Any | `.size(IconSize::Custom(n))` | Special cases |
 
-**Note**: All sizes create square icons (width = height).
+## Icon Backgrounds
+
+Icons can have optional backgrounds:
+
+| Type | Method | Description |
+|------|--------|-------------|
+| None | Default | No background (icon only) |
+| Square | `.with_square_bg(color)` | Square background with padding |
+| Rectangle | `.with_rect_bg(w, h, color)` | Custom width and height |
+
+### Background Examples
+
+```rust
+// Square background
+Icon::new(IconName::Send)
+    .medium()
+    .color(rgb(0xFFFFFF))
+    .with_square_bg(rgb(0x3B82F6))
+    .rounded(px(8.))
+
+// Rectangular background
+Icon::new(IconName::Send)
+    .medium()
+    .color(rgb(0x3B82F6))
+    .with_rect_bg(px(80.), px(40.), rgb(0xEFF6FF))
+    .rounded(px(8.))
+
+// No background (default)
+Icon::new(IconName::Send)
+    .medium()
+    .color(rgb(0x3B82F6))
+```
 
 ## All Icons
 

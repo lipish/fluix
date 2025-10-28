@@ -59,6 +59,43 @@ Select::new(cx)
     .options(vec![...])
 ```
 
+### 2.5. 下拉对齐控制 (Dropdown Alignment) ⭐ NEW
+
+添加了 `DropdownAlignment` 枚举，支持左对齐、右对齐、居中对齐：
+
+```rust
+pub enum DropdownAlignment {
+    Left,    // 左对齐（默认）
+    Right,   // 右对齐
+    Center,  // 居中对齐
+}
+```
+
+#### 使用方法
+
+```rust
+// 左对齐（默认）
+Select::new(cx)
+    .align_left()
+    .options(vec![...])
+
+// 右对齐
+Select::new(cx)
+    .align_right()
+    .options(vec![...])
+
+// 居中对齐
+Select::new(cx)
+    .align_center()
+    .options(vec![...])
+
+// 组合使用：右对齐 + 向上展开
+Select::new(cx)
+    .align_right()
+    .dropdown_direction(DropdownDirection::Up)
+    .options(vec![...])
+```
+
 ### 3. 便捷方法 (Convenience Methods)
 
 添加了快捷方法，简化常见用例：
@@ -82,6 +119,11 @@ Select::new(cx)
 // 清爽样式（无边框、无阴影、透明背景）
 Select::new(cx)
     .clean()
+    .options(vec![...])
+
+// 紧凑间距（NEW!）
+Select::new(cx)
+    .compact()
     .options(vec![...])
 
 // 自定义边框颜色
@@ -141,11 +183,16 @@ Select::new(cx)
 |------|------|------|
 | `.variant()` | `SelectVariant` | 设置视觉变体 |
 | `.dropdown_direction()` | `DropdownDirection` | 设置下拉方向 |
+| `.dropdown_alignment()` | `DropdownAlignment` | 设置下拉对齐 ⭐ NEW |
+| `.align_left()` | - | 左对齐（便捷方法） ⭐ NEW |
+| `.align_right()` | - | 右对齐（便捷方法） ⭐ NEW |
+| `.align_center()` | - | 居中对齐（便捷方法） ⭐ NEW |
 | `.border_color()` | `Rgba` | 设置边框颜色 |
 | `.no_border()` | - | 移除边框（便捷方法） |
-| `.no_shadow()` | - | 移除阴影（便捷方法） ⭐ NEW |
+| `.no_shadow()` | - | 移除阴影（便捷方法） |
 | `.transparent()` | - | 透明背景（便捷方法） |
-| `.clean()` | - | 清爽样式：无边框、无阴影、透明（便捷方法） ⭐ NEW |
+| `.clean()` | - | 清爽样式：无边框、无阴影、透明（便捷方法） |
+| `.compact()` | - | 紧凑间距（便捷方法） ⭐ NEW |
 
 ### 新增类型
 

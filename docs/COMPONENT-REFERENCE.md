@@ -75,7 +75,7 @@ cx.subscribe_in(&button, window, |_, _, event, _, _| {
 
 ## Icon
 
-SVG icon component with 23 built-in icons. **Icons are square by default** (equal width and height).
+SVG icon component with 23 built-in icons. **Icons support square and rectangular backgrounds**.
 
 ### Constructor
 
@@ -94,6 +94,10 @@ Icon::new(name: IconName) -> Self
 | `.xlarge()` | - | Set size to 32px |
 | `.size()` | `IconSize` | Set custom size |
 | `.color()` | `Rgba` | Set icon color |
+| `.with_square_bg()` | `Rgba` | Add square background ⭐ NEW |
+| `.with_rect_bg()` | `Pixels, Pixels, Rgba` | Add rectangular background ⭐ NEW |
+| `.bg_color()` | `Rgba` | Set background color ⭐ NEW |
+| `.rounded()` | `Pixels` | Set border radius ⭐ NEW |
 
 ### Icon Names
 
@@ -114,20 +118,24 @@ Icon::new(name: IconName) -> Self
 ### Example
 
 ```rust
-// Basic icon (square by default)
+// Basic icon (no background)
 Icon::new(IconName::Star)
     .large()
     .color(rgb(0xF59E0B))
 
-// Send icon (NEW!)
+// Send icon with square background (NEW!)
+Icon::new(IconName::Send)
+    .medium()
+    .color(rgb(0xFFFFFF))
+    .with_square_bg(rgb(0x3B82F6))
+    .rounded(px(8.))
+
+// Icon with rectangular background (NEW!)
 Icon::new(IconName::Send)
     .medium()
     .color(rgb(0x3B82F6))
-
-// Custom size (still square)
-Icon::new(IconName::Search)
-    .size(IconSize::Custom(48.0))
-    .color(rgb(0x666666))
+    .with_rect_bg(px(80.), px(40.), rgb(0xEFF6FF))
+    .rounded(px(8.))
 ```
 
 ---
@@ -152,12 +160,17 @@ Select::new(id: impl Into<SharedString>) -> Self
 | `.bg_color()` | `Rgba` | Set custom background color |
 | `.text_color()` | `Rgba` | Set custom text color |
 | `.border_color()` | `Rgba` | Set custom border color ⭐ NEW |
-| `.variant()` | `SelectVariant` | Set visual variant (Default, Ghost, Outline) ⭐ NEW |
-| `.dropdown_direction()` | `DropdownDirection` | Set dropdown direction (Down, Up, Auto) ⭐ NEW |
-| `.no_border()` | - | Remove border (convenience method) ⭐ NEW |
-| `.no_shadow()` | - | Remove shadow (convenience method) ⭐ NEW |
-| `.transparent()` | - | Make background transparent (convenience method) ⭐ NEW |
-| `.clean()` | - | Clean style: no border, no shadow, transparent (convenience method) ⭐ NEW |
+| `.variant()` | `SelectVariant` | Set visual variant (Default, Ghost, Outline) |
+| `.dropdown_direction()` | `DropdownDirection` | Set dropdown direction (Down, Up, Auto) |
+| `.dropdown_alignment()` | `DropdownAlignment` | Set dropdown alignment (Left, Right, Center) ⭐ NEW |
+| `.align_left()` | - | Align dropdown to left (convenience method) ⭐ NEW |
+| `.align_right()` | - | Align dropdown to right (convenience method) ⭐ NEW |
+| `.align_center()` | - | Center align dropdown (convenience method) ⭐ NEW |
+| `.no_border()` | - | Remove border (convenience method) |
+| `.no_shadow()` | - | Remove shadow (convenience method) |
+| `.transparent()` | - | Make background transparent (convenience method) |
+| `.clean()` | - | Clean style: no border, no shadow, transparent (convenience method) |
+| `.compact()` | - | Use compact spacing for dropdown items (convenience method) ⭐ NEW |
 | `.multiple()` | `bool` | Enable multiple selection |
 | `.options()` | `Vec<SelectOption>` | Set options |
 | `.option_groups()` | `Vec<SelectOptionGroup>` | Set grouped options |
@@ -312,11 +325,33 @@ let simple_select = cx.new(|cx| {
         .options(vec![...])
 });
 
-// Clean style - all-in-one (NEW!)
+// Clean style - all-in-one
 let clean_select = cx.new(|cx| {
     Select::new(cx)
         .clean()                          // No border, no shadow, transparent
         .text_color(rgb(0x999999))
+        .options(vec![...])
+});
+
+// Compact spacing - less padding
+let compact_select = cx.new(|cx| {
+    Select::new(cx)
+        .compact()                        // Compact spacing for dropdown items
+        .options(vec![...])
+});
+
+// Right aligned dropdown (NEW!)
+let right_aligned = cx.new(|cx| {
+    Select::new(cx)
+        .align_right()                    // Align dropdown to right edge
+        .options(vec![...])
+});
+
+// Center aligned + Up direction (NEW!)
+let center_up = cx.new(|cx| {
+    Select::new(cx)
+        .align_center()                   // Center align
+        .dropdown_direction(DropdownDirection::Up)
         .options(vec![...])
 });
 ```
