@@ -22,6 +22,30 @@ impl EventEmitter<SelectEvent> for Select {}
 // Types
 // ============================================================================
 
+/// Visual variant of the Select component
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub enum SelectVariant {
+    /// Default style with border and background
+    #[default]
+    Default,
+    /// No border, transparent background
+    Ghost,
+    /// Only border, transparent background
+    Outline,
+}
+
+/// Direction for dropdown expansion
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub enum DropdownDirection {
+    /// Expand downward (default)
+    #[default]
+    Down,
+    /// Expand upward
+    Up,
+    /// Auto-detect based on available space
+    Auto,
+}
+
 /// An option in the select dropdown
 #[derive(Clone, Debug)]
 pub struct SelectOption {
@@ -97,12 +121,22 @@ pub struct Select {
     disabled: bool,
     /// Size of the select
     size: ComponentSize,
+    /// Visual variant
+    variant: SelectVariant,
+    /// Dropdown expansion direction
+    dropdown_direction: DropdownDirection,
     /// Custom font size (overrides size.font_size() if set)
     custom_font_size: Option<Pixels>,
     /// Custom background color
     custom_bg_color: Option<Rgba>,
     /// Custom text color
     custom_text_color: Option<Rgba>,
+    /// Custom border color
+    custom_border_color: Option<Rgba>,
+    /// Whether to show border
+    show_border: bool,
+    /// Whether to show shadow
+    show_shadow: bool,
     /// Whether to allow multiple selection
     multiple: bool,
     /// Flag to prevent closing when clicking inside menu
@@ -121,9 +155,14 @@ impl Select {
             is_open: false,
             disabled: false,
             size: ComponentSize::Medium,
+            variant: SelectVariant::Default,
+            dropdown_direction: DropdownDirection::Down,
             custom_font_size: None,
             custom_bg_color: None,
             custom_text_color: None,
+            custom_border_color: None,
+            show_border: true,
+            show_shadow: true,
             multiple: false,
             clicking_menu: false,
         }
@@ -187,6 +226,50 @@ impl Select {
     /// Set custom text color
     pub fn text_color(mut self, color: Rgba) -> Self {
         self.custom_text_color = Some(color);
+        self
+    }
+
+    /// Set custom border color
+    pub fn border_color(mut self, color: Rgba) -> Self {
+        self.custom_border_color = Some(color);
+        self
+    }
+
+    /// Set visual variant
+    pub fn variant(mut self, variant: SelectVariant) -> Self {
+        self.variant = variant;
+        self
+    }
+
+    /// Set dropdown expansion direction
+    pub fn dropdown_direction(mut self, direction: DropdownDirection) -> Self {
+        self.dropdown_direction = direction;
+        self
+    }
+
+    /// Remove border (convenience method)
+    pub fn no_border(mut self) -> Self {
+        self.show_border = false;
+        self
+    }
+
+    /// Remove shadow (convenience method)
+    pub fn no_shadow(mut self) -> Self {
+        self.show_shadow = false;
+        self
+    }
+
+    /// Make background transparent (convenience method)
+    pub fn transparent(mut self) -> Self {
+        self.custom_bg_color = Some(rgba(0x00000000));
+        self
+    }
+
+    /// Clean style: no border, no shadow, transparent background (convenience method)
+    pub fn clean(mut self) -> Self {
+        self.show_border = false;
+        self.show_shadow = false;
+        self.custom_bg_color = Some(rgba(0x00000000));
         self
     }
 
@@ -279,10 +362,16 @@ impl Select {
 
         div()
             .absolute()
-            .top_full()
+            .map(|this| match self.dropdown_direction {
+                DropdownDirection::Down | DropdownDirection::Auto => {
+                    this.top_full().mt_1()
+                }
+                DropdownDirection::Up => {
+                    this.bottom_full().mb_1()
+                }
+            })
             .left_0()
             .right_0()
-            .mt_1()
             .occlude()
             .on_mouse_down(MouseButton::Left, cx.listener(|this, _event: &MouseDownEvent, _window, _cx| {
                 // Mark that we're clicking inside the menu
@@ -306,20 +395,22 @@ impl Select {
             .border_1()
             .border_color(theme.colors.border)
             .bg(theme.colors.background)
-            .shadow(vec![
-                BoxShadow {
-                    color: rgba(0x00000010).into(),
-                    offset: point(px(0.), px(4.)),
-                    blur_radius: px(16.),
-                    spread_radius: px(-2.),
-                },
-                BoxShadow {
-                    color: rgba(0x00000008).into(),
-                    offset: point(px(0.), px(2.)),
-                    blur_radius: px(8.),
-                    spread_radius: px(0.),
-                },
-            ])
+            .when(self.show_shadow, |this| {
+                this.shadow(vec![
+                    BoxShadow {
+                        color: rgba(0x00000010).into(),
+                        offset: point(px(0.), px(4.)),
+                        blur_radius: px(16.),
+                        spread_radius: px(-2.),
+                    },
+                    BoxShadow {
+                        color: rgba(0x00000008).into(),
+                        offset: point(px(0.), px(2.)),
+                        blur_radius: px(8.),
+                        spread_radius: px(0.),
+                    },
+                ])
+            })
             .p(px(6.));
 
         // Render grouped or flat options
@@ -528,16 +619,32 @@ impl Render for Select {
                             .py(padding_y)
                             .px(padding_x)
                             .rounded(px(BorderRadius::LG))
-                            .border_1()
-                            .border_color(theme.colors.border)
-                            .bg(self.custom_bg_color.unwrap_or(theme.colors.background))
+                            .when(self.show_border && self.variant != SelectVariant::Ghost, |this| {
+                                this.border_1()
+                                    .border_color(self.custom_border_color.unwrap_or(theme.colors.border))
+                            })
+                            .map(|this| match self.variant {
+                                SelectVariant::Default => {
+                                    this.bg(self.custom_bg_color.unwrap_or(theme.colors.background))
+                                }
+                                SelectVariant::Ghost => {
+                                    this.bg(self.custom_bg_color.unwrap_or(rgba(0x00000000)))
+                                }
+                                SelectVariant::Outline => {
+                                    this.bg(self.custom_bg_color.unwrap_or(rgba(0x00000000)))
+                                        .border_1()
+                                        .border_color(self.custom_border_color.unwrap_or(theme.colors.border))
+                                }
+                            })
                             .text_size(self.custom_font_size.unwrap_or(self.size.font_size()))
-                            .shadow(vec![BoxShadow {
-                                color: rgba(0x0000000A).into(),
-                                offset: point(px(0.), px(1.)),
-                                blur_radius: px(2.),
-                                spread_radius: px(0.),
-                            }])
+                            .when(self.show_shadow, |this| {
+                                this.shadow(vec![BoxShadow {
+                                    color: rgba(0x0000000A).into(),
+                                    offset: point(px(0.), px(1.)),
+                                    blur_radius: px(2.),
+                                    spread_radius: px(0.),
+                                }])
+                            })
                             .when(!disabled, |this| {
                                 this.cursor(CursorStyle::PointingHand)
                             })

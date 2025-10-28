@@ -5,6 +5,50 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.11] - 2025-10-28
+
+### Added
+- **Select Component Variant System** 🎨
+  - New `SelectVariant` enum: Default, Ghost, Outline
+  - Ghost variant: no border, transparent background
+  - Outline variant: border only, transparent background
+  - `.variant()` method to set visual variant
+
+- **Dropdown Direction Control** ⬆️⬇️
+  - New `DropdownDirection` enum: Down, Up, Auto
+  - `.dropdown_direction()` method to control expansion direction
+  - Support for upward expansion (perfect for bottom toolbars)
+
+- **Enhanced Convenience Methods** 🛠️
+  - `.no_border()` - Remove border
+  - `.no_shadow()` - Remove shadow ⭐ NEW
+  - `.transparent()` - Transparent background
+  - `.clean()` - All-in-one: no border + no shadow + transparent ⭐ NEW
+  - `.border_color()` - Custom border color
+
+### Examples
+- Add `select_variants_demo.rs` - Comprehensive variants and directions demo
+- Add `select_clean_demo.rs` - Demonstrates no_border + no_shadow combinations
+
+### Documentation
+- Add [SELECT-IMPROVEMENTS.md](docs/SELECT-IMPROVEMENTS.md) - Complete improvement guide
+- Update Component Reference with all new methods
+- Update tutorials with variant examples
+
+### Technical Details
+- Select: Add `variant: SelectVariant` field
+- Select: Add `dropdown_direction: DropdownDirection` field
+- Select: Add `show_shadow: bool` field
+- Select: Add `custom_border_color: Option<Rgba>` field
+- Conditional rendering for borders and shadows
+- Upward dropdown positioning support
+
+### Use Cases
+- Embedded selects in Settings views (Ghost variant)
+- Bottom toolbar selects (Upward expansion)
+- Flat design (no_shadow)
+- Minimal design (clean method)
+
 ## [0.1.10] - 2025-10-28
 
 ### Added

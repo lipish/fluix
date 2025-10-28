@@ -145,7 +145,14 @@ Select::new(id: impl Into<SharedString>) -> Self
 | `.size()` | `ComponentSize` | Set component size |
 | `.font_size()` | `Pixels` | Set custom font size (independent of component size) |
 | `.bg_color()` | `Rgba` | Set custom background color |
-| `.text_color()` | `Rgba` | Set custom text color ⭐ NEW |
+| `.text_color()` | `Rgba` | Set custom text color |
+| `.border_color()` | `Rgba` | Set custom border color ⭐ NEW |
+| `.variant()` | `SelectVariant` | Set visual variant (Default, Ghost, Outline) ⭐ NEW |
+| `.dropdown_direction()` | `DropdownDirection` | Set dropdown direction (Down, Up, Auto) ⭐ NEW |
+| `.no_border()` | - | Remove border (convenience method) ⭐ NEW |
+| `.no_shadow()` | - | Remove shadow (convenience method) ⭐ NEW |
+| `.transparent()` | - | Make background transparent (convenience method) ⭐ NEW |
+| `.clean()` | - | Clean style: no border, no shadow, transparent (convenience method) ⭐ NEW |
 | `.multiple()` | `bool` | Enable multiple selection |
 | `.options()` | `Vec<SelectOption>` | Set options |
 | `.option_groups()` | `Vec<SelectOptionGroup>` | Set grouped options |
@@ -257,12 +264,54 @@ let fully_custom_select = cx.new(|cx| {
         .options(vec![...])
 });
 
-// Dark theme with custom text color (NEW!)
+// Dark theme with custom text color
 let dark_theme_select = cx.new(|cx| {
     Select::new(cx)
         .placeholder("Dark theme")
         .bg_color(rgb(0x1F2937))          // Dark gray background
         .text_color(rgb(0xFFFFFF))        // White text
+        .options(vec![...])
+});
+
+// Ghost variant (NEW!)
+let ghost_select = cx.new(|cx| {
+    Select::new(cx)
+        .placeholder("Ghost variant")
+        .variant(SelectVariant::Ghost)    // No border, transparent
+        .text_color(rgb(0x999999))
+        .options(vec![...])
+});
+
+// Outline variant (NEW!)
+let outline_select = cx.new(|cx| {
+    Select::new(cx)
+        .placeholder("Outline variant")
+        .variant(SelectVariant::Outline)  // Border only
+        .options(vec![...])
+});
+
+// Dropdown expands upward (NEW!)
+let up_select = cx.new(|cx| {
+    Select::new(cx)
+        .placeholder("Expands upward")
+        .dropdown_direction(DropdownDirection::Up)
+        .options(vec![...])
+});
+
+// Convenience methods (NEW!)
+let simple_select = cx.new(|cx| {
+    Select::new(cx)
+        .no_border()                      // Remove border
+        .no_shadow()                      // Remove shadow
+        .transparent()                    // Transparent background
+        .options(vec![...])
+});
+
+// Clean style - all-in-one (NEW!)
+let clean_select = cx.new(|cx| {
+    Select::new(cx)
+        .clean()                          // No border, no shadow, transparent
+        .text_color(rgb(0x999999))
         .options(vec![...])
 });
 ```
