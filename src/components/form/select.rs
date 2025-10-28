@@ -97,6 +97,8 @@ pub struct Select {
     disabled: bool,
     /// Size of the select
     size: ComponentSize,
+    /// Custom font size (overrides size.font_size() if set)
+    custom_font_size: Option<Pixels>,
     /// Whether to allow multiple selection
     multiple: bool,
     /// Flag to prevent closing when clicking inside menu
@@ -115,6 +117,7 @@ impl Select {
             is_open: false,
             disabled: false,
             size: ComponentSize::Medium,
+            custom_font_size: None,
             multiple: false,
             clicking_menu: false,
         }
@@ -159,6 +162,13 @@ impl Select {
     /// Set the size
     pub fn size(mut self, size: ComponentSize) -> Self {
         self.size = size;
+        self
+    }
+
+    /// Set custom font size (independent of component size)
+    /// This allows you to change the text size without affecting the component height
+    pub fn font_size(mut self, size: Pixels) -> Self {
+        self.custom_font_size = Some(size);
         self
     }
 
@@ -350,7 +360,7 @@ impl Select {
             .px(px(12.))
             .py(px(8.))
             .cursor(CursorStyle::PointingHand)
-            .text_size(size.font_size())
+            .text_size(self.custom_font_size.unwrap_or(size.font_size()))
             .rounded(px(BorderRadius::SM))
             .map(|this| {
                 if is_selected && !multiple {
@@ -503,7 +513,7 @@ impl Render for Select {
                             .border_1()
                             .border_color(theme.colors.border)
                             .bg(theme.colors.background)
-                            .text_size(self.size.font_size())
+                            .text_size(self.custom_font_size.unwrap_or(self.size.font_size()))
                             .shadow(vec![BoxShadow {
                                 color: rgba(0x0000000A).into(),
                                 offset: point(px(0.), px(1.)),

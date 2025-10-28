@@ -29,11 +29,43 @@ fluix = "0.1"
 gpui = "0.2"
 ```
 
+## 📚 Documentation & Tutorials
+
+### 🎓 Tutorials (Start Here!)
+
+**New to Fluix?** Follow our step-by-step tutorials:
+
+1. **[Getting Started](docs/tutorials/01-GETTING-STARTED.md)** ⭐ - Your first Fluix app (30 min)
+2. **[Working with Components](docs/tutorials/02-COMPONENTS.md)** - All components explained (45 min)
+3. **[Styling and Theming](docs/tutorials/03-STYLING.md)** - Make it beautiful (30 min)
+
+[📖 View All Tutorials →](docs/tutorials/README.md) | [📑 Documentation Index →](docs/DOCUMENTATION-INDEX.md)
+
+### 📖 Reference Documentation
+
+- **[Component Reference](docs/COMPONENT-REFERENCE.md)** - Complete API reference for all components
+- **[Icon Reference](docs/ICON_REFERENCE.md)** - All 22 icons with examples and usage guide
+- **[FAQ](docs/FAQ.md)** - Common questions answered
+- **[Asset Loading Guide](docs/ASSET_LOADING_GUIDE.md)** - How SVG loading works
+
+### 💡 Quick Links
+
+- **Icons not showing?** → [FAQ: Why aren't my icons showing?](docs/FAQ.md#why-arent-my-icons-showing)
+- **Want to customize colors?** → [Styling Guide](docs/tutorials/03-STYLING.md#color-system)
+- **Need to handle events?** → [Component Tutorial](docs/tutorials/02-COMPONENTS.md#handling-button-events)
+- **Building a form?** → [Select Component Guide](docs/tutorials/02-COMPONENTS.md#select-component)
+
 ## 🚀 快速开始
 
-### 重要：注册资源
+### 安装
 
-使用 Fluix 之前，**必须**注册资源加载器：
+```toml
+[dependencies]
+fluix = "0.1.7"
+gpui = "0.2"
+```
+
+### 最小示例
 
 ```rust
 use gpui::*;
@@ -41,7 +73,7 @@ use fluix::*;
 
 fn main() {
     let app = Application::new()
-        .with_assets(fluix::Assets);  // ← 必须！加载 SVG 图标等资源
+        .with_assets(fluix::Assets);  // ← 重要！加载 SVG 图标
 
     app.run(move |cx| {
         cx.open_window(window_options, |window, cx| {

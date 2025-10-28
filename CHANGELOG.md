@@ -5,6 +5,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.8] - 2025-10-28
+
+### Added
+- **Independent Font Size Control for Select Component** 🎉
+  - New `.font_size(px)` method for Select component
+  - Change font size without changing component height
+  - Perfect for matching TextInput font size (12px)
+  - Fully backward compatible
+
+- **Comprehensive Tutorial System**
+  - 3 complete tutorials (Getting Started, Components, Styling)
+  - Component Reference with complete API documentation
+  - Icon Reference with all 22 icons
+  - FAQ with 40+ questions answered
+  - Documentation Index for easy navigation
+  - 100+ code examples across all docs
+
+- **New Example**
+  - `select_font_size_demo.rs` - Demonstrates independent font size control
+
+### Changed
+- Select component now supports custom font size via `.font_size()`
+- Updated all documentation with new font size feature
+- Improved documentation structure and navigation
+
+### Documentation
+- Added [Getting Started Tutorial](docs/tutorials/01-GETTING-STARTED.md)
+- Added [Working with Components Tutorial](docs/tutorials/02-COMPONENTS.md)
+- Added [Styling and Theming Tutorial](docs/tutorials/03-STYLING.md)
+- Added [Component Reference](docs/COMPONENT-REFERENCE.md)
+- Added [Icon Reference](docs/ICON_REFERENCE.md)
+- Added [FAQ](docs/FAQ.md)
+- Added [Documentation Index](docs/DOCUMENTATION-INDEX.md)
+- Added [Select Font Size Feature Guide](docs/SELECT-FONT-SIZE-FEATURE.md)
+
+### Technical Details
+- Select component internal: Added `custom_font_size: Option<Pixels>` field
+- Rendering logic updated to use custom font size when provided
+- ~2,000 lines of new documentation
+- 9 new documentation files
+
 ## [0.1.7] - 2025-10-28
 
 ### Added
