@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.10] - 2025-10-28
+
+### Added
+- **Text Color Customization for Select Component** 🎨
+  - New `.text_color(color)` method for Select component
+  - Customize text color with any RGB/RGBA color
+  - Perfect for dark themes and semantic colors
+  - Works seamlessly with `.bg_color()` for complete theming
+  - Fully backward compatible
+
+### Fixed
+- **Scrolling Support in All Demos** 📜
+  - Add scrolling to `select_bg_color_demo.rs`
+  - Add scrolling to `select_font_size_demo.rs`
+  - All components now visible even in smaller windows
+  - Consistent scroll behavior across all demos
+
+### Changed
+- Update `select_bg_color_demo.rs` to showcase dark theme with white text
+- Improve demo user experience with proper scroll containers
+
+### Technical Details
+- Select component: Added `custom_text_color: Option<Rgba>` field
+- Select component: Added `text_color(color: Rgba)` method
+- Rendering updated to use custom text color for placeholder and selected values
+- All demos now use `ScrollHandle` and `.overflow_y_scroll()` pattern
+
+### Examples
+- Enhanced `select_bg_color_demo.rs` with dark theme example
+- All demos now support scrolling for better UX
+
 ## [0.1.9] - 2025-10-28
 
 ### Added

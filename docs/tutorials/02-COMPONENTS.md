@@ -328,6 +328,13 @@ Select::new(cx)
     .font_size(px(12.))               // Custom font
     .bg_color(rgb(0xEFF6FF))          // Custom background
     .options(vec![...])
+
+// Dark theme (NEW!)
+Select::new(cx)
+    .placeholder("Dark theme")
+    .bg_color(rgb(0x1F2937))          // Dark background
+    .text_color(rgb(0xFFFFFF))        // White text
+    .options(vec![...])
 ```
 
 ### Pre-selected Values

@@ -28,6 +28,7 @@ fn main() {
 }
 
 struct SelectBgColorDemo {
+    scroll_handle: ScrollHandle,
     default_select: Entity<Select>,
     light_blue_select: Entity<Select>,
     light_green_select: Entity<Select>,
@@ -38,6 +39,7 @@ struct SelectBgColorDemo {
 
 impl SelectBgColorDemo {
     fn new(_window: &mut Window, cx: &mut Context<Self>) -> Self {
+        let scroll_handle = ScrollHandle::new();
         let options = vec![
             SelectOption::new("react", "React"),
             SelectOption::new("vue", "Vue"),
@@ -84,15 +86,17 @@ impl SelectBgColorDemo {
                 .options(options.clone())
         });
 
-        // Dark background with custom font color would need text color support
+        // Dark background with white text
         let dark_select = cx.new(|cx| {
             Select::new(cx)
-                .placeholder("Dark Background")
+                .placeholder("Dark Background with White Text")
                 .bg_color(rgb(0x1F2937))  // Dark gray
+                .text_color(rgb(0xFFFFFF))  // White text
                 .options(options.clone())
         });
 
         Self {
+            scroll_handle,
             default_select,
             light_blue_select,
             light_green_select,
@@ -107,11 +111,21 @@ impl Render for SelectBgColorDemo {
     fn render(&mut self, _: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
         div()
             .size_full()
-            .flex()
-            .items_center()
-            .justify_center()
-            .bg(rgb(0xF5F5F5))
+            .overflow_hidden()
             .child(
+                div()
+                    .id("scroll-container")
+                    .size_full()
+                    .overflow_y_scroll()
+                    .track_scroll(&self.scroll_handle)
+                    .child(
+                        div()
+                            .flex()
+                            .flex_col()
+                            .bg(rgb(0xF5F5F5))
+                            .p_8()
+                            .gap_8()
+                            .child(
                 div()
                     .flex()
                     .flex_col()
@@ -261,14 +275,14 @@ impl Render for SelectBgColorDemo {
                                             .text_sm()
                                             .font_weight(FontWeight::MEDIUM)
                                             .text_color(rgb(0x374151))
-                                            .child("Dark Background (Note: text color not customizable yet)")
+                                            .child("Dark Background with White Text")
                                     )
                                     .child(self.dark_select.clone())
                                     .child(
                                         div()
                                             .text_xs()
                                             .text_color(rgb(0x9CA3AF))
-                                            .child("Code: .bg_color(rgb(0x1F2937))")
+                                            .child("Code: .bg_color(rgb(0x1F2937)).text_color(rgb(0xFFFFFF))")
                                     )
                             )
                     )
@@ -295,17 +309,19 @@ impl Render for SelectBgColorDemo {
                                         div()
                                             .text_sm()
                                             .text_color(rgb(0x15803D))
-                                            .child("You can now customize the background color of Select components!")
+                                            .child("You can now customize both background and text colors!")
                                     )
                                     .child(
                                         div()
                                             .text_xs()
                                             .text_color(rgb(0x166534))
-                                            .child("Use .bg_color(rgb(0xRRGGBB)) to set any background color you want.")
+                                            .child("Use .bg_color() for background and .text_color() for text.")
                                     )
                             )
                     )
+                )
             )
+        )
     }
 }
 

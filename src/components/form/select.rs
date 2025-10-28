@@ -101,6 +101,8 @@ pub struct Select {
     custom_font_size: Option<Pixels>,
     /// Custom background color
     custom_bg_color: Option<Rgba>,
+    /// Custom text color
+    custom_text_color: Option<Rgba>,
     /// Whether to allow multiple selection
     multiple: bool,
     /// Flag to prevent closing when clicking inside menu
@@ -121,6 +123,7 @@ impl Select {
             size: ComponentSize::Medium,
             custom_font_size: None,
             custom_bg_color: None,
+            custom_text_color: None,
             multiple: false,
             clicking_menu: false,
         }
@@ -178,6 +181,12 @@ impl Select {
     /// Set custom background color
     pub fn bg_color(mut self, color: Rgba) -> Self {
         self.custom_bg_color = Some(color);
+        self
+    }
+
+    /// Set custom text color
+    pub fn text_color(mut self, color: Rgba) -> Self {
+        self.custom_text_color = Some(color);
         self
     }
 
@@ -376,7 +385,7 @@ impl Select {
                     this.bg(theme.colors.primary)
                         .text_color(rgb(0xFFFFFF))
                 } else {
-                    this.text_color(theme.colors.text)
+                    this.text_color(self.custom_text_color.unwrap_or(theme.colors.text))
                         .hover(|style| style.bg(theme.colors.background_hover))
                 }
             })
@@ -556,10 +565,10 @@ impl Render for Select {
                                         this.child(
                                             div()
                                                 .when(is_placeholder, |this| {
-                                                    this.text_color(theme.colors.text_secondary)
+                                                    this.text_color(self.custom_text_color.unwrap_or(theme.colors.text_secondary))
                                                 })
                                                 .when(!is_placeholder, |this| {
-                                                    this.text_color(theme.colors.text)
+                                                    this.text_color(self.custom_text_color.unwrap_or(theme.colors.text))
                                                 })
                                                 .child(self.display_text())
                                         )

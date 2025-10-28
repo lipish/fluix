@@ -28,6 +28,7 @@ fn main() {
 }
 
 struct SelectFontSizeDemo {
+    scroll_handle: ScrollHandle,
     default_select: Entity<Select>,
     small_font_select: Entity<Select>,
     large_font_select: Entity<Select>,
@@ -36,6 +37,7 @@ struct SelectFontSizeDemo {
 
 impl SelectFontSizeDemo {
     fn new(window: &mut Window, cx: &mut Context<Self>) -> Self {
+        let scroll_handle = ScrollHandle::new();
         let options = vec![
             SelectOption::new("react", "React"),
             SelectOption::new("vue", "Vue"),
@@ -75,6 +77,7 @@ impl SelectFontSizeDemo {
         });
 
         Self {
+            scroll_handle,
             default_select,
             small_font_select,
             large_font_select,
@@ -87,11 +90,21 @@ impl Render for SelectFontSizeDemo {
     fn render(&mut self, _: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
         div()
             .size_full()
-            .flex()
-            .items_center()
-            .justify_center()
-            .bg(rgb(0xF5F5F5))
+            .overflow_hidden()
             .child(
+                div()
+                    .id("scroll-container")
+                    .size_full()
+                    .overflow_y_scroll()
+                    .track_scroll(&self.scroll_handle)
+                    .child(
+                        div()
+                            .flex()
+                            .flex_col()
+                            .bg(rgb(0xF5F5F5))
+                            .p_8()
+                            .gap_8()
+                            .child(
                 div()
                     .flex()
                     .flex_col()
@@ -239,7 +252,9 @@ impl Render for SelectFontSizeDemo {
                                     )
                             )
                     )
+                )
             )
+        )
     }
 }
 

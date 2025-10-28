@@ -144,7 +144,8 @@ Select::new(id: impl Into<SharedString>) -> Self
 | `.placeholder()` | `impl Into<SharedString>` | Set placeholder text |
 | `.size()` | `ComponentSize` | Set component size |
 | `.font_size()` | `Pixels` | Set custom font size (independent of component size) |
-| `.bg_color()` | `Rgba` | Set custom background color ⭐ NEW |
+| `.bg_color()` | `Rgba` | Set custom background color |
+| `.text_color()` | `Rgba` | Set custom text color ⭐ NEW |
 | `.multiple()` | `bool` | Enable multiple selection |
 | `.options()` | `Vec<SelectOption>` | Set options |
 | `.option_groups()` | `Vec<SelectOptionGroup>` | Set grouped options |
@@ -253,6 +254,15 @@ let fully_custom_select = cx.new(|cx| {
         .size(ComponentSize::Large)      // Custom size
         .font_size(px(12.))               // Custom font size
         .bg_color(rgb(0xF0FDF4))          // Light green background
+        .options(vec![...])
+});
+
+// Dark theme with custom text color (NEW!)
+let dark_theme_select = cx.new(|cx| {
+    Select::new(cx)
+        .placeholder("Dark theme")
+        .bg_color(rgb(0x1F2937))          // Dark gray background
+        .text_color(rgb(0xFFFFFF))        // White text
         .options(vec![...])
 });
 ```
