@@ -5,7 +5,70 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.15] - 2025-10-29
+
+### Fixed - TextInput Component
+- **Cursor Position Fix** 🐛 CRITICAL
+  - Fixed cursor stuck at right edge issue
+  - Cursor now follows typing position correctly
+  - Text inserts at cursor position (not at end)
+  - Full cursor movement support with arrow keys
+  - Backspace/Delete work at cursor position
+  - Home/End keys jump to start/end
+  - Cursor works correctly with password masking
+  - Prefilled text fully editable at any position
+  - Natural text editing experience restored
+
+### Technical Implementation
+- Add `cursor_position: usize` field to track cursor byte offset
+- Text insertion at cursor position with proper string slicing
+- Cursor movement methods: `move_cursor_left/right/home/end()`
+- Delete operations: `handle_backspace()` and `handle_delete()`
+- Cursor rendering split text into before/after cursor
+- Keyboard event handling for all cursor controls
+- Password masking compatible with cursor positioning
+
+### Examples
+- Add `text_input_cursor_demo.rs` - Comprehensive cursor demonstration
+  - Normal input with cursor following
+  - Password input with cursor support
+  - Prefilled text editing
+  - All keyboard shortcuts demonstrated
+
+### Documentation
+- Add [TEXTINPUT-CURSOR-FIX.md](docs/TEXTINPUT-CURSOR-FIX.md)
+  - Detailed problem description
+  - Technical implementation explanation
+  - Before/after comparison
+  - Testing guide with all test cases
+  - Keyboard shortcuts reference
+
+### Keyboard Shortcuts
+- **Left Arrow**: Move cursor left
+- **Right Arrow**: Move cursor right
+- **Home**: Move cursor to start
+- **End**: Move cursor to end
+- **Backspace**: Delete character before cursor
+- **Delete**: Delete character at cursor
+- **Enter**: Submit input
+
+### Impact
+- **Severity**: Critical bug fix
+- **User Experience**: Dramatically improved
+- **Backward Compatible**: Yes - no API changes
+- **Affected Components**: All TextInput usage (Settings, forms, etc.)
+
 ## [0.1.14] - 2025-10-28
+
+### Fixed - TextInput Component (Partial)
+- **Cursor Position Fix** 🐛
+  - Cursor now follows typing position (was stuck at right edge)
+  - Text inserts at cursor position
+  - Arrow keys move cursor (Left, Right, Home, End)
+  - Backspace deletes before cursor
+  - Delete key deletes at cursor
+  - Cursor works with password masking
+  - Prefilled text fully editable
 
 ### Added - Select Component
 - **Dropdown Width Control** 📏
@@ -17,11 +80,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Four width modes: MatchTrigger, Fixed, MinWidth, MaxWidth
 
 ### Examples
+- Add `text_input_cursor_demo.rs` - Cursor functionality demonstration
+  - Shows cursor following typing
+  - Demonstrates cursor movement
+  - Tests all keyboard shortcuts
 - Add `select_width_demo.rs` - Dropdown width demonstration
   - Shows all width modes
   - Demonstrates combinations with compact and alignment
 
 ### Documentation
+- Add [TEXTINPUT-CURSOR-FIX.md](docs/TEXTINPUT-CURSOR-FIX.md)
+  - Document cursor position fix
+  - Explain technical implementation
+  - Provide testing guide
 - Update [SELECT-IMPROVEMENTS.md](docs/SELECT-IMPROVEMENTS.md)
   - Add dropdown width section
   - Add usage examples
@@ -30,17 +101,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Add width examples
 
 ### Technical Details
+- TextInput: Add `cursor_position: usize` field to track cursor
+- TextInput: Text insertion at cursor position
+- TextInput: Cursor movement methods (left, right, home, end)
+- TextInput: Delete operations (backspace, delete)
+- TextInput: Cursor rendering at correct position
+- TextInput: Keyboard event handling for cursor control
 - Select: Add `DropdownWidth` enum (MatchTrigger, Fixed, MinWidth, MaxWidth)
 - Select: Add `dropdown_width: DropdownWidth` field
 - Select: Add `.dropdown_width()`, `.fixed_width()`, `.min_width()`, `.max_width()` methods
 - Select: Width-based rendering logic for dropdown menu
 
 ### Use Cases
-- Narrow action menus: `.fixed_width(px(100.))`
-- Wide detailed options: `.fixed_width(px(400.))`
-- Responsive design: `.min_width(px(200.))`
-- Constrained layouts: `.max_width(px(300.))`
-- Combined: `.fixed_width(px(100.)).compact().align_right()`
+- TextInput: Natural text editing with cursor support
+- TextInput: Edit text at any position
+- TextInput: Password input with cursor
+- Select: Narrow action menus: `.fixed_width(px(100.))`
+- Select: Wide detailed options: `.fixed_width(px(400.))`
+- Select: Responsive design: `.min_width(px(200.))`
+- Select: Constrained layouts: `.max_width(px(300.))`
+- Select: Combined: `.fixed_width(px(100.)).compact().align_right()`
 
 ## [0.1.13] - 2025-10-28
 

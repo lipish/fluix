@@ -27,6 +27,8 @@ pub enum TextInputEvent {
 pub struct TextInput {
     /// Current input value
     value: String,
+    /// Cursor position (byte offset in the string)
+    cursor_position: usize,
     /// Placeholder text when empty
     placeholder: String,
     /// Focus handle for keyboard input
@@ -46,6 +48,7 @@ impl TextInput {
     pub fn new(cx: &mut Context<Self>) -> Self {
         Self {
             value: String::new(),
+            cursor_position: 0,
             placeholder: String::new(),
             focus_handle: cx.focus_handle(),
             disabled: false,
@@ -64,6 +67,7 @@ impl TextInput {
     /// Set the initial value
     pub fn value(mut self, value: impl Into<String>) -> Self {
         self.value = value.into();
+        self.cursor_position = self.value.len();
         self
     }
 
@@ -114,6 +118,7 @@ impl TextInput {
         }
 
         self.value = value.clone();
+        self.cursor_position = self.value.len();
         cx.emit(TextInputEvent::Change(value));
         cx.notify();
     }
@@ -121,6 +126,7 @@ impl TextInput {
     /// Clear the input
     pub fn clear(&mut self, cx: &mut Context<Self>) {
         self.value.clear();
+        self.cursor_position = 0;
         cx.emit(TextInputEvent::Change(String::new()));
         cx.notify();
     }
@@ -135,8 +141,11 @@ impl TextInput {
             return;
         }
 
-        let mut new_value = self.value.clone();
+        // Insert text at cursor position
+        let mut new_value = String::new();
+        new_value.push_str(&self.value[..self.cursor_position]);
         new_value.push_str(text);
+        new_value.push_str(&self.value[self.cursor_position..]);
 
         // Check max length
         if let Some(max_len) = self.max_length {
@@ -153,17 +162,63 @@ impl TextInput {
         }
 
         self.value = new_value.clone();
+        self.cursor_position += text.len();
         cx.emit(TextInputEvent::Change(new_value));
         cx.notify();
     }
 
     fn handle_backspace(&mut self, cx: &mut Context<Self>) {
-        if self.disabled || self.value.is_empty() {
+        if self.disabled || self.cursor_position == 0 {
             return;
         }
 
-        self.value.pop();
-        cx.emit(TextInputEvent::Change(self.value.clone()));
+        // Remove character before cursor
+        let mut new_value = String::new();
+        new_value.push_str(&self.value[..self.cursor_position - 1]);
+        new_value.push_str(&self.value[self.cursor_position..]);
+
+        self.value = new_value.clone();
+        self.cursor_position -= 1;
+        cx.emit(TextInputEvent::Change(new_value));
+        cx.notify();
+    }
+
+    fn handle_delete(&mut self, cx: &mut Context<Self>) {
+        if self.disabled || self.cursor_position >= self.value.len() {
+            return;
+        }
+
+        // Remove character at cursor
+        let mut new_value = String::new();
+        new_value.push_str(&self.value[..self.cursor_position]);
+        new_value.push_str(&self.value[self.cursor_position + 1..]);
+
+        self.value = new_value.clone();
+        cx.emit(TextInputEvent::Change(new_value));
+        cx.notify();
+    }
+
+    fn move_cursor_left(&mut self, cx: &mut Context<Self>) {
+        if self.cursor_position > 0 {
+            self.cursor_position -= 1;
+            cx.notify();
+        }
+    }
+
+    fn move_cursor_right(&mut self, cx: &mut Context<Self>) {
+        if self.cursor_position < self.value.len() {
+            self.cursor_position += 1;
+            cx.notify();
+        }
+    }
+
+    fn move_cursor_home(&mut self, cx: &mut Context<Self>) {
+        self.cursor_position = 0;
+        cx.notify();
+    }
+
+    fn move_cursor_end(&mut self, cx: &mut Context<Self>) {
+        self.cursor_position = self.value.len();
         cx.notify();
     }
 
@@ -213,6 +268,21 @@ impl Render for TextInput {
                     "backspace" => {
                         this.handle_backspace(cx);
                     }
+                    "delete" => {
+                        this.handle_delete(cx);
+                    }
+                    "left" => {
+                        this.move_cursor_left(cx);
+                    }
+                    "right" => {
+                        this.move_cursor_right(cx);
+                    }
+                    "home" => {
+                        this.move_cursor_home(cx);
+                    }
+                    "end" => {
+                        this.move_cursor_end(cx);
+                    }
                     "enter" => {
                         this.handle_submit(cx);
                     }
@@ -250,13 +320,16 @@ impl Render for TextInput {
             })
             .child(
                 div()
+                    .flex()
+                    .items_center()
                     .flex_1()
                     .text_sm()
                     .when(show_placeholder, |this| {
                         this.text_color(rgb(0x999999))
                             .child(placeholder)
                     })
-                    .when(!show_placeholder, |this| {
+                    .when(!show_placeholder && !is_focused, |this| {
+                        // Not focused: show full text
                         this.text_color(if disabled {
                             rgb(0x999999)
                         } else {
@@ -264,16 +337,48 @@ impl Render for TextInput {
                         })
                         .child(display_text.clone())
                     })
+                    .when(!show_placeholder && is_focused && !disabled, |this| {
+                        // Focused: show text with cursor
+                        let cursor_pos = self.cursor_position;
+                        let text_before = if cursor_pos > 0 {
+                            if self.is_password {
+                                "•".repeat(cursor_pos)
+                            } else {
+                                self.value[..cursor_pos].to_string()
+                            }
+                        } else {
+                            String::new()
+                        };
+
+                        let text_after = if cursor_pos < self.value.len() {
+                            if self.is_password {
+                                "•".repeat(self.value.len() - cursor_pos)
+                            } else {
+                                self.value[cursor_pos..].to_string()
+                            }
+                        } else {
+                            String::new()
+                        };
+
+                        this.text_color(if disabled {
+                            rgb(0x999999)
+                        } else {
+                            rgb(0x333333)
+                        })
+                        .when(!text_before.is_empty(), |this| {
+                            this.child(text_before)
+                        })
+                        .child(
+                            // Cursor
+                            div()
+                                .w(px(1.))
+                                .h(px(18.))
+                                .bg(rgb(0x333333))
+                        )
+                        .when(!text_after.is_empty(), |this| {
+                            this.child(text_after)
+                        })
+                    })
             )
-            .when(is_focused && !disabled, |this| {
-                // Render blinking cursor
-                this.child(
-                    div()
-                        .w(px(1.))
-                        .h(px(18.))
-                        .bg(rgb(0x333333))
-                        // TODO: Add blink animation
-                )
-            })
     }
 }
