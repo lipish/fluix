@@ -1,5 +1,13 @@
 use gpui::*;
 use gpui::prelude::FluentBuilder;
+use std::sync::{Arc, Mutex};
+
+// Element state for storing layout information per line
+#[derive(Clone)]
+struct TextAreaLineLayout {
+    bounds: Bounds<Pixels>,
+    shaped_line: ShapedLine,
+}
 
 // ============================================================================
 // Events
@@ -52,6 +60,16 @@ pub struct TextArea {
     focus_border_color: Option<Rgba>,
     /// Whether to show border
     show_border: bool,
+    /// Blink epoch - increments when cursor should reset to visible
+    blink_epoch: usize,
+    /// Whether cursor is currently visible (for blinking)
+    cursor_visible: bool,
+    /// Blink task handle
+    _blink_task: Option<Task<()>>,
+    /// Whether mouse is currently dragging for selection
+    is_dragging: bool,
+    /// Last layout info for mouse position calculation (per line)
+    last_layout: Vec<TextAreaLineLayout>,
 }
 
 impl TextArea {
@@ -72,6 +90,11 @@ impl TextArea {
             custom_border_color: None,
             focus_border_color: None,
             show_border: true,
+            blink_epoch: 0,
+            cursor_visible: true,
+            _blink_task: None,
+            is_dragging: false,
+            last_layout: Vec::new(),
         }
     }
 
@@ -230,6 +253,7 @@ impl TextArea {
 
         self.value = new_value.clone();
         self.cursor_pos += text.chars().count();
+        self.pause_blinking(cx);
         cx.emit(TextAreaEvent::Change(new_value));
         cx.notify();
     }
@@ -242,6 +266,7 @@ impl TextArea {
         // If there's a selection, delete it
         if self.has_selection() {
             self.cursor_pos = self.delete_selection();
+            self.pause_blinking(cx);
             cx.emit(TextAreaEvent::Change(self.value.clone()));
             cx.notify();
             return;
@@ -256,6 +281,7 @@ impl TextArea {
         let after = self.value.chars().skip(self.cursor_pos).collect::<String>();
         self.value = format!("{}{}", before, after);
         self.cursor_pos -= 1;
+        self.pause_blinking(cx);
         
         cx.emit(TextAreaEvent::Change(self.value.clone()));
         cx.notify();
@@ -299,6 +325,7 @@ impl TextArea {
             } else {
                 self.clear_selection();
             }
+            self.pause_blinking(cx);
             cx.notify();
         }
     }
@@ -319,6 +346,7 @@ impl TextArea {
             } else {
                 self.clear_selection();
             }
+            self.pause_blinking(cx);
             cx.notify();
         }
     }
@@ -337,6 +365,7 @@ impl TextArea {
         } else {
             self.clear_selection();
         }
+        self.pause_blinking(cx);
         cx.notify();
     }
     
@@ -354,6 +383,7 @@ impl TextArea {
         } else {
             self.clear_selection();
         }
+        self.pause_blinking(cx);
         cx.notify();
     }
 
@@ -369,6 +399,134 @@ impl TextArea {
             // Enter: submit
             cx.emit(TextAreaEvent::Submit(self.value.clone()));
         }
+    }
+    
+    fn handle_delete(&mut self, cx: &mut Context<Self>) {
+        if self.disabled {
+            return;
+        }
+        
+        // If there's a selection, delete it
+        if self.has_selection() {
+            self.cursor_pos = self.delete_selection();
+            cx.emit(TextAreaEvent::Change(self.value.clone()));
+            cx.notify();
+            return;
+        }
+        
+        let char_count = self.value.chars().count();
+        if self.cursor_pos >= char_count {
+            return;
+        }
+
+        // Remove character at cursor
+        let before = self.value.chars().take(self.cursor_pos).collect::<String>();
+        let after = self.value.chars().skip(self.cursor_pos + 1).collect::<String>();
+        self.value = format!("{}{}", before, after);
+        
+        cx.emit(TextAreaEvent::Change(self.value.clone()));
+        cx.notify();
+    }
+    
+    /// Increment blink epoch (used to cancel old blink tasks)
+    fn next_blink_epoch(&mut self) -> usize {
+        self.blink_epoch += 1;
+        self.blink_epoch
+    }
+
+    /// Start cursor blinking animation
+    fn start_blinking(&mut self, epoch: usize, cx: &mut Context<Self>) {
+        // Only blink if this is still the current epoch
+        if epoch == self.blink_epoch {
+            // Toggle visibility
+            self.cursor_visible = !self.cursor_visible;
+            cx.notify();
+
+            // Schedule next blink
+            let next_epoch = self.next_blink_epoch();
+            let task = cx.spawn(async move |this, cx| {
+                cx.background_spawn(async move {
+                    std::thread::sleep(std::time::Duration::from_millis(530));
+                }).await;
+                _ = this.update(cx, |this, cx| {
+                    this.start_blinking(next_epoch, cx);
+                });
+            });
+            self._blink_task = Some(task);
+        }
+    }
+
+    /// Pause blinking and show cursor (called on user input)
+    fn pause_blinking(&mut self, cx: &mut Context<Self>) {
+        // Show cursor immediately
+        self.cursor_visible = true;
+        cx.notify();
+
+        // Cancel current blink and restart after a delay
+        let epoch = self.next_blink_epoch();
+        let task = cx.spawn(async move |this, cx| {
+            cx.background_spawn(async move {
+                std::thread::sleep(std::time::Duration::from_millis(530));
+            }).await;
+            _ = this.update(cx, |this, cx| {
+                this.start_blinking(epoch, cx);
+            });
+        });
+        self._blink_task = Some(task);
+    }
+    
+    /// Calculate character index from mouse position (for multi-line text)
+    fn index_for_mouse_position(&self, position: Point<Pixels>) -> usize {
+        if self.value.is_empty() {
+            return 0;
+        }
+
+        if self.last_layout.is_empty() {
+            return self.value.chars().count();
+        }
+
+        let lines: Vec<&str> = self.value.split('\n').collect();
+        
+        // Find which line the click is on
+        let mut target_line_idx = 0;
+        
+        for (idx, layout) in self.last_layout.iter().enumerate() {
+            if position.y < layout.bounds.bottom() {
+                target_line_idx = idx;
+                break;
+            }
+        }
+        
+        // If click is below all lines, return end of text
+        if target_line_idx >= lines.len() {
+            return self.value.chars().count();
+        }
+        
+        // Get the layout for the target line
+        let Some(line_layout) = self.last_layout.get(target_line_idx) else {
+            return self.value.chars().count();
+        };
+        
+        // Calculate relative x position within the line
+        let relative_x = position.x - line_layout.bounds.left();
+        
+        // Use ShapedLine to find closest character index
+        let byte_index = line_layout.shaped_line.closest_index_for_x(relative_x);
+        
+        // Calculate character index before this line
+        let mut chars_before_line = 0;
+        for (idx, line) in lines.iter().enumerate() {
+            if idx < target_line_idx {
+                chars_before_line += line.chars().count() + 1; // +1 for newline
+            }
+        }
+        
+        // Convert byte index to character index and add offset
+        let line = lines[target_line_idx];
+        let chars_in_line = line.chars().count();
+        let char_index_in_line = byte_index.min(chars_in_line);
+        
+        chars_before_line + char_index_in_line
     }
 
     fn count_lines(&self) -> usize {
@@ -406,6 +564,13 @@ impl Focusable for TextArea {
 impl Render for TextArea {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let is_focused = self.focus_handle.is_focused(window);
+        
+        // Start blinking when focused
+        if is_focused && self._blink_task.is_none() {
+            let epoch = self.next_blink_epoch();
+            self.start_blinking(epoch, cx);
+        }
+        
         let show_placeholder = self.value.is_empty() && !is_focused;
         let disabled = self.disabled;
         let placeholder = self.placeholder.clone();
@@ -414,6 +579,9 @@ impl Render for TextArea {
         let height = self.calculate_height();
         let selection_start = self.selection_start;
         let selection_end = self.selection_end;
+        
+        // Create a shared container for layout info that will be filled during paint
+        let layout_container: Arc<Mutex<Vec<TextAreaLineLayout>>> = Arc::new(Mutex::new(Vec::new()));
         
         // Determine colors based on customization or defaults
         let bg_color = if disabled {
@@ -461,6 +629,9 @@ impl Render for TextArea {
                     "backspace" => {
                         this.handle_backspace(cx);
                     }
+                    "delete" => {
+                        this.handle_delete(cx);
+                    }
                     "left" => {
                         this.move_cursor_left(shift_pressed, cx);
                     }
@@ -485,22 +656,70 @@ impl Render for TextArea {
                     }
                 }
             }))
-            .on_mouse_down(MouseButton::Left, cx.listener(|this, event: &MouseDownEvent, window, cx| {
-                cx.emit(TextAreaEvent::Focus);
-                cx.focus_self(window);
-                
-                // Check for double-click to select all
-                if event.click_count == 2 && !this.disabled {
-                    this.select_all(cx);
-                } else if !this.disabled {
-                    // Single click: clear selection and position cursor at click
-                    this.clear_selection();
-                    // For now, just move cursor to end on click
-                    // (Precise click positioning would require pixel-to-char calculation)
-                    this.cursor_pos = this.value.chars().count();
-                }
-                
+            .on_mouse_down(MouseButton::Left, {
+                let layout_container = layout_container.clone();
+                cx.listener(move |this, event: &MouseDownEvent, window, cx| {
+                    cx.emit(TextAreaEvent::Focus);
+                    cx.focus_self(window);
+                    
+                    // Update last_layout from the container
+                    if let Ok(layout) = layout_container.lock() {
+                        this.last_layout = layout.clone();
+                    }
+                    
+                    // Check for double-click to select all
+                    if event.click_count == 2 && !this.disabled {
+                        this.select_all(cx);
+                        this.pause_blinking(cx);
+                    } else if !this.disabled {
+                        // Start dragging
+                        this.is_dragging = true;
+                        
+                        // Calculate click position
+                        let index = this.index_for_mouse_position(event.position);
+                        
+                        if event.modifiers.shift {
+                            // Shift+click extends selection
+                            if !this.has_selection() {
+                                this.selection_start = Some(this.cursor_pos);
+                                this.selection_end = Some(index);
+                            } else {
+                                // Extend existing selection
+                                this.selection_end = Some(index);
+                            }
+                        } else {
+                            // Normal click - clear selection and set cursor
+                            this.clear_selection();
+                        }
+                        
+                        this.cursor_pos = index;
+                        this.pause_blinking(cx);
+                    }
+                    
+                    cx.notify();
+                })
+            })
+            .on_mouse_up(MouseButton::Left, cx.listener(|this, _event: &MouseUpEvent, _window, cx| {
+                this.is_dragging = false;
                 cx.notify();
+            }))
+            .on_mouse_move(cx.listener(|this, event: &MouseMoveEvent, _window, cx| {
+                if this.is_dragging {
+                    // Update selection while dragging
+                    let index = this.index_for_mouse_position(event.position);
+                    
+                    if !this.has_selection() {
+                        // Start new selection from cursor position
+                        this.selection_start = Some(this.cursor_pos);
+                        this.selection_end = Some(index);
+                    } else {
+                        // Update selection end
+                        this.selection_end = Some(index);
+                    }
+                    
+                    this.cursor_pos = index;
+                    cx.notify();
+                }
             }))
             .flex()
             .flex_col()
@@ -528,140 +747,287 @@ impl Render for TextArea {
                             .child(placeholder)
                     })
                     .when(!show_placeholder && is_focused && value.is_empty(), |this| {
-                        // Empty and focused: show just cursor
-                        this.child(
-                            div()
-                                .w(px(2.))
-                                .h(px(20.))
-                                .bg(rgb(0x333333))
-                        )
+                        // Empty and focused: show cursor if visible
+                        let cursor_visible = self.cursor_visible;
+                        if cursor_visible {
+                            this.child(
+                                div()
+                                    .w(px(2.))
+                                    .h(px(20.))
+                                    .bg(rgb(0x333333))
+                            )
+                        } else {
+                            this // Empty div when cursor hidden
+                        }
                     })
                     .when(!show_placeholder && !value.is_empty(), |this| {
-                        // Calculate selection range if exists
+                        // Use TextRun API for rendering - prevents width jitter
                         let has_selection = selection_start.is_some() && selection_end.is_some();
-                        let (sel_start, sel_end) = if let (Some(start), Some(end)) = (selection_start, selection_end) {
-                            if start <= end {
-                                (start, end)
-                            } else {
-                                (end, start)
-                            }
-                        } else {
-                            (0, 0)
+                        let font = gpui::Font {
+                            family: ".SystemUIFont".into(),
+                            features: Default::default(),
+                            weight: Default::default(),
+                            style: Default::default(),
+                            fallbacks: None,
                         };
+                        let font_size = px(14.);
+                        let line_height = px(20.);
+                        let cursor_visible = self.cursor_visible;
                         
-                        // Split text into lines and find cursor position
+                        // Split text into lines
                         let lines: Vec<&str> = value.split('\n').collect();
+                        
+                        // Calculate character offsets for each line
+                        let mut line_offsets = Vec::new();
                         let mut chars_counted = 0;
+                        for line in &lines {
+                            let line_start = chars_counted;
+                            line_offsets.push(line_start);
+                            chars_counted += line.chars().count() + 1; // +1 for newline
+                        }
+                        
+                        // Find cursor line
                         let mut cursor_line_idx = 0;
                         let mut cursor_col = cursor_pos;
-                        
-                        // Find which line the cursor is on
-                        for (idx, line) in lines.iter().enumerate() {
-                            let line_len = line.chars().count();
-                            // Check if cursor is within this line (including at the end)
-                            if cursor_pos <= chars_counted + line_len {
+                        for (idx, offset) in line_offsets.iter().enumerate() {
+                            let line_len = lines[idx].chars().count();
+                            if cursor_pos <= *offset + line_len {
                                 cursor_line_idx = idx;
-                                cursor_col = cursor_pos - chars_counted;
+                                cursor_col = cursor_pos - *offset;
                                 break;
-                            }
-                            // +1 for the newline character
-                            chars_counted += line_len + 1;
-                            
-                            // If this is the last line and we haven't found the cursor yet
-                            if idx == lines.len() - 1 {
-                                cursor_line_idx = idx;
-                                cursor_col = line_len;
                             }
                         }
                         
-                        this.text_color(if disabled {
-                            rgb(0x999999)
-                        } else {
-                            rgb(0x333333)
-                        })
-                        .child(
+                        // Clone layout container for each line
+                        let layout_container_clone = layout_container.clone();
+                        
+                        this.child(
                             div()
                                 .flex()
                                 .flex_col()
                                 .items_start()
                                 .w_full()
                                 .children(
-                                    lines.iter().enumerate().map(|(line_idx, line)| {
-                                        let line_str = line.to_string();
-                                        let mut line_chars_before = 0;
+                                    lines.iter().enumerate().map({
+                                        let font_clone = font.clone();
+                                        let font_size_clone = font_size;
+                                        let line_height_clone = line_height;
+                                        let cursor_visible_clone = cursor_visible;
+                                        let cursor_line_idx_clone = cursor_line_idx;
+                                        let cursor_col_clone = cursor_col;
+                                        let layout_container_for_line = layout_container_clone.clone();
+                                        let line_offsets_clone = line_offsets.clone();
+                                        let has_selection_clone = has_selection;
+                                        let selection_start_clone = selection_start;
+                                        let selection_end_clone = selection_end;
                                         
-                                        // Calculate character count before this line
-                                        for (idx, l) in lines.iter().enumerate() {
-                                            if idx < line_idx {
-                                                line_chars_before += l.chars().count() + 1; // +1 for newline
-                                            }
-                                        }
-                                        
-                                        let line_start = line_chars_before;
-                                        let line_end = line_start + line_str.chars().count();
-                                        
-                                        // Check if this line has selection
-                                        let line_has_selection = has_selection && 
-                                            !(sel_end <= line_start || sel_start >= line_end);
-                                        
-                                        if line_has_selection {
-                                            // This line has selection
-                                            let sel_start_in_line = if sel_start > line_start {
-                                                sel_start - line_start
+                                        move |(line_idx, line)| {
+                                            let line_start = line_offsets_clone[line_idx];
+                                            let line_str = line.to_string();
+                                            let line_end = line_start + line_str.chars().count();
+                                            
+                                            // Build TextRun for this line
+                                            let (display_text, text_runs) = if !has_selection_clone {
+                                                // No selection: single text run
+                                                (line_str.clone(), vec![TextRun {
+                                                    len: line_str.len(),
+                                                    font: font_clone.clone(),
+                                                    color: rgb(0x333333).into(),
+                                                    background_color: None,
+                                                    underline: None,
+                                                    strikethrough: None,
+                                                }])
                                             } else {
-                                                0
-                                            };
-                                            let sel_end_in_line = if sel_end < line_end {
-                                                sel_end - line_start
-                                            } else {
-                                                line_str.chars().count()
+                                                // Check if this line has selection
+                                                let (sel_start, sel_end) = if let (Some(start), Some(end)) = (selection_start_clone, selection_end_clone) {
+                                                    if start <= end {
+                                                        (start, end)
+                                                    } else {
+                                                        (end, start)
+                                                    }
+                                                } else {
+                                                    (0, 0)
+                                                };
+                                                
+                                                let line_has_selection = !(sel_end <= line_start || sel_start >= line_end);
+                                                
+                                                if !line_has_selection {
+                                                    // No selection on this line
+                                                    (line_str.clone(), vec![TextRun {
+                                                        len: line_str.len(),
+                                                        font: font_clone.clone(),
+                                                        color: rgb(0x333333).into(),
+                                                        background_color: None,
+                                                        underline: None,
+                                                        strikethrough: None,
+                                                    }])
+                                                } else {
+                                                    // This line has selection
+                                                    let sel_start_in_line = if sel_start > line_start {
+                                                        sel_start - line_start
+                                                    } else {
+                                                        0
+                                                    };
+                                                    let sel_end_in_line = if sel_end < line_end {
+                                                        sel_end - line_start
+                                                    } else {
+                                                        line_str.chars().count()
+                                                    };
+                                                    
+                                                    let mut runs = Vec::new();
+                                                    
+                                                    // Text before selection
+                                                    if sel_start_in_line > 0 {
+                                                        runs.push(TextRun {
+                                                            len: sel_start_in_line,
+                                                            font: font_clone.clone(),
+                                                            color: rgb(0x333333).into(),
+                                                            background_color: None,
+                                                            underline: None,
+                                                            strikethrough: None,
+                                                        });
+                                                    }
+                                                    
+                                                    // Selected text
+                                                    if sel_end_in_line > sel_start_in_line {
+                                                        runs.push(TextRun {
+                                                            len: sel_end_in_line - sel_start_in_line,
+                                                            font: font_clone.clone(),
+                                                            color: rgb(0xFFFFFF).into(),
+                                                            background_color: Some(rgb(0x4A90E2).into()),
+                                                            underline: None,
+                                                            strikethrough: None,
+                                                        });
+                                                    }
+                                                    
+                                                    // Text after selection
+                                                    if sel_end_in_line < line_str.chars().count() {
+                                                        runs.push(TextRun {
+                                                            len: line_str.chars().count() - sel_end_in_line,
+                                                            font: font_clone.clone(),
+                                                            color: rgb(0x333333).into(),
+                                                            background_color: None,
+                                                            underline: None,
+                                                            strikethrough: None,
+                                                        });
+                                                    }
+                                                    
+                                                    (line_str.clone(), runs)
+                                                }
                                             };
                                             
-                                            let before_sel = line_str.chars().take(sel_start_in_line).collect::<String>();
-                                            let selected = line_str.chars().skip(sel_start_in_line).take(sel_end_in_line - sel_start_in_line).collect::<String>();
-                                            let after_sel = line_str.chars().skip(sel_end_in_line).collect::<String>();
+                                            let is_cursor_line = line_idx == cursor_line_idx_clone && !has_selection_clone;
                                             
                                             div()
                                                 .flex()
                                                 .flex_row()
                                                 .items_start()
-                                                .when(!before_sel.is_empty(), |el| el.child(before_sel))
-                                                .when(!selected.is_empty(), |el| {
+                                                .w_full()
+                                                .relative()
+                                                .child(
+                                                    // Text layer using canvas with TextRun API
+                                                    canvas(
+                                                        move |bounds, _, _cx| {
+                                                            gpui::size(bounds.size.width, line_height_clone)
+                                                        },
+                                                        {
+                                                            let display_text_clone = display_text.clone();
+                                                            let text_runs_clone = text_runs.clone();
+                                                            let line_idx_clone = line_idx;
+                                                            let layout_container_for_paint = layout_container_for_line.clone();
+                                                            
+                                                            move |bounds, _, window, _cx| {
+                                                                if !display_text_clone.is_empty() {
+                                                                    // Shape the line using TextRun
+                                                                    let shaped_line = window.text_system().shape_line(
+                                                                        display_text_clone.clone().into(),
+                                                                        font_size_clone,
+                                                                        &text_runs_clone,
+                                                                        None,
+                                                                    );
+                                                                    
+                                                                    // Save layout info for mouse position calculation
+                                                                    if let Ok(mut layouts) = layout_container_for_paint.lock() {
+                                                                        // Ensure vector is large enough
+                                                                        while layouts.len() <= line_idx_clone {
+                                                                            layouts.push(TextAreaLineLayout {
+                                                                                bounds: gpui::Bounds::default(),
+                                                                                shaped_line: shaped_line.clone(),
+                                                                            });
+                                                                        }
+                                                                        layouts[line_idx_clone] = TextAreaLineLayout {
+                                                                            bounds,
+                                                                            shaped_line: shaped_line.clone(),
+                                                                        };
+                                                                    }
+                                                                    
+                                                                    let origin = bounds.origin;
+                                                                    
+                                                                    // Paint background first (for selection)
+                                                                    shaped_line.paint_background(origin, line_height_clone, window, _cx).ok();
+                                                                    
+                                                                    // Then paint the text
+                                                                    shaped_line.paint(origin, line_height_clone, window, _cx).ok();
+                                                                }
+                                                            }
+                                                        },
+                                                    )
+                                                    .w_full()
+                                                    .h(line_height_clone)
+                                                )
+                                                .when(is_cursor_line && is_focused && !disabled && cursor_visible_clone, |el| {
+                                                    // Cursor layer
+                                                    let cursor_col_clone = cursor_col_clone;
+                                                    let line_str_clone = line_str.clone();
+                                                    let font_clone_for_cursor = font_clone.clone();
+                                                    
                                                     el.child(
-                                                        div()
-                                                            .bg(rgb(0x4A90E2))
-                                                            .text_color(rgb(0xFFFFFF))
-                                                            .child(selected)
+                                                        canvas(
+                                                            move |_bounds, _, _cx| {
+                                                                gpui::size(px(0.), px(0.))
+                                                            },
+                                                            move |bounds, _, window, _cx| {
+                                                                // Calculate cursor position
+                                                                let cursor_x = if cursor_col_clone == 0 || line_str_clone.is_empty() {
+                                                                    px(0.)
+                                                                } else {
+                                                                    let text_before = line_str_clone.chars().take(cursor_col_clone).collect::<String>();
+                                                                    if text_before.is_empty() {
+                                                                        px(0.)
+                                                                    } else {
+                                                                        let temp_runs = vec![TextRun {
+                                                                            len: text_before.len(),
+                                                                            font: font_clone_for_cursor.clone(),
+                                                                            color: rgb(0x333333).into(),
+                                                                            background_color: None,
+                                                                            underline: None,
+                                                                            strikethrough: None,
+                                                                        }];
+                                                                        let temp_line = window.text_system().shape_line(
+                                                                            text_before.into(),
+                                                                            font_size_clone,
+                                                                            &temp_runs,
+                                                                            None,
+                                                                        );
+                                                                        temp_line.width
+                                                                    }
+                                                                };
+                                                                
+                                                                // Draw cursor
+                                                                let cursor_bounds = gpui::Bounds {
+                                                                    origin: bounds.origin + gpui::point(cursor_x, px(1.)),
+                                                                    size: gpui::size(px(2.), px(18.)),
+                                                                };
+                                                                window.paint_quad(gpui::fill(cursor_bounds, rgb(0x000000)));
+                                                            },
+                                                        )
+                                                        .absolute()
+                                                        .top(px(0.))
+                                                        .left(px(0.))
+                                                        .w(px(0.))
+                                                        .h(line_height_clone)
                                                     )
                                                 })
-                                                .when(!after_sel.is_empty(), |el| el.child(after_sel))
-                                                // Don't show cursor when there's a selection
-                                        } else if line_idx == cursor_line_idx {
-                                            // This line contains the cursor but no selection
-                                            let before = line_str.chars().take(cursor_col).collect::<String>();
-                                            let after = line_str.chars().skip(cursor_col).collect::<String>();
-                                            
-                                            div()
-                                                .flex()
-                                                .flex_row()
-                                                .items_start()
-                                                .child(before)
-                                                .when(is_focused && !disabled, |el| {
-                                                    el.child(
-                                                        div()
-                                                            .w(px(2.))
-                                                            .h(px(20.))
-                                                            .bg(rgb(0x333333))
-                                                            .flex_shrink_0()
-                                                    )
-                                                })
-                                                .child(after)
-                                        } else {
-                                            // Regular line without cursor or selection
-                                            div()
-                                                .flex()
-                                                .flex_row()
-                                                .child(line_str)
                                         }
                                     })
                                 )
