@@ -381,7 +381,7 @@ let constrained_select = cx.new(|cx| {
 
 ## TextInput
 
-Text input field component.
+A powerful single-line text input component with full editing capabilities.
 
 ### Constructor
 
@@ -399,6 +399,23 @@ TextInput::new(cx: &mut Context<Self>) -> Self
 | `.disabled()` | `bool` | Enable/disable the input |
 | `.max_length()` | `usize` | Set maximum length |
 | `.validator()` | `fn(&str) -> bool` | Set validation function |
+
+### Features
+
+**✨ IME Support** - Full support for Chinese, Japanese, Korean input with proper multi-byte character handling
+
+**🖱️ Mouse Selection** - Click to position cursor, drag to select, Shift+Click to extend
+
+**⌨️ Keyboard Shortcuts**
+- `Cmd+A` / `Ctrl+A` - Select all
+- `Shift+Arrow` - Extend selection
+- `Shift+Home/End` - Extend to start/end
+- `Backspace` / `Delete` - Delete character or selection
+
+**🎨 Visual Features**
+- Cursor blinking animation
+- Smooth selection highlighting
+- No width jitter during selection
 
 ### Events
 
@@ -427,6 +444,86 @@ cx.subscribe_in(&input, window, |_, _, event, _, _| {
             println!("Value: {}", value);
         }
         TextInputEvent::Submit(value) => {
+            println!("Submitted: {}", value);
+        }
+        _ => {}
+    }
+}).detach();
+```
+
+---
+
+## TextArea
+
+A multi-line text area component with full editing capabilities.
+
+### Constructor
+
+```rust
+TextArea::new(cx: &mut Context<Self>) -> Self
+```
+
+### Methods
+
+| Method | Type | Description |
+|--------|------|-------------|
+| `.placeholder()` | `impl Into<SharedString>` | Set placeholder text |
+| `.value()` | `impl Into<String>` | Set initial value |
+| `.disabled()` | `bool` | Enable/disable the textarea |
+| `.max_length()` | `usize` | Set maximum length |
+| `.min_height()` | `f32` | Set minimum height in pixels |
+| `.max_height()` | `f32` | Set maximum height in pixels |
+| `.bg_color()` | `Rgba` | Set custom background color |
+| `.border_color()` | `Rgba` | Set custom border color |
+| `.focus_border_color()` | `Rgba` | Set custom focus border color |
+| `.no_border()` | - | Remove border |
+
+### Features
+
+**🖱️ Mouse Selection** - Click to position cursor in multi-line text, drag to select across lines, Shift+Click to extend, double-click to select all
+
+**⌨️ Keyboard Shortcuts**
+- `Cmd+A` / `Ctrl+A` - Select all
+- `Shift+Arrow` - Extend selection
+- `Shift+Enter` - Insert newline
+- `Enter` - Submit (without Shift)
+- `Backspace` / `Delete` - Delete character or selection
+
+**🎨 Visual Features**
+- Automatic height adjustment based on content
+- Cursor blinking animation
+- Smooth selection highlighting
+- No width jitter during selection
+
+### Events
+
+```rust
+pub enum TextAreaEvent {
+    Change(String),  // Value changed
+    Submit(String),  // Enter key pressed (without Shift)
+    Focus,           // Textarea focused
+    Blur,            // Textarea blurred
+}
+```
+
+### Example
+
+```rust
+let textarea = cx.new(|cx| {
+    TextArea::new(cx)
+        .placeholder("Type your message...")
+        .min_height(80.0)
+        .max_height(200.0)
+        .bg_color(rgb(0xF0F9FF))
+        .border_color(rgb(0x3B82F6))
+});
+
+cx.subscribe_in(&textarea, window, |_, _, event, _, _| {
+    match event {
+        TextAreaEvent::Change(value) => {
+            println!("Content: {}", value);
+        }
+        TextAreaEvent::Submit(value) => {
             println!("Submitted: {}", value);
         }
         _ => {}

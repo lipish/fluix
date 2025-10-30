@@ -354,6 +354,8 @@ Select::new("languages")
 
 ## 📝 TextInput Component
 
+A powerful single-line text input component with full editing capabilities.
+
 ### Basic Usage
 
 ```rust
@@ -393,12 +395,43 @@ impl MyView {
 }
 ```
 
+### Features
+
+TextInput includes many advanced features:
+
+**✨ IME Support**
+- Full support for Chinese, Japanese, Korean input
+- Proper handling of multi-byte characters
+- Accurate cursor positioning
+
+**🖱️ Mouse Selection**
+- Click to position cursor precisely
+- Drag to select text
+- Shift+Click to extend selection
+- Double-click to select word (upcoming)
+
+**⌨️ Keyboard Shortcuts**
+- `Cmd+A` / `Ctrl+A` - Select all text
+- `Shift+Left/Right` - Extend selection
+- `Shift+Home/End` - Extend selection to start/end
+- `Left/Right` - Move cursor
+- `Home/End` - Jump to start/end
+- `Backspace` - Delete character or selection
+- `Delete` - Delete character at cursor
+- `Enter` - Submit input
+
+**🎨 Visual Features**
+- Cursor blinking animation (530ms interval)
+- Cursor hides when text is selected
+- Smooth text selection highlighting
+- No width jitter during selection
+
 ### Password Input
 
 ```rust
 TextInput::new(cx)
     .placeholder("Enter password")
-    .password(true)  // Mask characters
+    .password(true)  // Mask characters with bullets
 ```
 
 ### Input Validation
@@ -417,6 +450,131 @@ TextInput::new(cx)
 TextInput::new(cx)
     .placeholder("Username (max 20 chars)")
     .max_length(20)
+```
+
+### Pre-filled Value
+
+```rust
+TextInput::new(cx)
+    .value("Initial text")
+    .placeholder("Enter text...")
+```
+
+### Disabled State
+
+```rust
+TextInput::new(cx)
+    .value("Cannot edit this")
+    .disabled(true)
+```
+
+## 📄 TextArea Component
+
+A multi-line text area component with full editing capabilities.
+
+### Basic Usage
+
+```rust
+struct MyView {
+    textarea: Entity<TextArea>,
+}
+
+impl MyView {
+    fn new(window: &mut Window, cx: &mut Context<Self>) -> Self {
+        let textarea = cx.new(|cx| {
+            TextArea::new(cx)
+                .placeholder("Type your message...")
+                .min_height(80.0)
+                .max_height(200.0)
+        });
+
+        cx.subscribe_in(&textarea, window, Self::on_textarea).detach();
+
+        Self { textarea }
+    }
+
+    fn on_textarea(
+        &mut self,
+        _: &Entity<TextArea>,
+        event: &TextAreaEvent,
+        _: &mut Window,
+        _: &mut Context<Self>,
+    ) {
+        match event {
+            TextAreaEvent::Change(value) => {
+                println!("Content changed: {}", value);
+            }
+            TextAreaEvent::Submit(value) => {
+                println!("Submitted: {}", value);
+            }
+            _ => {}
+        }
+    }
+}
+```
+
+### Features
+
+TextArea shares many features with TextInput:
+
+**🖱️ Mouse Selection**
+- Click to position cursor in multi-line text
+- Drag to select text across multiple lines
+- Shift+Click to extend selection
+- Double-click to select all text
+
+**⌨️ Keyboard Shortcuts**
+- `Cmd+A` / `Ctrl+A` - Select all text
+- `Shift+Left/Right` - Extend selection
+- `Shift+Home/End` - Extend selection to start/end
+- `Shift+Enter` - Insert newline
+- `Enter` - Submit (without Shift)
+- `Backspace` / `Delete` - Delete character or selection
+
+**🎨 Visual Features**
+- Automatic height adjustment based on content
+- Cursor blinking animation
+- Smooth text selection highlighting
+- No width jitter during selection
+
+### Custom Styling
+
+```rust
+TextArea::new(cx)
+    .placeholder("Styled textarea...")
+    .min_height(60.0)
+    .max_height(200.0)
+    .bg_color(rgb(0xF0F9FF))          // Light blue background
+    .border_color(rgb(0x3B82F6))       // Blue border
+    .focus_border_color(rgb(0x2563EB)) // Darker blue on focus
+```
+
+### Borderless TextArea
+
+```rust
+TextArea::new(cx)
+    .placeholder("No border...")
+    .bg_color(rgb(0xFAFAFA))
+    .no_border()
+```
+
+### Height Constraints
+
+```rust
+// Fixed height
+TextArea::new(cx)
+    .min_height(100.0)
+    .max_height(100.0)
+
+// Flexible height
+TextArea::new(cx)
+    .min_height(80.0)
+    // No max_height = unlimited
+
+// Auto-growing
+TextArea::new(cx)
+    .min_height(50.0)
+    // Height grows with content
 ```
 
 ## ✅ Checkbox Component
