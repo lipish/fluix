@@ -1,6 +1,13 @@
 use gpui::*;
 use gpui::prelude::FluentBuilder;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
+
+// Element state for storing layout information
+#[derive(Clone)]
+struct TextInputLayout {
+    bounds: Bounds<Pixels>,
+    shaped_line: ShapedLine,
+}
 
 // ============================================================================
 // Events
@@ -51,6 +58,10 @@ pub struct TextInput {
     cursor_visible: bool,
     /// Blink task handle
     _blink_task: Option<Task<()>>,
+    /// Whether mouse is currently dragging for selection
+    is_dragging: bool,
+    /// Last layout info for mouse position calculation
+    last_layout: Option<TextInputLayout>,
 }
 
 impl TextInput {
@@ -70,6 +81,8 @@ impl TextInput {
             blink_epoch: 0,
             cursor_visible: true,
             _blink_task: None,
+            is_dragging: false,
+            last_layout: None,
         }
     }
 
@@ -222,6 +235,42 @@ impl TextInput {
             });
         });
         self._blink_task = Some(task);
+    }
+
+    /// Calculate character index from mouse position
+    fn index_for_mouse_position(&self, position: Point<Pixels>) -> usize {
+        if self.value.is_empty() {
+            return 0;
+        }
+
+        let Some(layout) = &self.last_layout else {
+            return self.value.len();
+        };
+
+        // Check if click is within bounds
+        if position.y < layout.bounds.top() {
+            return 0;
+        }
+        if position.y > layout.bounds.bottom() {
+            return self.value.len();
+        }
+
+        // Calculate relative x position
+        let relative_x = position.x - layout.bounds.left();
+        
+        // Use ShapedLine to find closest character index
+        let byte_index = layout.shaped_line.closest_index_for_x(relative_x);
+        
+        // For password mode, we need to convert from display text index to actual value index
+        if self.is_password {
+            // Each bullet is 3 bytes, each character in value is variable bytes
+            let bullet_len = "•".len(); // 3 bytes
+            let char_index = byte_index / bullet_len;
+            // Convert character index to byte index in actual value
+            self.value.char_indices().nth(char_index).map(|(i, _)| i).unwrap_or(self.value.len())
+        } else {
+            byte_index.min(self.value.len())
+        }
     }
 
     /// Build TextRun array for rendering with selection support
@@ -576,6 +625,9 @@ impl Render for TextInput {
         let show_placeholder = self.value.is_empty();
         let disabled = self.disabled;
         let placeholder = self.placeholder.clone();
+        
+        // Create a shared container for layout info that will be filled during paint
+        let layout_container: Arc<Mutex<Option<TextInputLayout>>> = Arc::new(Mutex::new(None));
 
         div()
             .id("text-input")
@@ -634,15 +686,63 @@ impl Render for TextInput {
                     }
                 }
             }))
-            .on_mouse_down(MouseButton::Left, cx.listener(|this, _, window, cx| {
-                cx.emit(TextInputEvent::Focus);
-                cx.focus_self(window);
-                // Clear selection on click
-                this.clear_selection();
-                // For now, move cursor to end on click
-                // (Precise click positioning would require pixel-to-char calculation)
-                this.cursor_position = this.value.len();
+            .on_mouse_down(MouseButton::Left, {
+                let layout_container = layout_container.clone();
+                cx.listener(move |this, event: &MouseDownEvent, window, cx| {
+                    cx.emit(TextInputEvent::Focus);
+                    cx.focus_self(window);
+                    
+                    // Update last_layout from the container
+                    if let Ok(layout) = layout_container.lock() {
+                        this.last_layout = layout.clone();
+                    }
+                    
+                    // Start dragging
+                    this.is_dragging = true;
+                    
+                    // Calculate click position
+                    let index = this.index_for_mouse_position(event.position);
+                    
+                    if event.modifiers.shift {
+                        // Shift+click extends selection
+                        if !this.has_selection() {
+                            this.selection_start = Some(this.cursor_position);
+                            this.selection_end = Some(index);
+                        } else {
+                            // Extend existing selection
+                            this.selection_end = Some(index);
+                        }
+                    } else {
+                        // Normal click - clear selection and set cursor
+                        this.clear_selection();
+                    }
+                    
+                    this.cursor_position = index;
+                    this.pause_blinking(cx);
+                    cx.notify();
+                })
+            })
+            .on_mouse_up(MouseButton::Left, cx.listener(|this, _event: &MouseUpEvent, _window, cx| {
+                this.is_dragging = false;
                 cx.notify();
+            }))
+            .on_mouse_move(cx.listener(|this, event: &MouseMoveEvent, _window, cx| {
+                if this.is_dragging {
+                    // Update selection while dragging
+                    let index = this.index_for_mouse_position(event.position);
+                    
+                    if !this.has_selection() {
+                        // Start new selection from cursor position
+                        this.selection_start = Some(this.cursor_position);
+                        this.selection_end = Some(index);
+                    } else {
+                        // Update selection end
+                        this.selection_end = Some(index);
+                    }
+                    
+                    this.cursor_position = index;
+                    cx.notify();
+                }
             }))
             .flex()
             .items_center()
@@ -721,6 +821,9 @@ impl Render for TextInput {
                         let has_selection = self.has_selection();
                         let cursor_visible = self.cursor_visible;
                         
+                        // Clone layout container for use in canvas closure
+                        let layout_container_for_canvas = layout_container.clone();
+                        
                         // Use TextRun API to render text with selection
                         // This ensures consistent width regardless of selection state
                         
@@ -749,6 +852,14 @@ impl Render for TextInput {
                                                     &text_runs,
                                                     None,
                                                 );
+                                                
+                                                // Save layout info for mouse position calculation
+                                                if let Ok(mut layout) = layout_container_for_canvas.lock() {
+                                                    *layout = Some(TextInputLayout {
+                                                        bounds,
+                                                        shaped_line: shaped_line.clone(),
+                                                    });
+                                                }
                                                 
                                                 // origin should be the TOP of the line, not the baseline
                                                 // paint() and paint_background() will calculate baseline internally
