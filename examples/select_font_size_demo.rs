@@ -36,7 +36,7 @@ struct SelectFontSizeDemo {
 }
 
 impl SelectFontSizeDemo {
-    fn new(window: &mut Window, cx: &mut Context<Self>) -> Self {
+    fn new(_window: &mut Window, cx: &mut Context<Self>) -> Self {
         let scroll_handle = ScrollHandle::new();
         let options = vec![
             SelectOption::new("react", "React"),
