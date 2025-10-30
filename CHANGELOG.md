@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.18] - 2025-10-30
+
+### Improved - Select Component
+- **Enhanced Grouped Options Design** 🎨
+  - Improved group label styling with bold, dark text for better visibility
+  - Added indentation for grouped options (sub-items) to show hierarchy
+  - Added separator lines below each group for clear visual distinction
+  - Cleaner, more professional appearance matching modern UI patterns
+
+- **Compact Mode Enhancements** 📏
+  - More compact spacing for dropdown items in compact mode
+  - Reduced padding for group labels (py: 4px) and option items (py: 3px)
+  - Reduced spacing between groups (mt: 2px) and separator margins (mt: 1px)
+  - Better space utilization for long option lists
+
+### Fixed - Select Component
+- **Demo Window and Layout** 🔧
+  - Increased demo window height (1000px) to accommodate dropdown menus
+  - Added bottom padding (250px) to prevent dropdown cutoff
+  - Moved grouped options section to second position in demo layout
+  - Added compact mode example for comparison
+
+### Changed - Select Component
+- **Group Rendering** 🔄
+  - Separator lines now appear below each group instead of above
+  - Group labels use darker text color for better contrast
+  - Improved spacing for grouped option items
+
 ## [0.1.17] - 2025-10-30
 
 ### Added - TextInput Component

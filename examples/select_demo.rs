@@ -11,7 +11,7 @@ fn main() {
         let window_options = WindowOptions {
             window_bounds: Some(WindowBounds::Windowed(Bounds {
                 origin: point(px(100.), px(100.)),
-                size: size(px(900.), px(700.)),
+                size: size(px(900.), px(1000.)),
             })),
             titlebar: Some(TitlebarOptions {
                 title: Some("Fluix Select Demo".into()),
@@ -34,10 +34,12 @@ struct SelectDemo {
     disabled_select: Entity<Select>,
     multi_select: Entity<Select>,
     grouped_select: Entity<Select>,
+    compact_grouped_select: Entity<Select>,
     selected_framework: String,
     selected_size: String,
     selected_languages: Vec<String>,
     selected_country: String,
+    selected_country_compact: String,
 }
 
 impl SelectDemo {
@@ -119,6 +121,32 @@ impl SelectDemo {
                     ]),
                 ])
         });
+        
+        // Compact grouped select for comparison
+        let compact_grouped_select = cx.new(|cx| {
+            Select::new(cx)
+                .placeholder("Select country (compact)...")
+                .compact()
+                .option_groups(vec![
+                    SelectOptionGroup::new("North America", vec![
+                        SelectOption::new("us", "United States"),
+                        SelectOption::new("ca", "Canada"),
+                        SelectOption::new("mx", "Mexico"),
+                    ]),
+                    SelectOptionGroup::new("Europe", vec![
+                        SelectOption::new("uk", "United Kingdom"),
+                        SelectOption::new("de", "Germany"),
+                        SelectOption::new("fr", "France"),
+                        SelectOption::new("es", "Spain"),
+                    ]),
+                    SelectOptionGroup::new("Asia", vec![
+                        SelectOption::new("cn", "China"),
+                        SelectOption::new("jp", "Japan"),
+                        SelectOption::new("kr", "South Korea"),
+                        SelectOption::new("in", "India"),
+                    ]),
+                ])
+        });
 
         // Subscribe to events
         cx.subscribe_in(&framework_select, _window, |this: &mut Self, _select, event: &SelectEvent, _window, cx| {
@@ -153,6 +181,14 @@ impl SelectDemo {
             }
         }).detach();
 
+        cx.subscribe_in(&compact_grouped_select, _window, |this: &mut Self, _select, event: &SelectEvent, _window, cx| {
+            if let SelectEvent::Changed(value) = event {
+                this.selected_country_compact = value.clone();
+                println!("Country selected (compact): {}", value);
+                cx.notify();
+            }
+        }).detach();
+
         Self {
             scroll_handle,
             framework_select,
@@ -160,10 +196,12 @@ impl SelectDemo {
             disabled_select,
             multi_select,
             grouped_select,
+            compact_grouped_select,
             selected_framework: String::new(),
             selected_size: "medium".to_string(),
             selected_languages: Vec::new(),
             selected_country: String::new(),
+            selected_country_compact: String::new(),
         }
     }
 }
@@ -185,6 +223,7 @@ impl Render for SelectDemo {
                             .flex_col()
                             .bg(rgb(0xF5F5F5))
                             .p_8()
+                            .pb(px(250.))
                             .gap_8()
                             .child(
                 // Header
@@ -302,61 +341,6 @@ impl Render for SelectDemo {
                     )
             )
             .child(
-                // Multi-select section
-                div()
-                    .flex()
-                    .flex_col()
-                    .w_full()
-                    .max_w(px(600.))
-                    .p_6()
-                    .bg(rgb(0xFFFFFF))
-                    .border_1()
-                    .border_color(rgb(0xE0E0E0))
-                    .rounded(px(8.))
-                    .gap_6()
-                    .child(
-                        div()
-                            .flex()
-                            .flex_col()
-                            .gap_1()
-                            .child(
-                                div()
-                                    .text_lg()
-                                    .font_weight(FontWeight::SEMIBOLD)
-                                    .text_color(rgb(0x333333))
-                                    .child("Multi-Select")
-                            )
-                            .child(
-                                div()
-                                    .text_sm()
-                                    .text_color(rgb(0x666666))
-                                    .child("Select multiple options with checkboxes")
-                            )
-                    )
-                    .child(
-                        div()
-                            .flex()
-                            .flex_col()
-                            .gap_2()
-                            .child(
-                                div()
-                                    .text_sm()
-                                    .font_weight(FontWeight::MEDIUM)
-                                    .text_color(rgb(0x333333))
-                                    .child("Programming Languages")
-                            )
-                            .child(self.multi_select.clone())
-                            .when(!self.selected_languages.is_empty(), |this| {
-                                this.child(
-                                    div()
-                                        .text_xs()
-                                        .text_color(rgb(0x666666))
-                                        .child(format!("Selected: {}", self.selected_languages.join(", ")))
-                                )
-                            })
-                    )
-            )
-            .child(
                 // Grouped select section
                 div()
                     .flex()
@@ -407,6 +391,84 @@ impl Render for SelectDemo {
                                         .text_xs()
                                         .text_color(rgb(0x666666))
                                         .child(format!("Selected: {}", self.selected_country))
+                                )
+                            })
+                            .child(
+                                div()
+                                    .mt(px(4.))
+                                    .flex()
+                                    .flex_col()
+                                    .gap_2()
+                                    .child(
+                                        div()
+                                            .text_sm()
+                                            .font_weight(FontWeight::MEDIUM)
+                                            .text_color(rgb(0x333333))
+                                            .child("Country Selection (Compact)")
+                                    )
+                                    .child(self.compact_grouped_select.clone())
+                                    .when(!self.selected_country_compact.is_empty(), |this| {
+                                        this.child(
+                                            div()
+                                                .text_xs()
+                                                .text_color(rgb(0x666666))
+                                                .child(format!("Selected: {}", self.selected_country_compact))
+                                        )
+                                    })
+                            )
+                    )
+            )
+            .child(
+                // Multi-select section
+                div()
+                    .flex()
+                    .flex_col()
+                    .w_full()
+                    .max_w(px(600.))
+                    .p_6()
+                    .bg(rgb(0xFFFFFF))
+                    .border_1()
+                    .border_color(rgb(0xE0E0E0))
+                    .rounded(px(8.))
+                    .gap_6()
+                    .child(
+                        div()
+                            .flex()
+                            .flex_col()
+                            .gap_1()
+                            .child(
+                                div()
+                                    .text_lg()
+                                    .font_weight(FontWeight::SEMIBOLD)
+                                    .text_color(rgb(0x333333))
+                                    .child("Multi-Select")
+                            )
+                            .child(
+                                div()
+                                    .text_sm()
+                                    .text_color(rgb(0x666666))
+                                    .child("Select multiple options with checkboxes")
+                            )
+                    )
+                    .child(
+                        div()
+                            .flex()
+                            .flex_col()
+                            .gap_2()
+                            .child(
+                                div()
+                                    .text_sm()
+                                    .font_weight(FontWeight::MEDIUM)
+                                    .text_color(rgb(0x333333))
+                                    .child("Programming Languages")
+                            )
+                            .child(self.multi_select.clone())
+                            .when(!self.selected_languages.is_empty(), |this| {
+                                this.child(
+                                    div()
+                                        .text_xs()
+                                        .text_color(rgb(0x666666))
+                                        .child(format!("Selected: {}", self.selected_languages.join(", ")))
                                 )
                             })
                     )

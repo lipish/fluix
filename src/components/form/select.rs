@@ -538,29 +538,47 @@ impl Select {
         // Render grouped or flat options
         if has_groups {
             let mut item_counter: usize = 0;
-            menu = menu.children(self.option_groups.iter().enumerate().map(|(_group_idx, group)| {
+            menu = menu.children(self.option_groups.iter().enumerate().map(|(group_idx, group)| {
                 div()
                     .flex()
                     .flex_col()
-                    .gap_1()
+                    .map(|this| {
+                        // Add top margin for groups after the first one
+                        if group_idx > 0 {
+                            this.mt(if self.compact { px(2.) } else { px(4.) })
+                        } else {
+                            this
+                        }
+                    })
                     .child({
-                        // Group label with compact spacing
-                        let label_py = if self.compact { px(3.) } else { px(6.) };
+                        // Group label with clear, bold styling
+                        let label_py = if self.compact { px(4.) } else { px(8.) };
                         let label_px = if self.compact { px(8.) } else { px(12.) };
 
                         div()
                             .px(label_px)
                             .py(label_py)
-                            .text_xs()
-                            .font_weight(FontWeight::SEMIBOLD)
-                            .text_color(theme.colors.text_secondary)
+                            .text_sm()
+                            .font_weight(FontWeight::BOLD)
+                            .text_color(theme.colors.text)
                             .child(group.label.clone())
                     })
                     .children(group.options.iter().map(|option| {
                         let id = ("select-group-item", item_counter);
                         item_counter += 1;
-                        self.render_option(option, id, theme, cx)
+                        // Wrap option with indentation for grouped items
+                        div()
+                            .pl(px(8.))
+                            .child(self.render_option(option, id, theme, cx))
                     }))
+                    .child(
+                        // Separator line below the last option in this group
+                        div()
+                            .h(px(1.))
+                            .bg(theme.colors.border)
+                            .mx(px(12.))
+                            .mt(if self.compact { px(1.) } else { px(2.) })
+                    )
             }));
         } else {
             menu = menu.children(self.options.iter().enumerate().map(|(idx, option)| {
@@ -585,7 +603,7 @@ impl Select {
         };
 
         // Use compact spacing if enabled
-        let padding_y = if self.compact { px(4.) } else { px(8.) };
+        let padding_y = if self.compact { px(3.) } else { px(8.) };
         let padding_x = if self.compact { px(8.) } else { px(12.) };
 
         div()
