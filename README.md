@@ -25,7 +25,7 @@
 
 ```toml
 [dependencies]
-fluix = "0.1"
+fluix = "0.1.16"
 gpui = "0.2"
 ```
 
@@ -61,7 +61,7 @@ gpui = "0.2"
 
 ```toml
 [dependencies]
-fluix = "0.1.7"
+fluix = "0.1.16"
 gpui = "0.2"
 ```
 
@@ -199,13 +199,20 @@ cx.subscribe_in(&textarea, window, |_, _, event: &TextAreaEvent, _, _| {
 
 **Keyboard Shortcuts:**
 - `Cmd+A` / `Ctrl+A` - Select all text
-- `Shift+Enter` - Insert newline
+- `Shift+Arrow` - Extend selection
+- `Shift+Click` - Extend selection
+- `Click` - Position cursor
+- `Drag` - Select text
+- `Shift+Enter` - Insert newline (TextArea only)
 - `Enter` - Submit
 - `Backspace` - Delete character or selected text
+- `Delete` - Delete character at cursor
 
 **Mouse Actions:**
-- `Double-click` - Select all text
-- `Single-click` - Focus and position cursor
+- `Click` - Position cursor precisely
+- `Drag` - Select text
+- `Double-click` - Select all text (TextArea)
+- `Shift+Click` - Extend selection
 
 ## 📚 组件列表
 
@@ -367,6 +374,6 @@ MIT License
 
 ---
 
-**当前版本**: v0.1.1  
+**当前版本**: v0.1.16  
 **已实现组件**: 4/46 (8.7%)  
-**最后更新**: 2025-10-25
+**最后更新**: 2025-10-30

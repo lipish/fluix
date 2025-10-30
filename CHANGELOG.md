@@ -5,6 +5,87 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.16] - 2025-10-30
+
+### Added - TextInput Component
+- **Mouse Selection Support** 🖱️
+  - Click to position cursor accurately
+  - Drag to select text
+  - Shift+Click to extend selection
+  - Precise character positioning using `ShapedLine::closest_index_for_x()`
+  - Layout information storage for accurate mouse position calculation
+
+- **Cursor Blinking Animation** ✨
+  - Automatic cursor blinking when focused (530ms interval)
+  - Cursor visibility toggles automatically
+  - Cursor pauses blinking during user input
+  - Cursor hides automatically when text is selected
+
+- **TextRun API Rendering** 🎨
+  - Use TextRun API with `background_color` for selection highlighting
+  - Prevents width jitter during text selection
+  - Consistent text width regardless of selection state
+  - Canvas-based rendering for precise cursor positioning
+
+### Added - TextArea Component
+- **Mouse Selection Support** 🖱️
+  - Click to position cursor in multi-line text
+  - Drag to select text across multiple lines
+  - Shift+Click to extend selection
+  - Per-line layout information storage
+  - Accurate character positioning using text measurement
+
+- **Cursor Blinking Animation** ✨
+  - Automatic cursor blinking when focused
+  - Cursor hides when text is selected
+  - Smooth blinking animation
+
+- **TextRun API Rendering** 🎨
+  - Use TextRun API for rendering each line
+  - Prevents width jitter during text selection
+  - Stable text width regardless of selection state
+  - Canvas-based rendering for each line
+
+- **Delete Key Support** ⌨️
+  - Added `handle_delete()` method
+  - Delete character at cursor position
+  - Delete selected text when selection exists
+
+### Improved
+- **TextInput Selection Stability** 📏
+  - Fixed width jitter issue when selecting text
+  - Consistent text width during selection
+  - Smooth selection experience
+
+- **TextArea Selection Stability** 📏
+  - Fixed width jitter issue when selecting text
+  - Consistent text width during selection
+  - Smooth multi-line selection experience
+
+### Technical Details
+- TextInput: Added `is_dragging`, `last_layout`, `cursor_visible`, `blink_epoch` fields
+- TextInput: Added `index_for_mouse_position()` for mouse position calculation
+- TextInput: Added `build_text_runs()` for TextRun API rendering
+- TextInput: Canvas-based rendering with `shape_line()` and `paint_background()`
+- TextArea: Added `is_dragging`, `last_layout`, `cursor_visible`, `blink_epoch` fields
+- TextArea: Added `index_for_mouse_position()` for multi-line mouse position calculation
+- TextArea: Added `build_line_text_runs()` for per-line TextRun API rendering
+- TextArea: Canvas-based rendering for each line with layout information storage
+- Both components: Use `ShapedLine::closest_index_for_x()` for precise character positioning
+
+### Examples
+- Updated `text_input_demo.rs` with mouse selection feature descriptions
+- Updated `text_input_cursor_demo.rs` with mouse selection instructions
+
+### Keyboard Shortcuts
+- **TextInput & TextArea**:
+  - `Cmd/Ctrl+A`: Select all text
+  - `Shift+Arrow`: Extend selection
+  - `Shift+Click`: Extend selection
+  - `Click`: Position cursor
+  - `Drag`: Select text
+  - `Delete`: Delete character at cursor
+
 ## [0.1.15] - 2025-10-29
 
 ### Fixed - TextInput Component
