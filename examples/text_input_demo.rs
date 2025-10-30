@@ -281,13 +281,195 @@ impl Render for TextInputDemo {
                                     .text_2xl()
                                     .font_weight(FontWeight::BOLD)
                                     .text_color(rgb(0x333333))
-                                    .child("Fluix TextArea Demo")
+                                    .child("Fluix TextInput Demo")
                             )
                             .child(
                                 div()
                                     .text_sm()
                                     .text_color(rgb(0x666666))
-                                    .child("Multi-line text editor component")
+                                    .child("Single-line text input with mouse selection support")
+                            )
+                    )
+                    .child(
+                        // Basic TextInput
+                        div()
+                            .flex()
+                            .flex_col()
+                            .gap_6()
+                            .bg(rgb(0xFFFFFF))
+                            .border_1()
+                            .border_color(rgb(0xE0E0E0))
+                            .rounded(px(8.))
+                            .p_6()
+                            .child(
+                                div()
+                                    .flex()
+                                    .flex_col()
+                                    .gap_2()
+                                    .w_full()
+                                    .child(
+                                        div()
+                                            .text_sm()
+                                            .font_weight(FontWeight::SEMIBOLD)
+                                            .text_color(rgb(0x333333))
+                                            .child("Basic TextInput")
+                                    )
+                                    .child(
+                                        div()
+                                            .w_full()
+                                            .child(self.basic_input.clone())
+                                    )
+                                    .child(
+                                        div()
+                                            .text_xs()
+                                            .text_color(rgb(0x666666))
+                                            .child(format!("Value: '{}'", self.basic_value))
+                                    )
+                            )
+                    )
+                    .child(
+                        // Password Input
+                        div()
+                            .flex()
+                            .flex_col()
+                            .gap_6()
+                            .bg(rgb(0xFFFFFF))
+                            .border_1()
+                            .border_color(rgb(0xE0E0E0))
+                            .rounded(px(8.))
+                            .p_6()
+                            .child(
+                                div()
+                                    .flex()
+                                    .flex_col()
+                                    .gap_2()
+                                    .w_full()
+                                    .child(
+                                        div()
+                                            .text_sm()
+                                            .font_weight(FontWeight::SEMIBOLD)
+                                            .text_color(rgb(0x333333))
+                                            .child("Password Input")
+                                    )
+                                    .child(
+                                        div()
+                                            .w_full()
+                                            .child(self.password_input.clone())
+                                    )
+                                    .child(
+                                        div()
+                                            .text_xs()
+                                            .text_color(rgb(0x666666))
+                                            .child(format!("Length: {}", self.password_value.len()))
+                                    )
+                            )
+                    )
+                    .child(
+                        // Limited Length Input
+                        div()
+                            .flex()
+                            .flex_col()
+                            .gap_6()
+                            .bg(rgb(0xFFFFFF))
+                            .border_1()
+                            .border_color(rgb(0xE0E0E0))
+                            .rounded(px(8.))
+                            .p_6()
+                            .child(
+                                div()
+                                    .flex()
+                                    .flex_col()
+                                    .gap_2()
+                                    .w_full()
+                                    .child(
+                                        div()
+                                            .text_sm()
+                                            .font_weight(FontWeight::SEMIBOLD)
+                                            .text_color(rgb(0x333333))
+                                            .child("Limited Length (Max 10 chars)")
+                                    )
+                                    .child(
+                                        div()
+                                            .w_full()
+                                            .child(self.limited_input.clone())
+                                    )
+                                    .child(
+                                        div()
+                                            .text_xs()
+                                            .text_color(rgb(0x666666))
+                                            .child(format!("Value: '{}' | Length: {}/10", 
+                                                self.limited_value, 
+                                                self.limited_value.len()
+                                            ))
+                                    )
+                            )
+                    )
+                    .child(
+                        // Validated Input
+                        div()
+                            .flex()
+                            .flex_col()
+                            .gap_6()
+                            .bg(rgb(0xFFFFFF))
+                            .border_1()
+                            .border_color(rgb(0xE0E0E0))
+                            .rounded(px(8.))
+                            .p_6()
+                            .child(
+                                div()
+                                    .flex()
+                                    .flex_col()
+                                    .gap_2()
+                                    .w_full()
+                                    .child(
+                                        div()
+                                            .text_sm()
+                                            .font_weight(FontWeight::SEMIBOLD)
+                                            .text_color(rgb(0x333333))
+                                            .child("Numbers Only (Validator)")
+                                    )
+                                    .child(
+                                        div()
+                                            .w_full()
+                                            .child(self.validated_input.clone())
+                                    )
+                                    .child(
+                                        div()
+                                            .text_xs()
+                                            .text_color(rgb(0x666666))
+                                            .child(format!("Value: '{}'", self.validated_value))
+                                    )
+                            )
+                    )
+                    .child(
+                        // Disabled Input
+                        div()
+                            .flex()
+                            .flex_col()
+                            .gap_6()
+                            .bg(rgb(0xFFFFFF))
+                            .border_1()
+                            .border_color(rgb(0xE0E0E0))
+                            .rounded(px(8.))
+                            .p_6()
+                            .child(
+                                div()
+                                    .flex()
+                                    .flex_col()
+                                    .gap_2()
+                                    .w_full()
+                                    .child(
+                                        div()
+                                            .text_sm()
+                                            .font_weight(FontWeight::SEMIBOLD)
+                                            .text_color(rgb(0x333333))
+                                            .child("Disabled Input")
+                                    )
+                                    .child(
+                                        div()
+                                            .w_full()
+                                            .child(self.disabled_input.clone())
+                                    )
                             )
                     )
                     .child(
@@ -405,40 +587,58 @@ impl Render for TextInputDemo {
                             )
                     )
                     .child(
-                        // Instructions
+                        // Instructions - TextInput
                         div()
                             .flex()
                             .flex_col()
                             .gap_2()
-                            .bg(rgb(0xFFF9E6))
+                            .bg(rgb(0xDEF7FF))
                             .border_1()
-                            .border_color(rgb(0xFFE066))
+                            .border_color(rgb(0x7DD3FC))
                             .rounded(px(8.))
                             .p_4()
                             .child(
                                 div()
                                     .text_sm()
                                     .font_weight(FontWeight::SEMIBOLD)
-                                    .text_color(rgb(0x664D00))
-                                    .child("💡 Instructions")
+                                    .text_color(rgb(0x075985))
+                                    .child("🖱️ TextInput Features")
                             )
                             .child(
                                 div()
                                     .text_xs()
-                                    .text_color(rgb(0x8C6600))
-                                    .child("• Click on the text area to focus and start typing")
+                                    .text_color(rgb(0x0C4A6E))
+                                    .child("• Click to position cursor")
                             )
                             .child(
                                 div()
                                     .text_xs()
-                                    .text_color(rgb(0x8C6600))
-                                    .child("• Press Shift+Enter to create new lines")
+                                    .text_color(rgb(0x0C4A6E))
+                                    .child("• Drag to select text")
                             )
                             .child(
                                 div()
                                     .text_xs()
-                                    .text_color(rgb(0x8C6600))
-                                    .child("• Press Enter to submit (check console)")
+                                    .text_color(rgb(0x0C4A6E))
+                                    .child("• Shift+Click to extend selection")
+                            )
+                            .child(
+                                div()
+                                    .text_xs()
+                                    .text_color(rgb(0x0C4A6E))
+                                    .child("• Cmd/Ctrl+A to select all")
+                            )
+                            .child(
+                                div()
+                                    .text_xs()
+                                    .text_color(rgb(0x0C4A6E))
+                                    .child("• Arrow keys + Shift to extend selection")
+                            )
+                            .child(
+                                div()
+                                    .text_xs()
+                                    .text_color(rgb(0x0C4A6E))
+                                    .child("• Cursor blinks automatically when focused")
                             )
                     )
             )
@@ -460,10 +660,10 @@ fn main() {
         let window_options = WindowOptions {
             window_bounds: Some(WindowBounds::Windowed(Bounds {
                 origin: point(px(100.), px(100.)),
-                size: size(px(700.), px(900.)),
+                size: size(px(700.), px(1000.)),
             })),
             titlebar: Some(TitlebarOptions {
-                title: Some("Fluix TextArea Demo".into()),
+                title: Some("Fluix TextInput Demo".into()),
                 appears_transparent: false,
                 ..Default::default()
             }),
