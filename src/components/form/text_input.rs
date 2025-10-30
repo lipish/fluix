@@ -9,6 +9,75 @@ struct TextInputLayout {
     shaped_line: ShapedLine,
 }
 
+// Custom element wrapper to register input handler
+struct TextInputElement {
+    entity: Entity<TextInput>,
+}
+
+impl IntoElement for TextInputElement {
+    type Element = Self;
+
+    fn into_element(self) -> Self::Element {
+        self
+    }
+}
+
+impl Element for TextInputElement {
+    type RequestLayoutState = ();
+    type PrepaintState = ();
+
+    fn id(&self) -> Option<ElementId> {
+        None
+    }
+
+    fn source_location(&self) -> Option<&'static core::panic::Location<'static>> {
+        None
+    }
+
+    fn request_layout(
+        &mut self,
+        _id: Option<&GlobalElementId>,
+        _inspector_id: Option<&InspectorElementId>,
+        window: &mut Window,
+        cx: &mut App,
+    ) -> (LayoutId, Self::RequestLayoutState) {
+        let mut style = Style::default();
+        style.size.width = px(0.0).into();
+        style.size.height = px(0.0).into();
+        (window.request_layout(style, [], cx), ())
+    }
+
+    fn prepaint(
+        &mut self,
+        _id: Option<&GlobalElementId>,
+        _inspector_id: Option<&InspectorElementId>,
+        _bounds: Bounds<Pixels>,
+        _request_layout: &mut Self::RequestLayoutState,
+        _window: &mut Window,
+        _cx: &mut App,
+    ) -> Self::PrepaintState {
+    }
+
+    fn paint(
+        &mut self,
+        _id: Option<&GlobalElementId>,
+        _inspector_id: Option<&InspectorElementId>,
+        bounds: Bounds<Pixels>,
+        _request_layout: &mut Self::RequestLayoutState,
+        _prepaint: &mut Self::PrepaintState,
+        window: &mut Window,
+        cx: &mut App,
+    ) {
+        // Register input handler for IME support
+        let focus_handle = self.entity.read(cx).focus_handle.clone();
+        window.handle_input(
+            &focus_handle,
+            ElementInputHandler::new(bounds, self.entity.clone()),
+            cx,
+        );
+    }
+}
+
 // ============================================================================
 // Events
 // ============================================================================
@@ -62,6 +131,8 @@ pub struct TextInput {
     is_dragging: bool,
     /// Last layout info for mouse position calculation
     last_layout: Option<TextInputLayout>,
+    /// Marked text range for IME (Input Method Editor) composition
+    marked_range: Option<std::ops::Range<usize>>,
 }
 
 impl TextInput {
@@ -83,6 +154,7 @@ impl TextInput {
             _blink_task: None,
             is_dragging: false,
             last_layout: None,
+            marked_range: None,
         }
     }
 
@@ -298,7 +370,7 @@ impl TextInput {
 
         // Has selection: build three text runs
         // IMPORTANT: Convert byte indices to character indices for password mode
-        let (sel_start, sel_end) = if let (Some(start), Some(end)) =
+        let (mut sel_start, mut sel_end) = if let (Some(start), Some(end)) =
             (self.selection_start, self.selection_end)
         {
             if start <= end {
@@ -309,6 +381,20 @@ impl TextInput {
         } else {
             (0, 0)
         };
+
+        // Ensure indices are within bounds and on character boundaries
+        sel_start = sel_start.min(self.value.len());
+        sel_end = sel_end.min(self.value.len());
+        
+        while sel_start > 0 && !self.value.is_char_boundary(sel_start) {
+            sel_start -= 1;
+        }
+        while sel_end > 0 && sel_end < self.value.len() && !self.value.is_char_boundary(sel_end) {
+            sel_end += 1;
+        }
+        if sel_end > self.value.len() {
+            sel_end = self.value.len();
+        }
 
         // For password mode, we need to calculate positions in the display text
         // Each character in value becomes one bullet point (•) in display_text
@@ -367,15 +453,29 @@ impl TextInput {
     /// Delete selected text and return the new cursor position
     fn delete_selection(&mut self) -> usize {
         if let (Some(start), Some(end)) = (self.selection_start, self.selection_end) {
-            let (sel_start, sel_end) = if start <= end {
+            let (mut sel_start, mut sel_end) = if start <= end {
                 (start, end)
             } else {
                 (end, start)
             };
 
-            let before = self.value[..sel_start].to_string();
-            let after = self.value[sel_end..].to_string();
-            self.value = format!("{}{}", before, after);
+            // Ensure indices are within bounds
+            sel_start = sel_start.min(self.value.len());
+            sel_end = sel_end.min(self.value.len());
+
+            // Ensure indices are on character boundaries
+            while sel_start > 0 && !self.value.is_char_boundary(sel_start) {
+                sel_start -= 1;
+            }
+            while sel_end > 0 && sel_end < self.value.len() && !self.value.is_char_boundary(sel_end) {
+                sel_end += 1;
+            }
+
+            if sel_start < sel_end && sel_end <= self.value.len() {
+                let before = self.value[..sel_start].to_string();
+                let after = self.value[sel_end..].to_string();
+                self.value = format!("{}{}", before, after);
+            }
             self.clear_selection();
             sel_start
         } else {
@@ -383,45 +483,15 @@ impl TextInput {
         }
     }
 
-    fn handle_input(&mut self, text: &str, cx: &mut Context<Self>) {
+    fn handle_backspace(&mut self, cx: &mut Context<Self>) {
         if self.disabled {
             return;
         }
 
-        // If there's a selection, delete it first
-        if self.has_selection() {
-            self.cursor_position = self.delete_selection();
-        }
-
-        // Insert text at cursor position
-        let mut new_value = String::new();
-        new_value.push_str(&self.value[..self.cursor_position]);
-        new_value.push_str(text);
-        new_value.push_str(&self.value[self.cursor_position..]);
-
-        // Check max length
-        if let Some(max_len) = self.max_length {
-            if new_value.len() > max_len {
-                return;
-            }
-        }
-
-        // Check validator
-        if let Some(ref validator) = self.validator {
-            if !validator(&new_value) {
-                return;
-            }
-        }
-
-        self.value = new_value.clone();
-        self.cursor_position += text.len();
-        self.pause_blinking(cx);
-        cx.emit(TextInputEvent::Change(new_value));
-        cx.notify();
-    }
-
-    fn handle_backspace(&mut self, cx: &mut Context<Self>) {
-        if self.disabled {
+        // If there's marked text (IME composition), clear it
+        if self.marked_range.is_some() {
+            self.marked_range = None;
+            cx.notify();
             return;
         }
 
@@ -438,13 +508,35 @@ impl TextInput {
             return;
         }
 
+        // Ensure cursor position is within bounds and on a character boundary
+        if self.cursor_position > self.value.len() {
+            self.cursor_position = self.value.len();
+        }
+        if !self.value.is_char_boundary(self.cursor_position) {
+            // Find the nearest valid boundary
+            while self.cursor_position > 0 && !self.value.is_char_boundary(self.cursor_position) {
+                self.cursor_position -= 1;
+            }
+        }
+
+        // Find the previous character boundary (handles multi-byte characters)
+        let mut prev_pos = self.cursor_position;
+        while prev_pos > 0 {
+            prev_pos -= 1;
+            if self.value.is_char_boundary(prev_pos) {
+                break;
+            }
+        }
+
         // Remove character before cursor
         let mut new_value = String::new();
-        new_value.push_str(&self.value[..self.cursor_position - 1]);
-        new_value.push_str(&self.value[self.cursor_position..]);
+        new_value.push_str(&self.value[..prev_pos]);
+        if self.cursor_position <= self.value.len() {
+            new_value.push_str(&self.value[self.cursor_position..]);
+        }
 
         self.value = new_value.clone();
-        self.cursor_position -= 1;
+        self.cursor_position = prev_pos;
         self.pause_blinking(cx);
         cx.emit(TextInputEvent::Change(new_value));
         cx.notify();
@@ -452,6 +544,13 @@ impl TextInput {
 
     fn handle_delete(&mut self, cx: &mut Context<Self>) {
         if self.disabled {
+            return;
+        }
+
+        // If there's marked text (IME composition), clear it
+        if self.marked_range.is_some() {
+            self.marked_range = None;
+            cx.notify();
             return;
         }
 
@@ -464,14 +563,34 @@ impl TextInput {
             return;
         }
 
+        // Ensure cursor position is within bounds and on a character boundary
+        if self.cursor_position > self.value.len() {
+            self.cursor_position = self.value.len();
+        }
         if self.cursor_position >= self.value.len() {
             return;
+        }
+        if !self.value.is_char_boundary(self.cursor_position) {
+            // Find the nearest valid boundary
+            while self.cursor_position > 0 && !self.value.is_char_boundary(self.cursor_position) {
+                self.cursor_position -= 1;
+            }
+        }
+
+        // Find the next character boundary (handles multi-byte characters)
+        let mut next_pos = self.cursor_position + 1;
+        while next_pos < self.value.len() && !self.value.is_char_boundary(next_pos) {
+            next_pos += 1;
         }
 
         // Remove character at cursor
         let mut new_value = String::new();
-        new_value.push_str(&self.value[..self.cursor_position]);
-        new_value.push_str(&self.value[self.cursor_position + 1..]);
+        if self.cursor_position <= self.value.len() {
+            new_value.push_str(&self.value[..self.cursor_position]);
+        }
+        if next_pos <= self.value.len() {
+            new_value.push_str(&self.value[next_pos..]);
+        }
 
         self.value = new_value.clone();
         self.pause_blinking(cx);
@@ -515,7 +634,17 @@ impl TextInput {
     fn move_cursor_left(&mut self, extend_selection: bool, cx: &mut Context<Self>) {
         if self.cursor_position > 0 {
             let old_pos = self.cursor_position;
-            self.cursor_position -= 1;
+            
+            // Find the previous character boundary (handles multi-byte characters)
+            let mut new_pos = self.cursor_position;
+            while new_pos > 0 {
+                new_pos -= 1;
+                if self.value.is_char_boundary(new_pos) {
+                    break;
+                }
+            }
+            self.cursor_position = new_pos;
+            
             if extend_selection {
                 if !self.has_selection() {
                     // Start new selection: old position is anchor, new position is end
@@ -535,7 +664,14 @@ impl TextInput {
     fn move_cursor_right(&mut self, extend_selection: bool, cx: &mut Context<Self>) {
         if self.cursor_position < self.value.len() {
             let old_pos = self.cursor_position;
-            self.cursor_position += 1;
+            
+            // Find the next character boundary (handles multi-byte characters)
+            let mut new_pos = self.cursor_position + 1;
+            while new_pos < self.value.len() && !self.value.is_char_boundary(new_pos) {
+                new_pos += 1;
+            }
+            self.cursor_position = new_pos;
+            
             if extend_selection {
                 if !self.has_selection() {
                     // Start new selection: old position is anchor, new position is end
@@ -599,6 +735,54 @@ impl TextInput {
             "•".repeat(self.value.len())
         } else {
             self.value.clone()
+        }
+    }
+
+    /// Convert byte range to UTF-16 code unit range
+    fn range_to_utf16(&self, range: &std::ops::Range<usize>) -> std::ops::Range<usize> {
+        let start_idx = range.start.min(self.value.len());
+        let end_idx = range.end.min(self.value.len());
+        
+        let start = self.value[..start_idx].encode_utf16().count();
+        let end = self.value[..end_idx].encode_utf16().count();
+        start..end
+    }
+
+    /// Convert UTF-16 code unit range to byte range
+    fn range_from_utf16(&self, range_utf16: &std::ops::Range<usize>) -> std::ops::Range<usize> {
+        let mut utf16_count = 0;
+        let mut start = None;
+        let mut end = None;
+
+        for (byte_idx, ch) in self.value.char_indices() {
+            if start.is_none() && utf16_count >= range_utf16.start {
+                start = Some(byte_idx);
+            }
+            
+            utf16_count += ch.len_utf16();
+            
+            if end.is_none() && utf16_count >= range_utf16.end {
+                end = Some(byte_idx + ch.len_utf8());
+                break;
+            }
+        }
+
+        let start = start.unwrap_or(self.value.len());
+        let end = end.unwrap_or(self.value.len());
+        
+        start..end
+    }
+
+    /// Get current selection as a range
+    fn selected_range(&self) -> std::ops::Range<usize> {
+        if let (Some(start), Some(end)) = (self.selection_start, self.selection_end) {
+            if start <= end {
+                start..end
+            } else {
+                end..start
+            }
+        } else {
+            self.cursor_position..self.cursor_position
         }
     }
 }
@@ -679,10 +863,8 @@ impl Render for TextInput {
                         this.handle_submit(cx);
                     }
                     _ => {
-                        // Handle regular character input
-                        if let Some(ch) = &event.keystroke.key_char {
-                            this.handle_input(ch, cx);
-                        }
+                        // Don't handle regular character input here
+                        // EntityInputHandler will handle all text input (including IME)
                     }
                 }
             }))
@@ -764,6 +946,9 @@ impl Render for TextInput {
             .when(!disabled, |this| {
                 this.cursor(CursorStyle::IBeam)
             })
+            .child(TextInputElement {
+                entity: cx.entity().clone(),
+            })
             .child(
                 div()
                     .flex()
@@ -820,6 +1005,16 @@ impl Render for TextInput {
                         let display_text_for_cursor = display_text.clone();  // Clone for cursor calculation
                         let has_selection = self.has_selection();
                         let cursor_visible = self.cursor_visible;
+                        let is_password = self.is_password;
+                        
+                        // Calculate display cursor position (for password mode)
+                        let display_cursor_pos = if is_password {
+                            // Convert byte index to character count, then to display bytes
+                            let char_count = self.value[..cursor_pos.min(self.value.len())].chars().count();
+                            char_count * "•".len()
+                        } else {
+                            cursor_pos
+                        };
                         
                         // Clone layout container for use in canvas closure
                         let layout_container_for_canvas = layout_container.clone();
@@ -887,10 +1082,16 @@ impl Render for TextInput {
                                         move |bounds, _, window, _cx| {
                                             if !has_selection && cursor_visible {
                                                 // Calculate accurate cursor position using text measurement
-                                                let cursor_x = if cursor_pos == 0 || display_text_for_cursor.is_empty() {
+                                                let cursor_x = if display_cursor_pos == 0 || display_text_for_cursor.is_empty() {
                                                     px(0.)
                                                 } else {
-                                                    let text_before = display_text_for_cursor.chars().take(cursor_pos).collect::<String>();
+                                                    // Get text before cursor in display text
+                                                    let text_before = if display_cursor_pos <= display_text_for_cursor.len() {
+                                                        display_text_for_cursor[..display_cursor_pos].to_string()
+                                                    } else {
+                                                        display_text_for_cursor.clone()
+                                                    };
+                                                    
                                                     if text_before.is_empty() {
                                                         px(0.)
                                                     } else {
@@ -931,5 +1132,169 @@ impl Render for TextInput {
                         )
                     })
             )
+    }
+}
+
+// Implement EntityInputHandler for IME (Input Method Editor) support
+impl EntityInputHandler for TextInput {
+    fn text_for_range(
+        &mut self,
+        range_utf16: std::ops::Range<usize>,
+        actual_range: &mut Option<std::ops::Range<usize>>,
+        _window: &mut Window,
+        _cx: &mut Context<Self>,
+    ) -> Option<String> {
+        let range = self.range_from_utf16(&range_utf16);
+        actual_range.replace(self.range_to_utf16(&range));
+        Some(self.value[range].to_string())
+    }
+
+    fn selected_text_range(
+        &mut self,
+        _ignore_disabled_input: bool,
+        _window: &mut Window,
+        _cx: &mut Context<Self>,
+    ) -> Option<UTF16Selection> {
+        let range = self.selected_range();
+        Some(UTF16Selection {
+            range: self.range_to_utf16(&range),
+            reversed: false, // Simplified - could track selection direction
+        })
+    }
+
+    fn marked_text_range(
+        &self,
+        _window: &mut Window,
+        _cx: &mut Context<Self>,
+    ) -> Option<std::ops::Range<usize>> {
+        self.marked_range
+            .as_ref()
+            .map(|range| self.range_to_utf16(range))
+    }
+
+    fn unmark_text(&mut self, _window: &mut Window, _cx: &mut Context<Self>) {
+        self.marked_range = None;
+    }
+
+    fn replace_text_in_range(
+        &mut self,
+        range_utf16: Option<std::ops::Range<usize>>,
+        new_text: &str,
+        _window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let mut range = range_utf16
+            .as_ref()
+            .map(|range_utf16| self.range_from_utf16(range_utf16))
+            .or(self.marked_range.clone())
+            .unwrap_or_else(|| self.selected_range());
+
+        // Ensure range is within bounds and on character boundaries
+        range.start = range.start.min(self.value.len());
+        range.end = range.end.min(self.value.len());
+        
+        while range.start > 0 && !self.value.is_char_boundary(range.start) {
+            range.start -= 1;
+        }
+        while range.end > 0 && range.end < self.value.len() && !self.value.is_char_boundary(range.end) {
+            range.end += 1;
+        }
+        if range.end > self.value.len() {
+            range.end = self.value.len();
+        }
+
+        // Replace text in range
+        let mut new_value = String::new();
+        new_value.push_str(&self.value[..range.start]);
+        new_value.push_str(new_text);
+        new_value.push_str(&self.value[range.end..]);
+
+        self.value = new_value;
+        self.cursor_position = range.start + new_text.len();
+        self.clear_selection();
+        self.marked_range = None;
+        
+        self.pause_blinking(cx);
+        cx.emit(TextInputEvent::Change(self.value.clone()));
+        cx.notify();
+    }
+
+    fn replace_and_mark_text_in_range(
+        &mut self,
+        range_utf16: Option<std::ops::Range<usize>>,
+        new_text: &str,
+        new_selected_range_utf16: Option<std::ops::Range<usize>>,
+        _window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let mut range = range_utf16
+            .as_ref()
+            .map(|range_utf16| self.range_from_utf16(range_utf16))
+            .or(self.marked_range.clone())
+            .unwrap_or_else(|| self.selected_range());
+
+        // Ensure range is within bounds and on character boundaries
+        range.start = range.start.min(self.value.len());
+        range.end = range.end.min(self.value.len());
+        
+        while range.start > 0 && !self.value.is_char_boundary(range.start) {
+            range.start -= 1;
+        }
+        while range.end > 0 && range.end < self.value.len() && !self.value.is_char_boundary(range.end) {
+            range.end += 1;
+        }
+        if range.end > self.value.len() {
+            range.end = self.value.len();
+        }
+
+        // Replace text in range
+        let mut new_value = String::new();
+        new_value.push_str(&self.value[..range.start]);
+        new_value.push_str(new_text);
+        new_value.push_str(&self.value[range.end..]);
+
+        self.value = new_value;
+
+        // Mark the newly inserted text for IME composition
+        if !new_text.is_empty() {
+            self.marked_range = Some(range.start..range.start + new_text.len());
+        } else {
+            self.marked_range = None;
+        }
+
+        // Update selection
+        if let Some(new_range_utf16) = new_selected_range_utf16 {
+            let new_range = self.range_from_utf16(&new_range_utf16);
+            self.cursor_position = range.start + new_range.end;
+        } else {
+            self.cursor_position = range.start + new_text.len();
+        }
+        self.clear_selection();
+
+        self.pause_blinking(cx);
+        cx.notify();
+    }
+
+    fn bounds_for_range(
+        &mut self,
+        _range_utf16: std::ops::Range<usize>,
+        bounds: Bounds<Pixels>,
+        _window: &mut Window,
+        _cx: &mut Context<Self>,
+    ) -> Option<Bounds<Pixels>> {
+        // Return the input bounds for IME candidate window positioning
+        Some(bounds)
+    }
+
+    fn character_index_for_point(
+        &mut self,
+        point: Point<Pixels>,
+        _window: &mut Window,
+        _cx: &mut Context<Self>,
+    ) -> Option<usize> {
+        // Convert pixel position to character index
+        let byte_index = self.index_for_mouse_position(point);
+        // Convert byte index to UTF-16 code units
+        Some(self.value[..byte_index].encode_utf16().count())
     }
 }

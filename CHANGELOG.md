@@ -5,6 +5,54 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.17] - 2025-10-30
+
+### Added - TextInput Component
+- **IME (Input Method Editor) Support** 🌏
+  - Full support for Chinese, Japanese, Korean input
+  - Implemented `EntityInputHandler` trait for IME integration
+  - Custom `TextInputElement` for proper input handler registration
+  - Marked text range support for composition
+  - UTF-16 conversion for proper IME communication
+  - Emoji and all multi-byte character support
+
+### Fixed - TextInput Component
+- **Character Boundary Handling** 🔧
+  - Fixed cursor movement to respect character boundaries (not byte boundaries)
+  - Fixed text selection to work correctly with multi-byte characters
+  - Fixed delete operations (backspace/delete) for Chinese and emoji
+  - Added boundary checks in all text manipulation methods
+  - Prevented crashes when mixing Chinese and English text
+
+- **Cursor Position Display** 🎯
+  - Fixed cursor rendering to use correct display position
+  - Proper byte-to-character conversion for password mode
+  - Accurate cursor positioning for mixed Chinese/English text
+  - Mouse click now correctly positions cursor
+  - Keyboard arrow keys now work properly
+
+- **Text Input Duplication** ✨
+  - Removed duplicate character input (was processing in both `on_key_down` and `EntityInputHandler`)
+  - All text input now handled exclusively by `EntityInputHandler`
+  - Clean separation between keyboard shortcuts and text input
+
+- **Selection Rendering** 🎨
+  - Fixed selection range calculation for multi-byte characters
+  - Added boundary validation in `build_text_runs`
+  - Prevented index out of bounds errors
+  - Proper handling of password mode selection
+
+- **UTF-16 Conversion** 🔄
+  - Fixed `range_to_utf16` with proper bounds checking
+  - Fixed `range_from_utf16` logic for edge cases
+  - Safe conversion between byte indices and UTF-16 code units
+
+### Technical Improvements
+- All string slicing operations now validate character boundaries
+- Comprehensive bounds checking in `EntityInputHandler` methods
+- Safe handling of `marked_range` for IME composition
+- Proper cleanup of IME state on delete operations
+
 ## [0.1.16] - 2025-10-30
 
 ### Added - TextInput Component

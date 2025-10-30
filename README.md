@@ -157,6 +157,16 @@ cx.subscribe_in(&input, window, |_, _, event: &TextInputEvent, _, _| {
 }).detach();
 ```
 
+**Features:**
+- ✨ Full IME support (Chinese, Japanese, Korean, etc.)
+- 🖱️ Mouse selection (click, drag, shift+click)
+- ⌨️ Keyboard navigation (arrow keys, home/end, shift+select)
+- 🎯 Accurate cursor positioning for multi-byte characters
+- 🔒 Password mode with masked input
+- ✂️ Copy/paste/cut support
+- 🎨 Cursor blinking animation
+- 📏 Max length validation
+
 ### TextArea Component
 
 ```rust
