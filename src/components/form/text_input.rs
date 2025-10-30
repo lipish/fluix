@@ -45,14 +45,17 @@ pub struct TextInput {
     max_length: Option<usize>,
     /// Custom validation function
     validator: Option<Arc<dyn Fn(&str) -> bool>>,
+    /// Blink epoch - increments when cursor should reset to visible
+    blink_epoch: usize,
+    /// Whether cursor is currently visible (for blinking)
+    cursor_visible: bool,
+    /// Blink task handle
+    _blink_task: Option<Task<()>>,
 }
 
 impl TextInput {
     /// Create a new TextInput
     pub fn new(cx: &mut Context<Self>) -> Self {
-        // TODO: Add cursor blinking animation later
-        // For now, cursor is always visible
-        
         Self {
             value: String::new(),
             cursor_position: 0,
@@ -64,6 +67,9 @@ impl TextInput {
             is_password: false,
             max_length: None,
             validator: None,
+            blink_epoch: 0,
+            cursor_visible: true,
+            _blink_task: None,
         }
     }
 
@@ -169,6 +175,53 @@ impl TextInput {
     /// Check if there is an active selection
     fn has_selection(&self) -> bool {
         self.selection_start.is_some() && self.selection_end.is_some()
+    }
+
+    /// Increment blink epoch (used to cancel old blink tasks)
+    fn next_blink_epoch(&mut self) -> usize {
+        self.blink_epoch += 1;
+        self.blink_epoch
+    }
+
+    /// Start cursor blinking animation
+    fn start_blinking(&mut self, epoch: usize, cx: &mut Context<Self>) {
+        // Only blink if this is still the current epoch
+        if epoch == self.blink_epoch {
+            // Toggle visibility
+            self.cursor_visible = !self.cursor_visible;
+            cx.notify();
+
+            // Schedule next blink
+            let next_epoch = self.next_blink_epoch();
+            let task = cx.spawn(async move |this, cx| {
+                cx.background_spawn(async move {
+                    std::thread::sleep(std::time::Duration::from_millis(530));
+                }).await;
+                _ = this.update(cx, |this, cx| {
+                    this.start_blinking(next_epoch, cx);
+                });
+            });
+            self._blink_task = Some(task);
+        }
+    }
+
+    /// Pause blinking and show cursor (called on user input)
+    fn pause_blinking(&mut self, cx: &mut Context<Self>) {
+        // Show cursor immediately
+        self.cursor_visible = true;
+        cx.notify();
+
+        // Cancel current blink and restart after a delay
+        let epoch = self.next_blink_epoch();
+        let task = cx.spawn(async move |this, cx| {
+            cx.background_spawn(async move {
+                std::thread::sleep(std::time::Duration::from_millis(530));
+            }).await;
+            _ = this.update(cx, |this, cx| {
+                this.start_blinking(epoch, cx);
+            });
+        });
+        self._blink_task = Some(task);
     }
 
     /// Build TextRun array for rendering with selection support
@@ -313,6 +366,7 @@ impl TextInput {
 
         self.value = new_value.clone();
         self.cursor_position += text.len();
+        self.pause_blinking(cx);
         cx.emit(TextInputEvent::Change(new_value));
         cx.notify();
     }
@@ -325,6 +379,7 @@ impl TextInput {
         // If there's a selection, delete it
         if self.has_selection() {
             self.cursor_position = self.delete_selection();
+            self.pause_blinking(cx);
             cx.emit(TextInputEvent::Change(self.value.clone()));
             cx.notify();
             return;
@@ -341,6 +396,7 @@ impl TextInput {
 
         self.value = new_value.clone();
         self.cursor_position -= 1;
+        self.pause_blinking(cx);
         cx.emit(TextInputEvent::Change(new_value));
         cx.notify();
     }
@@ -353,6 +409,7 @@ impl TextInput {
         // If there's a selection, delete it
         if self.has_selection() {
             self.cursor_position = self.delete_selection();
+            self.pause_blinking(cx);
             cx.emit(TextInputEvent::Change(self.value.clone()));
             cx.notify();
             return;
@@ -368,6 +425,7 @@ impl TextInput {
         new_value.push_str(&self.value[self.cursor_position + 1..]);
 
         self.value = new_value.clone();
+        self.pause_blinking(cx);
         cx.emit(TextInputEvent::Change(new_value));
         cx.notify();
     }
@@ -420,6 +478,7 @@ impl TextInput {
             } else {
                 self.clear_selection();
             }
+            self.pause_blinking(cx);
             cx.notify();
         }
     }
@@ -439,6 +498,7 @@ impl TextInput {
             } else {
                 self.clear_selection();
             }
+            self.pause_blinking(cx);
             cx.notify();
         }
     }
@@ -456,6 +516,7 @@ impl TextInput {
         } else {
             self.clear_selection();
         }
+        self.pause_blinking(cx);
         cx.notify();
     }
 
@@ -472,6 +533,7 @@ impl TextInput {
         } else {
             self.clear_selection();
         }
+        self.pause_blinking(cx);
         cx.notify();
     }
 
@@ -503,6 +565,13 @@ impl Focusable for TextInput {
 impl Render for TextInput {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let is_focused = self.focus_handle.is_focused(window);
+        
+        // Start blinking when focused
+        if is_focused && self._blink_task.is_none() {
+            let epoch = self.next_blink_epoch();
+            self.start_blinking(epoch, cx);
+        }
+        
         let display_text = self.render_display_text();
         let show_placeholder = self.value.is_empty();
         let disabled = self.disabled;
@@ -604,12 +673,12 @@ impl Render for TextInput {
                     .text_sm()
                     .when(show_placeholder, |this| {
                         // Show placeholder with cursor when focused
-                        if is_focused && !disabled && !self.has_selection() {
+                        if is_focused && !disabled && !self.has_selection() && self.cursor_visible {
                             this.text_color(rgb(0x999999))
                                 .relative()
                                 .child(placeholder)
                                 .child(
-                                    // Cursor at position 0 (empty input)
+                                    // Cursor at position 0 (empty input) - blinking
                                     div()
                                         .absolute()
                                         .left(px(0.))
@@ -650,6 +719,7 @@ impl Render for TextInput {
                         let (display_text, text_runs) = self.build_text_runs(font.clone(), font_size);
                         let display_text_for_cursor = display_text.clone();  // Clone for cursor calculation
                         let has_selection = self.has_selection();
+                        let cursor_visible = self.cursor_visible;
                         
                         // Use TextRun API to render text with selection
                         // This ensures consistent width regardless of selection state
@@ -704,7 +774,7 @@ impl Render for TextInput {
                                             gpui::size(px(0.), px(0.))  // Zero size, just for painting
                                         },
                                         move |bounds, _, window, _cx| {
-                                            if !has_selection {
+                                            if !has_selection && cursor_visible {
                                                 // Calculate accurate cursor position using text measurement
                                                 let cursor_x = if cursor_pos == 0 || display_text_for_cursor.is_empty() {
                                                     px(0.)
