@@ -29,6 +29,10 @@ pub struct TextInput {
     value: String,
     /// Cursor position (byte offset in the string)
     cursor_position: usize,
+    /// Selection start position (byte offset, None if no selection)
+    selection_start: Option<usize>,
+    /// Selection end position (byte offset, None if no selection)
+    selection_end: Option<usize>,
     /// Placeholder text when empty
     placeholder: String,
     /// Focus handle for keyboard input
@@ -46,9 +50,14 @@ pub struct TextInput {
 impl TextInput {
     /// Create a new TextInput
     pub fn new(cx: &mut Context<Self>) -> Self {
+        // TODO: Add cursor blinking animation later
+        // For now, cursor is always visible
+        
         Self {
             value: String::new(),
             cursor_position: 0,
+            selection_start: None,
+            selection_end: None,
             placeholder: String::new(),
             focus_handle: cx.focus_handle(),
             disabled: false,
@@ -68,6 +77,8 @@ impl TextInput {
     pub fn value(mut self, value: impl Into<String>) -> Self {
         self.value = value.into();
         self.cursor_position = self.value.len();
+        self.selection_start = None;
+        self.selection_end = None;
         self
     }
 
@@ -119,6 +130,8 @@ impl TextInput {
 
         self.value = value.clone();
         self.cursor_position = self.value.len();
+        self.selection_start = None;
+        self.selection_end = None;
         cx.emit(TextInputEvent::Change(value));
         cx.notify();
     }
@@ -127,6 +140,8 @@ impl TextInput {
     pub fn clear(&mut self, cx: &mut Context<Self>) {
         self.value.clear();
         self.cursor_position = 0;
+        self.selection_start = None;
+        self.selection_end = None;
         cx.emit(TextInputEvent::Change(String::new()));
         cx.notify();
     }
@@ -136,9 +151,144 @@ impl TextInput {
         self.focus_handle.focus(window);
     }
 
+    /// Select all text
+    pub fn select_all(&mut self, cx: &mut Context<Self>) {
+        if !self.value.is_empty() {
+            self.selection_start = Some(0);
+            self.selection_end = Some(self.value.len());
+            cx.notify();
+        }
+    }
+
+    /// Clear selection
+    fn clear_selection(&mut self) {
+        self.selection_start = None;
+        self.selection_end = None;
+    }
+
+    /// Check if there is an active selection
+    fn has_selection(&self) -> bool {
+        self.selection_start.is_some() && self.selection_end.is_some()
+    }
+
+    /// Build TextRun array for rendering with selection support
+    fn build_text_runs(&self, font: Font, _font_size: Pixels) -> (String, Vec<TextRun>) {
+        let display_text = if self.is_password {
+            "•".repeat(self.value.len())
+        } else {
+            self.value.clone()
+        };
+
+        if !self.has_selection() {
+            // No selection: single text run
+            return (
+                display_text.clone(),
+                vec![TextRun {
+                    len: display_text.len(),
+                    font,
+                    color: rgb(0x333333).into(),
+                    background_color: None,
+                    underline: None,
+                    strikethrough: None,
+                }],
+            );
+        }
+
+        // Has selection: build three text runs
+        // IMPORTANT: Convert byte indices to character indices for password mode
+        let (sel_start, sel_end) = if let (Some(start), Some(end)) =
+            (self.selection_start, self.selection_end)
+        {
+            if start <= end {
+                (start, end)
+            } else {
+                (end, start)
+            }
+        } else {
+            (0, 0)
+        };
+
+        // For password mode, we need to calculate positions in the display text
+        // Each character in value becomes one bullet point (•) in display_text
+        let (display_sel_start, display_sel_end) = if self.is_password {
+            // Count characters, not bytes
+            let char_start = self.value[..sel_start].chars().count();
+            let char_end = self.value[..sel_end].chars().count();
+            // Each bullet point is "•".len() = 3 bytes
+            let bullet_len = "•".len();
+            (char_start * bullet_len, char_end * bullet_len)
+        } else {
+            (sel_start, sel_end)
+        };
+
+        let mut runs = Vec::new();
+
+        // Text before selection
+        if display_sel_start > 0 {
+            runs.push(TextRun {
+                len: display_sel_start,
+                font: font.clone(),
+                color: rgb(0x333333).into(),
+                background_color: None,
+                underline: None,
+                strikethrough: None,
+            });
+        }
+
+        // Selected text - background color is a TextRun property!
+        if display_sel_end > display_sel_start {
+            runs.push(TextRun {
+                len: display_sel_end - display_sel_start,
+                font: font.clone(),
+                color: rgb(0xFFFFFF).into(),
+                background_color: Some(rgb(0x4A90E2).into()),
+                underline: None,
+                strikethrough: None,
+            });
+        }
+
+        // Text after selection
+        if display_sel_end < display_text.len() {
+            runs.push(TextRun {
+                len: display_text.len() - display_sel_end,
+                font: font.clone(),
+                color: rgb(0x333333).into(),
+                background_color: None,
+                underline: None,
+                strikethrough: None,
+            });
+        }
+
+        (display_text, runs)
+    }
+
+    /// Delete selected text and return the new cursor position
+    fn delete_selection(&mut self) -> usize {
+        if let (Some(start), Some(end)) = (self.selection_start, self.selection_end) {
+            let (sel_start, sel_end) = if start <= end {
+                (start, end)
+            } else {
+                (end, start)
+            };
+
+            let before = self.value[..sel_start].to_string();
+            let after = self.value[sel_end..].to_string();
+            self.value = format!("{}{}", before, after);
+            self.clear_selection();
+            sel_start
+        } else {
+            self.cursor_position
+        }
+    }
+
     fn handle_input(&mut self, text: &str, cx: &mut Context<Self>) {
         if self.disabled {
             return;
+        }
+
+        // If there's a selection, delete it first
+        if self.has_selection() {
+            self.cursor_position = self.delete_selection();
         }
 
         // Insert text at cursor position
@@ -168,7 +318,19 @@ impl TextInput {
     }
 
     fn handle_backspace(&mut self, cx: &mut Context<Self>) {
-        if self.disabled || self.cursor_position == 0 {
+        if self.disabled {
+            return;
+        }
+
+        // If there's a selection, delete it
+        if self.has_selection() {
+            self.cursor_position = self.delete_selection();
+            cx.emit(TextInputEvent::Change(self.value.clone()));
+            cx.notify();
+            return;
+        }
+
+        if self.cursor_position == 0 {
             return;
         }
 
@@ -184,7 +346,19 @@ impl TextInput {
     }
 
     fn handle_delete(&mut self, cx: &mut Context<Self>) {
-        if self.disabled || self.cursor_position >= self.value.len() {
+        if self.disabled {
+            return;
+        }
+
+        // If there's a selection, delete it
+        if self.has_selection() {
+            self.cursor_position = self.delete_selection();
+            cx.emit(TextInputEvent::Change(self.value.clone()));
+            cx.notify();
+            return;
+        }
+
+        if self.cursor_position >= self.value.len() {
             return;
         }
 
@@ -198,27 +372,106 @@ impl TextInput {
         cx.notify();
     }
 
-    fn move_cursor_left(&mut self, cx: &mut Context<Self>) {
+    /// Extend or start selection to the cursor position
+    fn extend_selection_to(&mut self, pos: usize) {
+        if !self.has_selection() {
+            // Start new selection: use the previous cursor position as anchor
+            // But since cursor is already moved, we need to track anchor separately
+            // For now, use current position as end, and adjust after cursor move
+            // This is a simplified approach - in a full implementation, we'd track the anchor
+            self.selection_start = Some(pos);
+            self.selection_end = Some(pos);
+        } else {
+            // Extend existing selection
+            // Determine which end to extend based on which is closer to the new position
+            if let (Some(start), Some(end)) = (self.selection_start, self.selection_end) {
+                let (sel_start, sel_end) = if start <= end {
+                    (start, end)
+                } else {
+                    (end, start)
+                };
+                
+                // Extend from the end that's closer to the new position
+                if (pos as i32 - sel_start as i32).abs() < (pos as i32 - sel_end as i32).abs() {
+                    // Extend from start
+                    self.selection_start = Some(pos);
+                    self.selection_end = Some(sel_end);
+                } else {
+                    // Extend from end
+                    self.selection_start = Some(sel_start);
+                    self.selection_end = Some(pos);
+                }
+            }
+        }
+    }
+
+    fn move_cursor_left(&mut self, extend_selection: bool, cx: &mut Context<Self>) {
         if self.cursor_position > 0 {
+            let old_pos = self.cursor_position;
             self.cursor_position -= 1;
+            if extend_selection {
+                if !self.has_selection() {
+                    // Start new selection: old position is anchor, new position is end
+                    self.selection_start = Some(old_pos);
+                    self.selection_end = Some(self.cursor_position);
+                } else {
+                    self.extend_selection_to(self.cursor_position);
+                }
+            } else {
+                self.clear_selection();
+            }
             cx.notify();
         }
     }
 
-    fn move_cursor_right(&mut self, cx: &mut Context<Self>) {
+    fn move_cursor_right(&mut self, extend_selection: bool, cx: &mut Context<Self>) {
         if self.cursor_position < self.value.len() {
+            let old_pos = self.cursor_position;
             self.cursor_position += 1;
+            if extend_selection {
+                if !self.has_selection() {
+                    // Start new selection: old position is anchor, new position is end
+                    self.selection_start = Some(old_pos);
+                    self.selection_end = Some(self.cursor_position);
+                } else {
+                    self.extend_selection_to(self.cursor_position);
+                }
+            } else {
+                self.clear_selection();
+            }
             cx.notify();
         }
     }
 
-    fn move_cursor_home(&mut self, cx: &mut Context<Self>) {
+    fn move_cursor_home(&mut self, extend_selection: bool, cx: &mut Context<Self>) {
+        let old_pos = self.cursor_position;
         self.cursor_position = 0;
+        if extend_selection {
+            if !self.has_selection() {
+                self.selection_start = Some(old_pos);
+                self.selection_end = Some(0);
+            } else {
+                self.extend_selection_to(0);
+            }
+        } else {
+            self.clear_selection();
+        }
         cx.notify();
     }
 
-    fn move_cursor_end(&mut self, cx: &mut Context<Self>) {
+    fn move_cursor_end(&mut self, extend_selection: bool, cx: &mut Context<Self>) {
+        let old_pos = self.cursor_position;
         self.cursor_position = self.value.len();
+        if extend_selection {
+            if !self.has_selection() {
+                self.selection_start = Some(old_pos);
+                self.selection_end = Some(self.value.len());
+            } else {
+                self.extend_selection_to(self.value.len());
+            }
+        } else {
+            self.clear_selection();
+        }
         cx.notify();
     }
 
@@ -263,6 +516,24 @@ impl Render for TextInput {
                     return;
                 }
 
+                // Handle keyboard shortcuts
+                let modifiers = &event.keystroke.modifiers;
+                // On macOS use platform (Cmd), on others use control (Ctrl)
+                let is_cmd_or_ctrl = if cfg!(target_os = "macos") {
+                    modifiers.platform
+                } else {
+                    modifiers.control
+                };
+
+                // Check for Cmd/Ctrl + A (Select All)
+                if is_cmd_or_ctrl && event.keystroke.key.as_str().eq_ignore_ascii_case("a") {
+                    this.select_all(cx);
+                    return;
+                }
+
+                // Check for Shift key to extend selection
+                let shift_pressed = modifiers.shift;
+
                 // Handle special keys
                 match event.keystroke.key.as_str() {
                     "backspace" => {
@@ -272,16 +543,16 @@ impl Render for TextInput {
                         this.handle_delete(cx);
                     }
                     "left" => {
-                        this.move_cursor_left(cx);
+                        this.move_cursor_left(shift_pressed, cx);
                     }
                     "right" => {
-                        this.move_cursor_right(cx);
+                        this.move_cursor_right(shift_pressed, cx);
                     }
                     "home" => {
-                        this.move_cursor_home(cx);
+                        this.move_cursor_home(shift_pressed, cx);
                     }
                     "end" => {
-                        this.move_cursor_end(cx);
+                        this.move_cursor_end(shift_pressed, cx);
                     }
                     "enter" => {
                         this.handle_submit(cx);
@@ -294,9 +565,15 @@ impl Render for TextInput {
                     }
                 }
             }))
-            .on_mouse_down(MouseButton::Left, cx.listener(|_, _, window, cx| {
+            .on_mouse_down(MouseButton::Left, cx.listener(|this, _, window, cx| {
                 cx.emit(TextInputEvent::Focus);
                 cx.focus_self(window);
+                // Clear selection on click
+                this.clear_selection();
+                // For now, move cursor to end on click
+                // (Precise click positioning would require pixel-to-char calculation)
+                this.cursor_position = this.value.len();
+                cx.notify();
             }))
             .flex()
             .items_center()
@@ -323,10 +600,28 @@ impl Render for TextInput {
                     .flex()
                     .items_center()
                     .flex_1()
+                    .min_w(px(0.))  // 允许收缩，防止内容撑开
                     .text_sm()
                     .when(show_placeholder, |this| {
-                        this.text_color(rgb(0x999999))
-                            .child(placeholder)
+                        // Show placeholder with cursor when focused
+                        if is_focused && !disabled && !self.has_selection() {
+                            this.text_color(rgb(0x999999))
+                                .relative()
+                                .child(placeholder)
+                                .child(
+                                    // Cursor at position 0 (empty input)
+                                    div()
+                                        .absolute()
+                                        .left(px(0.))
+                                        .top(px(2.))  // Adjusted to match input cursor position
+                                        .w(px(2.))
+                                        .h(px(18.))
+                                        .bg(rgb(0x000000))  // Black cursor
+                                )
+                        } else {
+                            this.text_color(rgb(0x999999))
+                                .child(placeholder)
+                        }
                     })
                     .when(!show_placeholder && !is_focused, |this| {
                         // Not focused: show full text
@@ -338,46 +633,121 @@ impl Render for TextInput {
                         .child(display_text.clone())
                     })
                     .when(!show_placeholder && is_focused && !disabled, |this| {
-                        // Focused: show text with cursor
+                        // Focused: show text with cursor and selection using TextRun API
                         let cursor_pos = self.cursor_position;
-                        let text_before = if cursor_pos > 0 {
-                            if self.is_password {
-                                "•".repeat(cursor_pos)
-                            } else {
-                                self.value[..cursor_pos].to_string()
-                            }
-                        } else {
-                            String::new()
+                        
+                        // Get font from settings (you may need to adjust this)
+                        let font = gpui::Font {
+                            family: ".SystemUIFont".into(),
+                            features: Default::default(),
+                            weight: Default::default(),
+                            style: Default::default(),
+                            fallbacks: None,
                         };
-
-                        let text_after = if cursor_pos < self.value.len() {
-                            if self.is_password {
-                                "•".repeat(self.value.len() - cursor_pos)
-                            } else {
-                                self.value[cursor_pos..].to_string()
-                            }
-                        } else {
-                            String::new()
-                        };
-
-                        this.text_color(if disabled {
-                            rgb(0x999999)
-                        } else {
-                            rgb(0x333333)
-                        })
-                        .when(!text_before.is_empty(), |this| {
-                            this.child(text_before)
-                        })
-                        .child(
-                            // Cursor
+                        let font_size = px(14.);
+                        
+                        // Build TextRun array with selection support
+                        let (display_text, text_runs) = self.build_text_runs(font.clone(), font_size);
+                        let display_text_for_cursor = display_text.clone();  // Clone for cursor calculation
+                        let has_selection = self.has_selection();
+                        
+                        // Use TextRun API to render text with selection
+                        // This ensures consistent width regardless of selection state
+                        
+                        this.child(
                             div()
-                                .w(px(1.))
-                                .h(px(18.))
-                                .bg(rgb(0x333333))
+                                .flex()
+                                .items_center()
+                                .h_full()
+                                .w_full()  // Ensure parent takes full width
+                                .relative()  // For absolute cursor positioning
+                                .child(
+                                    canvas(
+                                        move |bounds, _, _cx| {
+                                            // Return the size for layout - match line height
+                                            gpui::size(bounds.size.width, px(18.))
+                                        },
+                                        move |bounds, _, window, _cx| {
+                                            let line_height = px(18.);
+                                            
+                                            // Only shape and paint if there's text
+                                            if !display_text.is_empty() {
+                                                // Shape the line using TextRun
+                                                let shaped_line = window.text_system().shape_line(
+                                                    display_text.clone().into(),
+                                                    font_size,
+                                                    &text_runs,
+                                                    None,
+                                                );
+                                                
+                                                // origin should be the TOP of the line, not the baseline
+                                                // paint() and paint_background() will calculate baseline internally
+                                                let origin = bounds.origin;
+                                                
+                                                // IMPORTANT: Paint background first!
+                                                shaped_line.paint_background(origin, line_height, window, _cx).ok();
+                                                
+                                                // Then paint the text
+                                                shaped_line.paint(origin, line_height, window, _cx).ok();
+                                            }
+                                            
+                                            // Don't draw cursor in canvas - we'll use a div instead
+                                        },
+                                    )
+                                    .w_full()
+                                    .h(px(18.))
+                                )
+                                // Show cursor using canvas to get accurate position
+                                .child(
+                                    canvas(
+                                        move |_bounds, _, _cx| {
+                                            gpui::size(px(0.), px(0.))  // Zero size, just for painting
+                                        },
+                                        move |bounds, _, window, _cx| {
+                                            if !has_selection {
+                                                // Calculate accurate cursor position using text measurement
+                                                let cursor_x = if cursor_pos == 0 || display_text_for_cursor.is_empty() {
+                                                    px(0.)
+                                                } else {
+                                                    let text_before = display_text_for_cursor.chars().take(cursor_pos).collect::<String>();
+                                                    if text_before.is_empty() {
+                                                        px(0.)
+                                                    } else {
+                                                        // Use actual text measurement
+                                                        let temp_runs = vec![TextRun {
+                                                            len: text_before.len(),
+                                                            font: font.clone(),
+                                                            color: rgb(0x333333).into(),
+                                                            background_color: None,
+                                                            underline: None,
+                                                            strikethrough: None,
+                                                        }];
+                                                        let temp_line = window.text_system().shape_line(
+                                                            text_before.into(),
+                                                            font_size,
+                                                            &temp_runs,
+                                                            None,
+                                                        );
+                                                        temp_line.width
+                                                    }
+                                                };
+                                                
+                                                // Draw cursor - shift down 1px to align with text
+                                                let cursor_bounds = gpui::Bounds {
+                                                    origin: bounds.origin + gpui::point(cursor_x, px(1.)),
+                                                    size: gpui::size(px(2.), px(18.)),
+                                                };
+                                                window.paint_quad(gpui::fill(cursor_bounds, rgb(0x000000)));
+                                            }
+                                        },
+                                    )
+                                    .absolute()
+                                    .top(px(0.))
+                                    .left(px(0.))
+                                    .w(px(0.))
+                                    .h(px(18.))
+                                )
                         )
-                        .when(!text_after.is_empty(), |this| {
-                            this.child(text_after)
-                        })
                     })
             )
     }

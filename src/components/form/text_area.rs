@@ -261,6 +261,102 @@ impl TextArea {
         cx.notify();
     }
 
+    /// Extend or start selection to the cursor position
+    fn extend_selection_to(&mut self, pos: usize) {
+        // This is called when extending existing selection
+        if let (Some(start), Some(end)) = (self.selection_start, self.selection_end) {
+            let (sel_start, sel_end) = if start <= end {
+                (start, end)
+            } else {
+                (end, start)
+            };
+            
+            // Extend from the end that's closer to the new position
+            if (pos as i32 - sel_start as i32).abs() < (pos as i32 - sel_end as i32).abs() {
+                // Extend from start
+                self.selection_start = Some(pos);
+                self.selection_end = Some(sel_end);
+            } else {
+                // Extend from end
+                self.selection_start = Some(sel_start);
+                self.selection_end = Some(pos);
+            }
+        }
+    }
+    
+    fn move_cursor_left(&mut self, extend_selection: bool, cx: &mut Context<Self>) {
+        if self.cursor_pos > 0 {
+            let old_pos = self.cursor_pos;
+            self.cursor_pos -= 1;
+            if extend_selection {
+                if !self.has_selection() {
+                    // Start new selection: old position is anchor, new position is end
+                    self.selection_start = Some(old_pos);
+                    self.selection_end = Some(self.cursor_pos);
+                } else {
+                    self.extend_selection_to(self.cursor_pos);
+                }
+            } else {
+                self.clear_selection();
+            }
+            cx.notify();
+        }
+    }
+    
+    fn move_cursor_right(&mut self, extend_selection: bool, cx: &mut Context<Self>) {
+        let char_count = self.value.chars().count();
+        if self.cursor_pos < char_count {
+            let old_pos = self.cursor_pos;
+            self.cursor_pos += 1;
+            if extend_selection {
+                if !self.has_selection() {
+                    // Start new selection: old position is anchor, new position is end
+                    self.selection_start = Some(old_pos);
+                    self.selection_end = Some(self.cursor_pos);
+                } else {
+                    self.extend_selection_to(self.cursor_pos);
+                }
+            } else {
+                self.clear_selection();
+            }
+            cx.notify();
+        }
+    }
+    
+    fn move_cursor_home(&mut self, extend_selection: bool, cx: &mut Context<Self>) {
+        // For now, move to start of text (could be enhanced to move to start of line)
+        let old_pos = self.cursor_pos;
+        self.cursor_pos = 0;
+        if extend_selection {
+            if !self.has_selection() {
+                self.selection_start = Some(old_pos);
+                self.selection_end = Some(0);
+            } else {
+                self.extend_selection_to(0);
+            }
+        } else {
+            self.clear_selection();
+        }
+        cx.notify();
+    }
+    
+    fn move_cursor_end(&mut self, extend_selection: bool, cx: &mut Context<Self>) {
+        // For now, move to end of text (could be enhanced to move to end of line)
+        let old_pos = self.cursor_pos;
+        self.cursor_pos = self.value.chars().count();
+        if extend_selection {
+            if !self.has_selection() {
+                self.selection_start = Some(old_pos);
+                self.selection_end = Some(self.cursor_pos);
+            } else {
+                self.extend_selection_to(self.cursor_pos);
+            }
+        } else {
+            self.clear_selection();
+        }
+        cx.notify();
+    }
+
     fn handle_enter(&mut self, shift_pressed: bool, cx: &mut Context<Self>) {
         if self.disabled {
             return;
@@ -352,15 +448,30 @@ impl Render for TextArea {
                 };
                 
                 // Check for Cmd/Ctrl + A (Select All)
-                if is_cmd_or_ctrl && event.keystroke.key.as_str() == "a" {
+                if is_cmd_or_ctrl && event.keystroke.key.as_str().eq_ignore_ascii_case("a") {
                     this.select_all(cx);
                     return;
                 }
+
+                // Check for Shift key to extend selection
+                let shift_pressed = modifiers.shift;
 
                 // Handle special keys
                 match event.keystroke.key.as_str() {
                     "backspace" => {
                         this.handle_backspace(cx);
+                    }
+                    "left" => {
+                        this.move_cursor_left(shift_pressed, cx);
+                    }
+                    "right" => {
+                        this.move_cursor_right(shift_pressed, cx);
+                    }
+                    "home" => {
+                        this.move_cursor_home(shift_pressed, cx);
+                    }
+                    "end" => {
+                        this.move_cursor_end(shift_pressed, cx);
                     }
                     "enter" => {
                         let shift_pressed = event.keystroke.modifiers.shift;
@@ -524,15 +635,7 @@ impl Render for TextArea {
                                                     )
                                                 })
                                                 .when(!after_sel.is_empty(), |el| el.child(after_sel))
-                                                .when(line_idx == cursor_line_idx && is_focused && !disabled, |el| {
-                                                    el.child(
-                                                        div()
-                                                            .w(px(2.))
-                                                            .h(px(20.))
-                                                            .bg(rgb(0x333333))
-                                                            .flex_shrink_0()
-                                                    )
-                                                })
+                                                // Don't show cursor when there's a selection
                                         } else if line_idx == cursor_line_idx {
                                             // This line contains the cursor but no selection
                                             let before = line_str.chars().take(cursor_col).collect::<String>();
