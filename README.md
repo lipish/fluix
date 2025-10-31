@@ -25,7 +25,7 @@
 
 ```toml
 [dependencies]
-fluix = "0.1.19"
+fluix = "0.1.20"
 gpui = "0.2"
 ```
 
@@ -44,7 +44,7 @@ gpui = "0.2"
 ### 📖 Reference Documentation
 
 - **[Component Reference](docs/COMPONENT-REFERENCE.md)** - Complete API reference for all components
-- **[Icon Reference](docs/ICON_REFERENCE.md)** - All 22 icons with examples and usage guide
+- **[Icon Reference](docs/ICON_REFERENCE.md)** - All 31 icons with examples and usage guide
 - **[FAQ](docs/FAQ.md)** - Common questions answered
 - **[Asset Loading Guide](docs/ASSET_LOADING_GUIDE.md)** - How SVG loading works
 
@@ -61,7 +61,7 @@ gpui = "0.2"
 
 ```toml
 [dependencies]
-fluix = "0.1.19"
+fluix = "0.1.20"
 gpui = "0.2"
 ```
 
@@ -134,7 +134,7 @@ let custom_svg = Icon::from_path("icons/my-icon.svg")
     .medium();
 ```
 
-Available icon names: `ArrowLeft`, `ArrowRight`, `ArrowUp`, `ArrowDown`, `Check`, `Close`, `Plus`, `Minus`, `Search`, `Settings`, `Home`, `User`, `Bell`, `Star`, `Heart`, `Menu`, `Info`, `Warning`, `Error`, `Success`
+Available icon names: `ArrowLeft`, `ArrowRight`, `ArrowUp`, `ArrowDown`, `Check`, `ChevronUp`, `ChevronDown`, `ChevronUpDown`, `Close`, `Plus`, `Minus`, `Search`, `Settings`, `Home`, `User`, `UserPlus`, `Bell`, `Star`, `Heart`, `Menu`, `Info`, `Warning`, `Error`, `Success`, `AlertCircle`, `AlertTriangle`, `UnfoldMore`, `Send`, `Attachment`, `Image`, `LogIn`, `Task`
 
 ### TextInput Component
 
@@ -389,6 +389,6 @@ MIT License
 
 ---
 
-**当前版本**: v0.1.19  
+**当前版本**: v0.1.20  
 **已实现组件**: 5/46 (10.9%)  
 **最后更新**: 2025-01-16

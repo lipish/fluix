@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.20] - 2025-01-16
+
+### Added - Icon Component
+- **9 New Icons** 🎨
+  - `AlertCircle` - Circle alert icon
+  - `AlertTriangle` - Triangle alert icon
+  - `Attachment` - Attachment/file icon
+  - `ChevronDown` - Down chevron icon
+  - `ChevronUp` - Up chevron icon
+  - `Image` - Image/picture icon
+  - `LogIn` - Login/authentication icon
+  - `Task` - Task/checklist icon
+  - `UserPlus` - User add icon
+  - Total icons increased from 22 to 31
+
+### Improved
+- Fixed clippy warnings for code quality
+  - Removed redundant variable redefinitions in Tabs component
+  - Improved saturating_sub usage in TextArea component
+  - Code cleanup and optimization
+
+### Examples
+- Updated `icon_demo.rs` to showcase all 31 icons
+  - Added new icons to the demo
+  - Updated icon count display
+
 ## [0.1.19] - 2025-01-16
 
 ### Added - Tabs Component

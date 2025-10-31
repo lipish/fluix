@@ -8,6 +8,8 @@ pub enum IconName {
     ArrowDown,
     Check,
     ChevronUpDown,
+    ChevronUp,
+    ChevronDown,
     Close,
     Plus,
     Minus,
@@ -15,6 +17,7 @@ pub enum IconName {
     Settings,
     Home,
     User,
+    UserPlus,
     Bell,
     Star,
     Heart,
@@ -23,8 +26,14 @@ pub enum IconName {
     Warning,
     Error,
     Success,
+    AlertCircle,
+    AlertTriangle,
     UnfoldMore,
     Send,
+    Attachment,
+    Image,
+    LogIn,
+    Task,
 }
 
 impl IconName {
@@ -38,6 +47,8 @@ impl IconName {
             Self::ArrowDown => "icons/arrow-down.svg",
             Self::Check => "icons/check.svg",
             Self::ChevronUpDown => "icons/chevron-up-down.svg",
+            Self::ChevronUp => "icons/chevron-up.svg",
+            Self::ChevronDown => "icons/chevron-down.svg",
             Self::Close => "icons/close.svg",
             Self::Plus => "icons/plus.svg",
             Self::Minus => "icons/minus.svg",
@@ -45,6 +56,7 @@ impl IconName {
             Self::Settings => "icons/settings.svg",
             Self::Home => "icons/home.svg",
             Self::User => "icons/user.svg",
+            Self::UserPlus => "icons/user-plus.svg",
             Self::Bell => "icons/bell.svg",
             Self::Star => "icons/star.svg",
             Self::Heart => "icons/heart.svg",
@@ -53,8 +65,14 @@ impl IconName {
             Self::Warning => "icons/warning.svg",
             Self::Error => "icons/error.svg",
             Self::Success => "icons/success.svg",
+            Self::AlertCircle => "icons/alert-circle.svg",
+            Self::AlertTriangle => "icons/alert-triangle.svg",
             Self::UnfoldMore => "icons/unfold-more.svg",
             Self::Send => "icons/send.svg",
+            Self::Attachment => "icons/attachment.svg",
+            Self::Image => "icons/image.svg",
+            Self::LogIn => "icons/log-in.svg",
+            Self::Task => "icons/task.svg",
         }
     }
 }

@@ -863,11 +863,7 @@ impl Render for TextArea {
                                                     }])
                                                 } else {
                                                     // This line has selection
-                                                    let sel_start_in_line = if sel_start > line_start {
-                                                        sel_start - line_start
-                                                    } else {
-                                                        0
-                                                    };
+                                                    let sel_start_in_line = sel_start.saturating_sub(line_start);
                                                     let sel_end_in_line = if sel_end < line_end {
                                                         sel_end - line_start
                                                     } else {
@@ -977,7 +973,6 @@ impl Render for TextArea {
                                                 )
                                                 .when(is_cursor_line && is_focused && !disabled && cursor_visible_clone, |el| {
                                                     // Cursor layer
-                                                    let cursor_col_clone = cursor_col_clone;
                                                     let line_str_clone = line_str.clone();
                                                     let font_clone_for_cursor = font_clone.clone();
                                                     

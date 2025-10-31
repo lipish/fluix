@@ -165,14 +165,10 @@ impl Render for Tabs {
                     .p_1() // Padding around tabs
                     .gap_1() // Gap between tabs
                     .children(tab_labels.iter().enumerate().map({
-                        let active_index = active_index;
                         let theme = theme.clone();
-                        let tab_py = tab_py;
-                        let tab_px = tab_px;
                         move |(index, label)| {
                             let is_active = index == active_index;
                             let label = label.clone();
-                            let tab_index = index;
                             
                             div()
                                 .relative()
@@ -195,11 +191,11 @@ impl Render for Tabs {
                                         .cursor(CursorStyle::PointingHand)
                                 })
                                 .on_mouse_down(MouseButton::Left, cx.listener({
-                                    let tab_index = tab_index;
+                                    let index = index;
                                     move |this, _event: &MouseDownEvent, _window, cx| {
-                                        if this.active_index != tab_index {
-                                            this.active_index = tab_index;
-                                            cx.emit(TabsEvent::TabChanged { index: tab_index });
+                                        if this.active_index != index {
+                                            this.active_index = index;
+                                            cx.emit(TabsEvent::TabChanged { index });
                                             cx.notify();
                                         }
                                     }
@@ -211,7 +207,6 @@ impl Render for Tabs {
             .child(
                 // Content area
                 {
-                    let active_index = active_index;
                     div()
                         .flex()
                         .flex_col()
