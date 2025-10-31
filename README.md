@@ -25,7 +25,7 @@
 
 ```toml
 [dependencies]
-fluix = "0.1.18"
+fluix = "0.1.19"
 gpui = "0.2"
 ```
 
@@ -61,7 +61,7 @@ gpui = "0.2"
 
 ```toml
 [dependencies]
-fluix = "0.1.18"
+fluix = "0.1.19"
 gpui = "0.2"
 ```
 
@@ -226,7 +226,7 @@ cx.subscribe_in(&textarea, window, |_, _, event: &TextAreaEvent, _, _| {
 
 ## 📚 组件列表
 
-### ✅ 已实现 (4/46)
+### ✅ 已实现 (5/46)
 
 #### 基础组件
 - ✅ **Button** - 按钮组件
@@ -235,6 +235,9 @@ cx.subscribe_in(&textarea, window, |_, _, event: &TextAreaEvent, _, _| {
 #### 表单组件
 - ✅ **TextInput** - 单行文本输入
 - ✅ **TextArea** - 多行文本编辑器
+
+#### 布局组件
+- ✅ **Tabs** - 选项卡组件
 
 ### 🔄 开发中
 
@@ -266,7 +269,7 @@ cx.subscribe_in(&textarea, window, |_, _, event: &TextAreaEvent, _, _| {
 - [ ] OtpInput - OTP 输入
 - [ ] Editor - 代码编辑器
 
-#### 布局组件 (9)
+#### 布局组件 (8)
 - [ ] DescriptionList - 描述列表
 - [ ] Drawer - 抽屉
 - [ ] GroupBox - 分组框
@@ -283,7 +286,6 @@ cx.subscribe_in(&textarea, window, |_, _, event: &TextAreaEvent, _, _| {
 - [ ] List - 列表
 - [ ] PopupMenu - 弹出菜单
 - [ ] Table - 数据表格
-- [ ] Tabs - 选项卡
 - [ ] Tree - 树形组件
 - [ ] VirtualList - 虚拟列表
 - [ ] WebView - Web 视图
@@ -332,6 +334,9 @@ cargo run --example icon_demo
 
 # TextInput 和 TextArea 示例
 cargo run --example text_input_demo
+
+# Tabs 组件示例
+cargo run --example tabs_demo
 ```
 
 ## 🗺️ 开发路线图
@@ -384,6 +389,6 @@ MIT License
 
 ---
 
-**当前版本**: v0.1.18  
-**已实现组件**: 4/46 (8.7%)  
-**最后更新**: 2025-10-30
+**当前版本**: v0.1.19  
+**已实现组件**: 5/46 (10.9%)  
+**最后更新**: 2025-01-16

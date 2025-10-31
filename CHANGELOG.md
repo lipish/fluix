@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.19] - 2025-01-16
+
+### Added - Tabs Component
+- **Tabs Component** 🎉
+  - Modern tab navigation with elegant design
+  - Light gray tab bar background with rounded corners and subtle shadows
+  - Active tab with white background, bold black text, and shadow elevation
+  - Inactive tabs with gray text and hover cursor
+  - Equal width tabs with flexible layout (justified)
+  - Tab change events (`TabsEvent::TabChanged`)
+  - Support for custom content per tab
+  - Size variants (XSmall, Small, Medium, Large, XLarge)
+  - Fully customizable with theme system
+
+### Examples
+- Add `tabs_demo.rs` - Comprehensive tabs demonstration
+  - Shows three tabs with different content
+  - Demonstrates tab switching
+  - Default active tab (Tab 2)
+
+### Technical Details
+- New `Tabs` component in `src/components/layout/tabs.rs`
+- New `TabItem` struct for tab configuration
+- Event system for tab change notifications
+- Flexible content rendering with closure-based builders
+- Integration with existing theme system
+
 ## [0.1.18] - 2025-10-30
 
 ### Improved - Select Component
