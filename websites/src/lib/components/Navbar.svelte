@@ -37,7 +37,6 @@
 	}
 </script>
 
-<svelte:window onkeydown={handleCmdK} />
 
 <nav class="navbar">
 	<div class="nav-container">
