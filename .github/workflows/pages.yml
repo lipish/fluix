@@ -5,6 +5,7 @@ on:
     branches:
       - main
     paths:
+      - 'docs-svelte/**'
       - 'docs/**'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
@@ -27,6 +28,21 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: docs-svelte/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./docs-svelte
+        run: npm ci
+
+      - name: Build SvelteKit
+        working-directory: ./docs-svelte
+        run: npm run build
 
       - name: Setup Pages
         uses: actions/configure-pages@v4

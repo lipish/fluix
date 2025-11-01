@@ -1,250 +1,37 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fluix Component</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-    <nav class="navbar">
-        <div class="container">
-            <div class="nav-brand">
-                <h1>Fluix Component</h1>
-            </div>
-            <div class="nav-links">
-                <a href="#home">快速开始</a>
-                <a href="#components">组件</a>
-                <a href="https://github.com/lipish/fluix" target="_blank">GitHub</a>
-                <a href="https://docs.rs/fluix" target="_blank">Docs</a>
-            </div>
-        </div>
-    </nav>
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		
+		<link rel="modulepreload" href="./_app/immutable/entry/start.DVQNPo6h.js">
+		<link rel="modulepreload" href="./_app/immutable/chunks/D-zQAof6.js">
+		<link rel="modulepreload" href="./_app/immutable/chunks/DA4lL2sB.js">
+		<link rel="modulepreload" href="./_app/immutable/chunks/BYtD5H5A.js">
+		<link rel="modulepreload" href="./_app/immutable/entry/app.BlpPLOpi.js">
+		<link rel="modulepreload" href="./_app/immutable/chunks/DL9NJ8in.js">
+		<link rel="modulepreload" href="./_app/immutable/chunks/DOevuEX7.js">
+		<link rel="modulepreload" href="./_app/immutable/chunks/Dlo5nQhW.js">
+		<link rel="modulepreload" href="./_app/immutable/chunks/BopED7Rw.js">
+	</head>
+	<body data-sveltekit-preload-data="hover">
+		<div style="display: contents">
+			<script>
+				{
+					__sveltekit_xtqkfz = {
+						base: new URL(".", location).pathname.slice(0, -1)
+					};
 
-    <main>
-        <section id="home" class="hero">
-            <div class="container">
-                <h1 class="hero-title">Fluix Component</h1>
-                <p class="hero-subtitle">基于 GPUI 0.2 的 Rust UI 组件库，用于构建现代化的跨平台桌面应用</p>
-                <div class="hero-actions">
-                    <a href="#installation" class="btn btn-primary">快速开始</a>
-                    <a href="#components" class="btn btn-secondary">查看组件</a>
-                </div>
-            </div>
-        </section>
+					const element = document.currentScript.parentElement;
 
-        <section class="features">
-            <div class="container">
-                <div class="features-grid">
-                    <div class="feature-card">
-                        <h3>46+ 组件</h3>
-                        <p>丰富的跨平台桌面 UI 组件库，提供完整的组件集合用于构建功能丰富的应用程序</p>
-                    </div>
-                    <div class="feature-card">
-                        <h3>高性能</h3>
-                        <p>基于 GPUI 的 GPU 加速渲染，提供流畅的用户体验</p>
-                    </div>
-                    <div class="feature-card">
-                        <h3>类型安全</h3>
-                        <p>充分利用 Rust 的类型系统，编译时保证类型安全</p>
-                    </div>
-                    <div class="feature-card">
-                        <h3>灵活定制</h3>
-                        <p>内置主题系统，支持灵活的主题和样式定制</p>
-                    </div>
-                    <div class="feature-card">
-                        <h3>易于使用</h3>
-                        <p>简洁一致的 API 设计，让你快速上手</p>
-                    </div>
-                    <div class="feature-card">
-                        <h3>完善文档</h3>
-                        <p>详细的 API 文档、教程和示例代码</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section id="api" class="section">
-            <div class="container">
-                <h2>简洁直观的 API</h2>
-                <p class="section-description">只需几行代码即可开始使用。无状态组件设计让构建复杂 UI 变得简单。</p>
-                <div class="code-block">
-                    <pre><code>Button::new("ok")
-    .primary()
-    .label("Click Me")
-    .on_click(|_, _, _| println!("Button clicked!"))</code></pre>
-                </div>
-            </div>
-        </section>
-
-        <section id="installation" class="section">
-            <div class="container">
-                <h2>安装 Fluix Component</h2>
-                <p>在 <code>Cargo.toml</code> 中添加以下依赖：</p>
-                <div class="code-block">
-                    <pre><code>gpui = "0.2"
-fluix = "0.1.20"</code></pre>
-                </div>
-            </div>
-        </section>
-
-        <section id="hello-world" class="section">
-            <div class="container">
-                <h2>Hello World</h2>
-                <p class="section-description">以下是一个简单的 "Hello, World!" 应用示例：</p>
-                <div class="code-block">
-                    <pre><code>use gpui::*;
-use fluix::*;
-
-pub struct HelloWorld;
-
-impl Render for HelloWorld {
-    fn render(&mut self, _: &mut Window, _: &mut Context&lt;Self&gt;) -> impl IntoElement {
-        div()
-            .v_flex()
-            .gap_2()
-            .size_full()
-            .items_center()
-            .justify_center()
-            .child("Hello, World!")
-            .child(
-                Button::new("click_me")
-                    .variant(ButtonVariant::Primary)
-                    .size(ComponentSize::Medium)
-            )
-    }
-}
-
-fn main() {
-    let app = Application::new()
-        .with_assets(fluix::Assets);  // ← 重要！加载 SVG 图标
-
-    app.run(move |cx| {
-        cx.spawn(async move |cx| {
-            cx.open_window(WindowOptions::default(), |window, cx| {
-                cx.new(|_| HelloWorld)
-            })?;
-
-            Ok::&lt;_, anyhow::Error&gt;(())
-        })
-        .detach();
-    });
-}</code></pre>
-                </div>
-                <p class="run-command">运行程序：</p>
-                <div class="code-block code-block-terminal">
-                    <pre><code>$ cargo run</code></pre>
-                </div>
-            </div>
-        </section>
-
-        <section id="components" class="section">
-            <div class="container">
-                <h2>组件列表</h2>
-                <p class="section-description">丰富的跨平台桌面 UI 组件库，提供完整的组件集合用于构建功能丰富的应用程序</p>
-                
-                <div class="component-grid">
-                    <div class="component-card">
-                        <h3>基础组件</h3>
-                        <ul class="component-list">
-                            <li><a href="#button">Button</a></li>
-                            <li><a href="#icon">Icon</a></li>
-                        </ul>
-                    </div>
-
-                    <div class="component-card">
-                        <h3>表单组件</h3>
-                        <ul class="component-list">
-                            <li><a href="#text-input">TextInput</a></li>
-                            <li><a href="#text-area">TextArea</a></li>
-                            <li><a href="#select">Select</a></li>
-                            <li><a href="#checkbox">Checkbox</a></li>
-                            <li><a href="#checkbox-group">CheckboxGroup</a></li>
-                            <li><a href="#radio-group">RadioGroup</a></li>
-                            <li><a href="#combobox">Combobox</a></li>
-                        </ul>
-                    </div>
-
-                    <div class="component-card">
-                        <h3>布局组件</h3>
-                        <ul class="component-list">
-                            <li><a href="#tabs">Tabs</a></li>
-                            <li><a href="#breadcrumb">Breadcrumb</a></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section id="button" class="component-section">
-            <div class="container">
-                <h2>Button</h2>
-                <p class="component-description">交互式按钮组件，支持多种变体和尺寸。</p>
-                
-                <h3>变体</h3>
-                <div class="code-block">
-                    <pre><code>Button::new("Primary")
-    .variant(ButtonVariant::Primary)
-
-Button::new("Secondary")
-    .variant(ButtonVariant::Secondary)
-
-Button::new("Outline")
-    .variant(ButtonVariant::Outline)</code></pre>
-                </div>
-            </div>
-        </section>
-
-        <section id="icon" class="component-section">
-            <div class="container">
-                <h2>Icon</h2>
-                <p class="component-description">SVG 图标组件，支持预定义图标和自定义图标。</p>
-                
-                <h3>使用方式</h3>
-                <div class="code-block">
-                    <pre><code>// 使用预定义图标名称
-Icon::new(IconName::Star)
-    .large()
-    .color(rgb(0xF59E0B))
-
-// 自定义尺寸
-Icon::new(IconName::Heart)
-    .size(IconSize::Custom(28.0))
-    .color(rgb(0xEF4444))</code></pre>
-                </div>
-            </div>
-        </section>
-
-        <section id="examples" class="section">
-            <div class="container">
-                <h2>示例</h2>
-                <p class="section-description">运行示例项目：</p>
-                <div class="code-block code-block-terminal">
-                    <pre><code># Button 组件示例
-cargo run --example button_demo
-
-# Icon 组件示例  
-cargo run --example icon_demo
-
-# TextInput 和 TextArea 示例
-cargo run --example text_input_demo
-
-# Tabs 组件示例
-cargo run --example tabs_demo</code></pre>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <footer class="footer">
-        <div class="container">
-            <p>&copy; 2025 Fluix Contributors. MIT License</p>
-            <p>
-                <a href="https://github.com/lipish/fluix">GitHub</a> |
-                <a href="https://docs.rs/fluix">API 文档</a> |
-                <a href="https://crates.io/crates/fluix">Crates.io</a>
-            </p>
-        </div>
-    </footer>
-</body>
+					Promise.all([
+						import("./_app/immutable/entry/start.DVQNPo6h.js"),
+						import("./_app/immutable/entry/app.BlpPLOpi.js")
+					]).then(([kit, app]) => {
+						kit.start(app, element);
+					});
+				}
+			</script>
+		</div>
+	</body>
 </html>
