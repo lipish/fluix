@@ -1,27 +1,49 @@
-# Fluix - Rust UI Component Library
+# Fluix Component
 
-[![Rust](https://img.shields.io/badge/rust-1.75%2B-orange.svg)](https://www.rust-lang.org/)
-[![GPUI](https://img.shields.io/badge/GPUI-0.2-blue.svg)](https://github.com/zed-industries/zed)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Crates.io](https://img.shields.io/crates/v/fluix.svg)](https://crates.io/crates/fluix)
-[![Documentation](https://docs.rs/fluix/badge.svg)](https://docs.rs/fluix)
+基于 GPUI 0.2 的 Rust UI 组件库，用于构建现代化的跨平台桌面应用。
 
-一个基于 GPUI 0.2 的现代化 Rust UI 组件库，提供完整的、易用的组件集合。
+[快速开始](#hello-world) | [组件文档](#组件列表)
 
-> ⚠️ **开发中**: Fluix 目前处于早期开发阶段，API 可能会有变化。
+---
 
-> 💡 **重要**: 使用 Fluix 时，必须在应用启动时调用 `.with_assets(fluix::Assets)` 来加载 SVG 图标资源！详见[快速开始](#-快速开始)。
+### 46+ 组件
 
-## ✨ 特性
+丰富的跨平台桌面 UI 组件库，提供完整的组件集合用于构建功能丰富的应用程序。
 
-- 🎨 **丰富的组件** - 46+ 个精心设计的 UI 组件
-- 🚀 **高性能** - 基于 GPUI 的 GPU 加速渲染
-- 🎯 **类型安全** - 充分利用 Rust 的类型系统
-- 🛠️ **可定制** - 灵活的主题系统和样式定制
-- 📚 **完善文档** - 详细的 API 文档和示例代码
-- 🔧 **易于使用** - 简洁一致的 API 设计
+### 高性能
 
-## 📦 安装
+基于 GPUI 的 GPU 加速渲染，提供流畅的用户体验。
+
+### 类型安全
+
+充分利用 Rust 的类型系统，编译时保证类型安全。
+
+### 灵活定制
+
+内置主题系统，支持灵活的主题和样式定制。
+
+### 易于使用
+
+简洁一致的 API 设计，让你快速上手。
+
+### 完善文档
+
+详细的 API 文档、教程和示例代码。
+
+## 简洁直观的 API
+
+只需几行代码即可开始使用。无状态组件设计让构建复杂 UI 变得简单。
+
+```rust
+Button::new("Click Me")
+    .variant(ButtonVariant::Primary)
+    .size(ComponentSize::Medium)
+    .on_click(|_, _, _| println!("Button clicked!"))
+```
+
+## 安装 Fluix Component
+
+在 `Cargo.toml` 中添加以下依赖：
 
 ```toml
 [dependencies]
@@ -29,299 +51,91 @@ fluix = "0.1.20"
 gpui = "0.2"
 ```
 
-## 📚 Documentation & Tutorials
+## Hello World
 
-### 🎓 Tutorials (Start Here!)
-
-**New to Fluix?** Follow our step-by-step tutorials:
-
-1. **[Getting Started](docs/tutorials/01-GETTING-STARTED.md)** ⭐ - Your first Fluix app (30 min)
-2. **[Working with Components](docs/tutorials/02-COMPONENTS.md)** - All components explained (45 min)
-3. **[Styling and Theming](docs/tutorials/03-STYLING.md)** - Make it beautiful (30 min)
-
-[📖 View All Tutorials →](docs/tutorials/README.md) | [📑 Documentation Index →](docs/DOCUMENTATION-INDEX.md)
-
-### 📖 Reference Documentation
-
-- **[Component Reference](docs/COMPONENT-REFERENCE.md)** - Complete API reference for all components
-- **[Icon Reference](docs/ICON_REFERENCE.md)** - All 31 icons with examples and usage guide
-- **[FAQ](docs/FAQ.md)** - Common questions answered
-- **[Asset Loading Guide](docs/ASSET_LOADING_GUIDE.md)** - How SVG loading works
-
-### 💡 Quick Links
-
-- **Icons not showing?** → [FAQ: Why aren't my icons showing?](docs/FAQ.md#why-arent-my-icons-showing)
-- **Want to customize colors?** → [Styling Guide](docs/tutorials/03-STYLING.md#color-system)
-- **Need to handle events?** → [Component Tutorial](docs/tutorials/02-COMPONENTS.md#handling-button-events)
-- **Building a form?** → [Select Component Guide](docs/tutorials/02-COMPONENTS.md#select-component)
-
-## 🚀 快速开始
-
-### 安装
-
-```toml
-[dependencies]
-fluix = "0.1.20"
-gpui = "0.2"
-```
-
-### 最小示例
+以下是一个简单的 "Hello, World!" 应用示例：
 
 ```rust
 use gpui::*;
 use fluix::*;
+
+pub struct HelloWorld;
+
+impl Render for HelloWorld {
+    fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
+        div()
+            .v_flex()
+            .gap_2()
+            .size_full()
+            .items_center()
+            .justify_center()
+            .child("Hello, World!")
+            .child(
+                Button::new("click_me")
+                    .variant(ButtonVariant::Primary)
+                    .size(ComponentSize::Medium)
+            )
+    }
+}
 
 fn main() {
     let app = Application::new()
         .with_assets(fluix::Assets);  // ← 重要！加载 SVG 图标
 
     app.run(move |cx| {
-        cx.open_window(window_options, |window, cx| {
-            cx.new(|cx| MyView::new(window, cx))
-        }).unwrap();
+        cx.spawn(async move |cx| {
+            cx.open_window(WindowOptions::default(), |window, cx| {
+                cx.new(|_| HelloWorld)
+            })?;
+
+            Ok::<_, anyhow::Error>(())
+        })
+        .detach();
     });
 }
-
-struct MyView {
-    button: Entity<Button>,
-}
-
-impl MyView {
-    fn new(window: &mut Window, cx: &mut Context<Self>) -> Self {
-        let button = cx.new(|_cx| {
-            Button::new("Click Me")
-                .variant(ButtonVariant::Primary)
-                .size(ComponentSize::Medium)
-        });
-        
-        cx.subscribe_in(&button, window, Self::on_click).detach();
-        
-        Self { button }
-    }
-    
-    fn on_click(&mut self, _: &Entity<Button>, _: &ButtonEvent, _: &mut Window, _: &mut Context<Self>) {
-        println!("Button clicked!");
-    }
-}
-
-impl Render for MyView {
-    fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
-        div()
-            .p_4()
-            .child(self.button.clone())
-    }
-}
 ```
 
-### Icon Component
+运行程序：
 
-```rust
-use gpui::*;
-use fluix::{Icon, IconName, IconSize};
-
-// Using predefined icon names
-let icon = Icon::new(IconName::Star)
-    .large()
-    .color(rgb(0xF59E0B));
-
-// Custom size and color
-let custom_icon = Icon::new(IconName::Heart)
-    .size(IconSize::Custom(28.0))
-    .color(rgb(0xEF4444));
-
-// Using custom SVG path
-let custom_svg = Icon::from_path("icons/my-icon.svg")
-    .medium();
+```bash
+$ cargo run
 ```
 
-Available icon names: `ArrowLeft`, `ArrowRight`, `ArrowUp`, `ArrowDown`, `Check`, `ChevronUp`, `ChevronDown`, `ChevronUpDown`, `Close`, `Plus`, `Minus`, `Search`, `Settings`, `Home`, `User`, `UserPlus`, `Bell`, `Star`, `Heart`, `Menu`, `Info`, `Warning`, `Error`, `Success`, `AlertCircle`, `AlertTriangle`, `UnfoldMore`, `Send`, `Attachment`, `Image`, `LogIn`, `Task`
+> ⚠️ **开发中**: Fluix 目前处于早期开发阶段，API 可能会有变化。  
+> 💡 **重要**: 使用 Fluix 时，必须在应用启动时调用 `.with_assets(fluix::Assets)` 来加载 SVG 图标资源！
 
-### TextInput Component
+## 文档和教程
 
-```rust
-use gpui::*;
-use fluix::{TextInput, TextInputEvent};
+### 📚 教程
 
-let input = cx.new(|cx| {
-    TextInput::new(cx)
-        .placeholder("Enter your name...")
-        .max_length(50)
-});
+**新手入门？** 跟随我们的分步教程：
 
-cx.subscribe_in(&input, window, |_, _, event: &TextInputEvent, _, _| {
-    match event {
-        TextInputEvent::Change(value) => println!("Value: {}", value),
-        TextInputEvent::Submit(value) => println!("Submitted: {}", value),
-        _ => {}
-    }
-}).detach();
-```
+- **[快速开始](docs/tutorials/01-GETTING-STARTED.md)** ⭐ - 你的第一个 Fluix 应用 (30 分钟)
+- **[使用组件](docs/tutorials/02-COMPONENTS.md)** - 所有组件详解 (45 分钟)
+- **[样式和主题](docs/tutorials/03-STYLING.md)** - 美化你的应用 (30 分钟)
 
-**Features:**
-- ✨ Full IME support (Chinese, Japanese, Korean, etc.)
-- 🖱️ Mouse selection (click, drag, shift+click)
-- ⌨️ Keyboard navigation (arrow keys, home/end, shift+select)
-- 🎯 Accurate cursor positioning for multi-byte characters
-- 🔒 Password mode with masked input
-- ✂️ Copy/paste/cut support
-- 🎨 Cursor blinking animation
-- 📏 Max length validation
+[查看所有教程 →](docs/tutorials/README.md) | [文档索引 →](docs/DOCUMENTATION-INDEX.md)
 
-### TextArea Component
+### 📖 API 参考
 
-```rust
-use gpui::*;
-use fluix::{TextArea, TextAreaEvent};
+- **[组件参考](docs/COMPONENT-REFERENCE.md)** - 所有组件的完整 API 参考
+- **[图标参考](docs/ICON_REFERENCE.md)** - 所有 31 个图标的使用示例
+- **[常见问题](docs/FAQ.md)** - 常见问题解答
+- **[资源加载指南](docs/ASSET_LOADING_GUIDE.md)** - SVG 加载工作原理
 
-let textarea = cx.new(|cx| {
-    TextArea::new(cx)
-        .placeholder("Type your message...")
-        .min_height(80.0)
-        .max_height(200.0)
-});
+## 组件列表
 
-// Custom styling
-let custom_textarea = cx.new(|cx| {
-    TextArea::new(cx)
-        .placeholder("Styled textarea...")
-        .min_height(60.0)
-        .bg_color(rgb(0xF0F9FF))          // Light blue background
-        .border_color(rgb(0x3B82F6))       // Blue border
-        .focus_border_color(rgb(0x2563EB)) // Darker blue on focus
-});
+### ✅ 已实现组件
 
-// Borderless textarea
-let borderless = cx.new(|cx| {
-    TextArea::new(cx)
-        .placeholder("No border...")
-        .bg_color(rgb(0xFAFAFA))
-        .no_border()
-});
-
-cx.subscribe_in(&textarea, window, |_, _, event: &TextAreaEvent, _, _| {
-    match event {
-        TextAreaEvent::Change(value) => println!("Content: {}", value),
-        TextAreaEvent::Submit(value) => println!("Submitted: {}", value),
-        _ => {}
-    }
-}).detach();
-```
-
-**Keyboard Shortcuts:**
-- `Cmd+A` / `Ctrl+A` - Select all text
-- `Shift+Arrow` - Extend selection
-- `Shift+Click` - Extend selection
-- `Click` - Position cursor
-- `Drag` - Select text
-- `Shift+Enter` - Insert newline (TextArea only)
-- `Enter` - Submit
-- `Backspace` - Delete character or selected text
-- `Delete` - Delete character at cursor
-
-**Mouse Actions:**
-- `Click` - Position cursor precisely
-- `Drag` - Select text
-- `Double-click` - Select all text (TextArea)
-- `Shift+Click` - Extend selection
-
-## 📚 组件列表
-
-### ✅ 已实现 (5/46)
-
-#### 基础组件
-- ✅ **Button** - 按钮组件
-- ✅ **Icon** - 图标组件
-
-#### 表单组件
-- ✅ **TextInput** - 单行文本输入
-- ✅ **TextArea** - 多行文本编辑器
-
-#### 布局组件
-- ✅ **Tabs** - 选项卡组件
+**基础组件**: Button, Icon  
+**表单组件**: TextInput, TextArea, Checkbox, Radio, Select, Combobox  
+**布局组件**: Tabs, Breadcrumb
 
 ### 🔄 开发中
 
-#### 基础组件 (17)
-- [ ] Badge - 徽章
-- [ ] Checkbox - 复选框
-- [ ] Radio - 单选框
-- [ ] Switch - 开关
-- [ ] Tag - 标签
-- [ ] Label - 标签文本
-- [ ] Avatar - 头像
-- [ ] Kbd - 键盘快捷键
-- [ ] Progress - 进度条
-- [ ] Slider - 滑块
-- [ ] Skeleton - 骨架屏
-- [ ] Tooltip - 工具提示
-- [ ] Toggle - 切换按钮
-- [ ] Image - 图片
-- [ ] Indicator - 指示器
-- [ ] Alert - 警告
-- [ ] Accordion - 手风琴
+查看 [ROADMAP.md](ROADMAP.md) 了解详细的开发进度和待实现组件列表。
 
-#### 表单组件 (6)
-- [ ] ColorPicker - 颜色选择器
-- [ ] DatePicker - 日期选择器
-- [ ] Dropdown - 下拉选择
-- [ ] Form - 表单容器
-- [ ] NumberInput - 数字输入
-- [ ] OtpInput - OTP 输入
-- [ ] Editor - 代码编辑器
-
-#### 布局组件 (8)
-- [ ] DescriptionList - 描述列表
-- [ ] Drawer - 抽屉
-- [ ] GroupBox - 分组框
-- [ ] Modal - 模态框
-- [ ] Notification - 通知
-- [ ] Popover - 气泡卡片
-- [ ] Resizable - 可调整大小
-- [ ] Scrollable - 滚动容器
-- [ ] Sidebar - 侧边栏
-
-#### 高级组件 (10)
-- [ ] Calendar - 日历
-- [ ] Chart - 图表
-- [ ] List - 列表
-- [ ] PopupMenu - 弹出菜单
-- [ ] Table - 数据表格
-- [ ] Tree - 树形组件
-- [ ] VirtualList - 虚拟列表
-- [ ] WebView - Web 视图
-
-## 🎨 主题系统
-
-Fluix 提供了灵活的主题系统：
-
-```rust
-use fluix::theme::*;
-
-let theme = Theme::new();
-let colors = theme.colors;
-
-// 使用预定义颜色
-colors.primary;          // 主色
-colors.success;          // 成功色
-colors.error;            // 错误色
-
-// 使用尺寸系统
-Size::Small.px();        // 28.0
-Size::Medium.px();       // 36.0
-Size::Large.px();        // 44.0
-
-// 使用间距系统
-Spacing::SM;             // 8.0
-Spacing::MD;             // 12.0
-Spacing::LG;             // 16.0
-
-// 使用圆角系统
-BorderRadius::SM;        // 4.0
-BorderRadius::MD;        // 6.0
-BorderRadius::LG;        // 8.0
-```
-
-## 📖 示例
+## 示例
 
 运行示例项目：
 
@@ -339,56 +153,19 @@ cargo run --example text_input_demo
 cargo run --example tabs_demo
 ```
 
-## 🗺️ 开发路线图
+查看更多示例：[examples/](examples/)
 
-详见 [ROADMAP.md](ROADMAP.md)
-
-### Phase 1: 核心基础组件 (优先级: 高)
-- Button, Icon, Label, Checkbox, Radio, Switch, Badge, Tag
-
-### Phase 2: 表单组件 (优先级: 高)
-- Dropdown, Form, NumberInput, ColorPicker, DatePicker
-
-### Phase 3: 反馈组件 (优先级: 中)
-- Alert, Tooltip, Modal, Notification, Progress, Indicator, Skeleton
-
-### Phase 4: 布局组件 (优先级: 中)
-- Drawer, Sidebar, Tabs, Accordion, GroupBox, Resizable, Scrollable
-
-### Phase 5: 数据展示组件 (优先级: 中低)
-- Table, List, VirtualList, Tree, Calendar, DescriptionList
-
-### Phase 6: 高级组件 (优先级: 低)
-- Chart, PopupMenu, Popover, WebView, Editor, OtpInput
-
-## 🤝 贡献
+## 贡献
 
 欢迎贡献！请查看 [ROADMAP.md](ROADMAP.md) 了解当前进度和待实现的组件。
 
-在贡献时请遵循：
-1. 保持代码风格一致
-2. 编写详细的文档和示例
-3. 参考 gpui-component 的 API 设计
-4. 更新 ROADMAP.md 中的进度
-
-## 📄 许可证
-
-MIT License
-
-## 🔗 相关链接
+## 相关链接
 
 - [GPUI](https://github.com/zed-industries/zed) - 底层 UI 框架
 - [gpui-component](https://github.com/longbridge/gpui-component) - 参考实现
-- [文档](https://docs.rs/fluix) - API 文档
-- [示例](examples/) - 示例代码
+- [API 文档](https://docs.rs/fluix) - 完整的 API 文档
+- [示例代码](examples/) - 更多示例
 
-## 🙏 致谢
+## 许可证
 
-- [GPUI](https://github.com/zed-industries/zed) - 提供强大的 GPU 加速 UI 框架
-- [gpui-component](https://github.com/longbridge/gpui-component) - 设计灵感来源
-
----
-
-**当前版本**: v0.1.20  
-**已实现组件**: 5/46 (10.9%)  
-**最后更新**: 2025-01-16
+MIT License
