@@ -54,25 +54,6 @@
 			<span class="logo-text">Fluix Component</span>
 		</a>
 
-		<!-- Search Bar -->
-		<div class="search-container">
-			<div class="search-input-wrapper">
-				<Search class="search-icon" />
-				<input
-					type="text"
-					class="search-input"
-					placeholder="Search"
-					bind:value={searchValue}
-					onkeydown={handleSearch}
-					bind:this={searchInput}
-				/>
-				<div class="search-shortcut">
-					<span class="shortcut-key">⌘</span>
-					<span class="shortcut-key">K</span>
-				</div>
-			</div>
-		</div>
-
 		<!-- Navigation Links -->
 		<div class="nav-links">
 			<a href="/" class="nav-link">Home</a>
@@ -171,70 +152,6 @@
 		font-weight: 700;
 		color: var(--foreground);
 		white-space: nowrap;
-	}
-
-	.search-container {
-		flex: 1;
-		max-width: 500px;
-		margin: 0 auto;
-		min-width: 200px;
-	}
-
-	.search-input-wrapper {
-		position: relative;
-		display: flex;
-		align-items: center;
-		background: var(--secondary);
-		border: 1px solid var(--border);
-		border-radius: 0.5rem;
-		padding: 0.5rem 0.75rem;
-		gap: 0.5rem;
-		transition: border-color 0.2s, box-shadow 0.2s;
-	}
-
-	.search-input-wrapper:focus-within {
-		border-color: var(--ring);
-		outline: 2px solid transparent;
-		outline-offset: 2px;
-		box-shadow: 0 0 0 2px oklch(from var(--ring) l c h / 0.2);
-	}
-
-	.search-icon {
-		width: 1rem;
-		height: 1rem;
-		color: var(--muted-foreground);
-		flex-shrink: 0;
-	}
-
-	.search-input {
-		flex: 1;
-		border: none;
-		background: transparent;
-		color: var(--foreground);
-		font-size: 0.875rem;
-		outline: none;
-	}
-
-	.search-input::placeholder {
-		color: var(--muted-foreground);
-	}
-
-	.search-shortcut {
-		display: flex;
-		gap: 0.125rem;
-		flex-shrink: 0;
-	}
-
-	.shortcut-key {
-		padding: 0.125rem 0.375rem;
-		font-size: 0.6875rem;
-		background: var(--background);
-		border: 1px solid var(--border);
-		border-radius: 0.25rem;
-		color: var(--muted-foreground);
-		font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
-		font-weight: 500;
-		line-height: 1.2;
 	}
 
 	.nav-links {
@@ -346,12 +263,6 @@
 	}
 
 	/* Responsive */
-	@media (max-width: 1024px) {
-		.search-container {
-			display: none;
-		}
-	}
-
 	@media (max-width: 768px) {
 		.logo-text {
 			display: none;
