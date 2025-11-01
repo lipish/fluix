@@ -4,24 +4,24 @@ This directory contains the GitHub Pages website for Fluix.
 
 ## Structure
 
-- `index.html` - Redirect page to `pages/index.html`
-- `pages/index.html` - Main page with component documentation
+- `pages/index.html` - Main page with component documentation (located in root `/pages` directory)
 - `pages/styles.css` - Styling for the website
 - `pages/script.js` - JavaScript for interactivity
+- `docs/index.html` - Redirect page to `/pages/index.html`
 
 ## Deployment
 
-GitHub Pages will automatically deploy the contents of this `docs/` directory.
-
-To enable GitHub Pages:
+GitHub Pages can be configured to serve from the root `/pages` directory:
 
 1. Go to your repository settings
 2. Navigate to "Pages" section
 3. Select "Deploy from a branch"
-4. Choose `main` branch and `/docs` folder
+4. Choose `main` branch and `/pages` folder
 5. Click Save
 
-The site will be available at: `https://<username>.github.io/fluix/`
+Alternatively, you can use the `/docs` folder and access the site at `/pages/index.html`.
+
+The site will be available at: `https://<username>.github.io/fluix/` (if configured from `/pages`) or `https://<username>.github.io/fluix/pages/` (if configured from `/docs`)
 
 ## Local Development
 
@@ -35,7 +35,7 @@ python3 -m http.server 8000 --directory docs
 npx http-server docs -p 8000
 
 # Then open http://localhost:8000/pages/index.html in your browser
-# Or http://localhost:8000/ which will redirect to pages/index.html
+# Or http://localhost:8000/ which will redirect to /pages/index.html
 ```
 
 ## Updating Content
