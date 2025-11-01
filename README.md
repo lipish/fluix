@@ -165,6 +165,23 @@ Contributions are welcome! Please check [ROADMAP.md](docs/ROADMAP.md) for curren
 - [API Documentation](https://docs.rs/fluix) - Complete API documentation
 - [Example Code](examples/) - More examples
 
+## About
+
+Fluix is a modern Rust UI component library built on top of GPUI 0.2, designed to simplify the development of cross-platform desktop applications. With GPU-accelerated rendering, a comprehensive component set, and type-safe APIs, Fluix empowers developers to build beautiful and performant desktop applications with ease.
+
+### Key Features
+
+- **GPU-Accelerated**: Built on GPUI for smooth, high-performance rendering
+- **Type-Safe**: Leverages Rust's type system for compile-time safety
+- **Cross-Platform**: Works on macOS, Windows, and Linux
+- **Comprehensive**: 46+ components covering basic UI, forms, and layouts
+- **Well-Documented**: Extensive tutorials, API documentation, and examples
+- **Themeable**: Flexible theming system for customizing application appearance
+
+### Why Fluix?
+
+Fluix bridges the gap between low-level GPUI APIs and high-level component development, providing a consistent and intuitive API for building modern desktop applications. Whether you're building a simple utility or a complex application, Fluix provides the building blocks you need.
+
 ## License
 
 MIT License
