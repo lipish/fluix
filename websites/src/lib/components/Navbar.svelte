@@ -1,23 +1,7 @@
 <script lang="ts">
 	import { ChevronDown, ExternalLink } from 'lucide-svelte';
-	import { onMount } from 'svelte';
 	
 	let resourcesOpen = $state(false);
-	let githubStars = $state<number | null>(null);
-
-	onMount(async () => {
-		// Fetch GitHub stars (with fallback)
-		try {
-			const response = await fetch('https://api.github.com/repos/lipish/fluix');
-			if (response.ok) {
-				const data = await response.json();
-				githubStars = data.stargazers_count;
-			}
-		} catch (error) {
-			console.error('Failed to fetch GitHub stars:', error);
-			githubStars = null;
-		}
-	});
 </script>
 
 
@@ -68,11 +52,7 @@
 			rel="noopener noreferrer"
 			class="github-link"
 		>
-			{#if githubStars !== null}
-				<span class="github-stars">{githubStars >= 1000 ? (githubStars / 1000).toFixed(1) + 'k' : githubStars}</span>
-			{:else}
-				<span class="github-stars">GitHub</span>
-			{/if}
+			<span class="github-stars">GitHub</span>
 		</a>
 	</div>
 </nav>
@@ -257,10 +237,6 @@
 		.nav-link {
 			padding: 0.5rem;
 			font-size: 0.8125rem;
-		}
-
-		.github-stars {
-			display: none;
 		}
 	}
 
