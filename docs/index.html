@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fluix - Rust UI Component Library</title>
+    <title>Fluix Component - Rust UI Component Library</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,13 +13,11 @@
     <nav class="navbar">
         <div class="container">
             <div class="nav-brand">
-                <h1>Fluix</h1>
-                <span class="version">v0.1.21</span>
+                <h1>Fluix Component</h1>
             </div>
             <div class="nav-links">
-                <a href="#home">Home</a>
-                <a href="#components">Components</a>
-                <a href="#examples">Examples</a>
+                <a href="#home">快速开始</a>
+                <a href="#components">组件</a>
                 <a href="https://github.com/lipish/fluix" target="_blank">GitHub</a>
                 <a href="https://docs.rs/fluix" target="_blank">Docs</a>
             </div>
@@ -29,28 +27,30 @@
     <main>
         <section id="home" class="hero">
             <div class="container">
-                <h1 class="hero-title">Fluix</h1>
-                <p class="hero-subtitle">Rust GUI components for building fantastic cross-platform desktop applications using GPUI</p>
+                <h1 class="hero-title">Fluix Component</h1>
+                <p class="hero-subtitle">基于 GPUI 0.2 的 Rust UI 组件库，用于构建现代化的跨平台桌面应用</p>
                 <div class="hero-badges">
-                    <span class="badge">60+ Components</span>
-                    <span class="badge">High Performance</span>
-                    <span class="badge">Themeable</span>
-                    <span class="badge">Type Safe</span>
+                    <span class="badge">46+ 组件</span>
+                    <span class="badge">高性能</span>
+                    <span class="badge">类型安全</span>
+                    <span class="badge">灵活定制</span>
+                    <span class="badge">易于使用</span>
+                    <span class="badge">完善文档</span>
                 </div>
                 <div class="hero-actions">
-                    <a href="#installation" class="btn btn-primary">Get Started</a>
-                    <a href="#components" class="btn btn-secondary">View Components</a>
+                    <a href="#quick-start" class="btn btn-primary">快速开始</a>
+                    <a href="#components" class="btn btn-secondary">查看组件</a>
                 </div>
             </div>
         </section>
 
         <section id="installation" class="section">
             <div class="container">
-                <h2>Installation</h2>
-                <p>Add Fluix to your <code>Cargo.toml</code>:</p>
+                <h2>安装 Fluix Component</h2>
+                <p>在 <code>Cargo.toml</code> 中添加以下依赖：</p>
                 <div class="code-block">
                     <pre><code>[dependencies]
-fluix = "0.1.21"
+fluix = "0.1.20"
 gpui = "0.2"</code></pre>
                 </div>
             </div>
@@ -58,65 +58,76 @@ gpui = "0.2"</code></pre>
 
         <section id="quick-start" class="section">
             <div class="container">
-                <h2>Quick Start</h2>
+                <h2>简洁直观的 API</h2>
+                <p class="section-description">只需几行代码即可开始使用。无状态组件设计让构建复杂 UI 变得简单。</p>
+                <div class="code-block">
+                    <pre><code>Button::new("Click Me")
+    .variant(ButtonVariant::Primary)
+    .size(ComponentSize::Medium)
+    .on_click(|_, _, _| println!("Button clicked!"))</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <section id="hello-world" class="section">
+            <div class="container">
+                <h2>Hello World</h2>
+                <p class="section-description">以下是一个简单的 "Hello, World!" 应用示例：</p>
                 <div class="code-block">
                     <pre><code>use gpui::*;
 use fluix::*;
 
-fn main() {
-    let app = Application::new()
-        .with_assets(fluix::Assets);  // Important! Load SVG icons
+pub struct HelloWorld;
 
-    app.run(move |cx| {
-        cx.open_window(WindowOptions::default(), |window, cx| {
-            cx.new(|cx| MyView::new(window, cx))
-        }).unwrap();
-    });
-}
-
-struct MyView {
-    button: Entity&lt;Button&gt;,
-}
-
-impl MyView {
-    fn new(window: &mut Window, cx: &mut Context&lt;Self&gt;) -> Self {
-        let button = cx.new(|_cx| {
-            Button::new("Click Me")
-                .variant(ButtonVariant::Primary)
-                .size(ComponentSize::Medium)
-        });
-        
-        cx.subscribe_in(&button, window, Self::on_click).detach();
-        
-        Self { button }
-    }
-    
-    fn on_click(&mut self, _: &Entity&lt;Button&gt;, _: &ButtonEvent, 
-                _: &mut Window, _: &mut Context&lt;Self&gt;) {
-        println!("Button clicked!");
-    }
-}
-
-impl Render for MyView {
+impl Render for HelloWorld {
     fn render(&mut self, _: &mut Window, _: &mut Context&lt;Self&gt;) -> impl IntoElement {
         div()
-            .p_4()
-            .child(self.button.clone())
+            .v_flex()
+            .gap_2()
+            .size_full()
+            .items_center()
+            .justify_center()
+            .child("Hello, World!")
+            .child(
+                Button::new("click_me")
+                    .variant(ButtonVariant::Primary)
+                    .size(ComponentSize::Medium)
+            )
     }
+}
+
+fn main() {
+    let app = Application::new()
+        .with_assets(fluix::Assets);  // ← 重要！加载 SVG 图标
+
+    app.run(move |cx| {
+        cx.spawn(async move |cx| {
+            cx.open_window(WindowOptions::default(), |window, cx| {
+                cx.new(|_| HelloWorld)
+            })?;
+
+            Ok::&lt;_, anyhow::Error&gt;(())
+        })
+        .detach();
+    });
 }</code></pre>
+                </div>
+                <p class="section-description">运行程序：</p>
+                <div class="code-block">
+                    <pre><code>$ cargo run</code></pre>
                 </div>
             </div>
         </section>
 
         <section id="components" class="section">
             <div class="container">
-                <h2>Components</h2>
-                <p class="section-description">Comprehensive library of cross-platform desktop UI components</p>
+                <h2>组件列表</h2>
+                <p class="section-description">丰富的跨平台桌面 UI 组件库，提供完整的组件集合用于构建功能丰富的应用程序</p>
                 
                 <div class="component-grid">
                     <!-- Basic Components -->
                     <div class="component-card">
-                        <h3>Basic Components</h3>
+                        <h3>基础组件</h3>
                         <ul class="component-list">
                             <li><a href="#button">Button</a></li>
                             <li><a href="#icon">Icon</a></li>
@@ -125,7 +136,7 @@ impl Render for MyView {
 
                     <!-- Form Components -->
                     <div class="component-card">
-                        <h3>Form Components</h3>
+                        <h3>表单组件</h3>
                         <ul class="component-list">
                             <li><a href="#text-input">TextInput</a></li>
                             <li><a href="#text-area">TextArea</a></li>
@@ -139,7 +150,7 @@ impl Render for MyView {
 
                     <!-- Layout Components -->
                     <div class="component-card">
-                        <h3>Layout Components</h3>
+                        <h3>布局组件</h3>
                         <ul class="component-list">
                             <li><a href="#tabs">Tabs</a></li>
                             <li><a href="#breadcrumb">Breadcrumb</a></li>
@@ -529,8 +540,8 @@ cx.subscribe_in(&input, window, |_, _, event: &TextInputEvent, _, _| {
 
         <section id="examples" class="section">
             <div class="container">
-                <h2>Examples</h2>
-                <p class="section-description">Run examples to see components in action:</p>
+                <h2>示例</h2>
+                <p class="section-description">运行示例项目：</p>
                 <div class="code-block">
                     <pre><code># Button component
 cargo run --example button_demo
@@ -565,10 +576,10 @@ cargo run --example radio_group_demo</code></pre>
 
     <footer class="footer">
         <div class="container">
-            <p>&copy; 2025 Fluix Contributors. Licensed under MIT License.</p>
+            <p>&copy; 2025 Fluix Contributors. MIT License</p>
             <p>
                 <a href="https://github.com/lipish/fluix">GitHub</a> |
-                <a href="https://docs.rs/fluix">Documentation</a> |
+                <a href="https://docs.rs/fluix">API 文档</a> |
                 <a href="https://crates.io/crates/fluix">Crates.io</a>
             </p>
         </div>
