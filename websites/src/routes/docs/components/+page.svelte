@@ -39,13 +39,6 @@
 				</button>
 			{/each}
 		</nav>
-		
-		<div class="demo-info">
-			<h3>运行 Demo</h3>
-			<p class="demo-command">
-				cargo run --example {components.find(c => c.id === selectedComponent)?.demo}
-			</p>
-		</div>
 	</aside>
 	
 	<!-- Main Content -->
@@ -85,13 +78,6 @@
 					</div>
 				</div>
 			</div>
-			
-			<div class="demo-section">
-				<h2>运行 Demo</h2>
-				<p>要查看实际的 Fluix 组件效果，请运行以下命令：</p>
-				<pre class="code-block"><code>cargo run --example {components.find(c => c.id === selectedComponent)?.demo}</code></pre>
-				<p class="hint">运行后，请对窗口进行截图并保存到 <code>websites/static/screenshots/components/{selectedComponent}-demo.png</code></p>
-			</div>
 		</div>
 	</main>
 </div>
@@ -128,7 +114,6 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.25rem;
-		margin-bottom: 2rem;
 	}
 
 	.nav-item {
@@ -153,30 +138,6 @@
 	.nav-item.active {
 		background: var(--primary);
 		color: var(--primary-foreground);
-	}
-
-	.demo-info {
-		padding: 1rem;
-		background: var(--secondary);
-		border-radius: 0.5rem;
-		border: 1px solid var(--border);
-	}
-
-	.demo-info h3 {
-		font-size: 0.875rem;
-		font-weight: 600;
-		margin-bottom: 0.5rem;
-		color: var(--foreground);
-	}
-
-	.demo-command {
-		font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-		font-size: 0.75rem;
-		color: var(--muted-foreground);
-		background: var(--background);
-		padding: 0.5rem;
-		border-radius: 0.25rem;
-		word-break: break-all;
 	}
 
 	/* Content */
@@ -258,26 +219,6 @@
 	.placeholder-content p {
 		color: var(--muted-foreground);
 		margin-bottom: 1rem;
-		font-size: 0.875rem;
-	}
-
-	.demo-section {
-		padding: 1.5rem;
-		border: 1px solid var(--border);
-		border-radius: 0.5rem;
-		background: var(--card);
-	}
-
-	.demo-section h2 {
-		font-size: 1.125rem;
-		font-weight: 600;
-		margin-bottom: 1rem;
-		color: var(--foreground);
-	}
-
-	.demo-section p {
-		color: var(--muted-foreground);
-		margin-bottom: 0.75rem;
 		font-size: 0.875rem;
 	}
 
