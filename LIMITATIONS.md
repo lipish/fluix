@@ -1,52 +1,52 @@
 # Known Limitations
 
-本文档记录 Fluix 组件库在使用 GPUI 框架时遇到的已知限制。
+This document records known limitations encountered when using the Fluix component library with the GPUI framework.
 
-## TextArea 组件
+## TextArea Component
 
-### 鼠标拖拽选择文本的限制
+### Mouse Drag Selection Limitation
 
-**问题描述：**
-无法实现精确的鼠标拖拽选择文本功能。
+**Issue Description:**
+Unable to implement precise mouse drag text selection functionality.
 
-**技术原因：**
-GPUI 0.2.2 的 `MouseDownEvent` 和 `MouseMoveEvent` 中的 `position` 字段类型为 `Point<Pixels>`，但 `Pixels` 结构体的内部字段是私有的：
+**Technical Reason:**
+In GPUI 0.2.2, the `position` field in `MouseDownEvent` and `MouseMoveEvent` is of type `Point<Pixels>`, but the internal field of the `Pixels` struct is private:
 
 ```rust
-pub struct Pixels(f32);  // 字段 `0` 是私有的
+pub struct Pixels(f32);  // Field `0` is private
 ```
 
-这导致无法直接访问鼠标的 x/y 坐标值来计算点击位置对应的字符索引。
+This prevents direct access to the mouse's x/y coordinate values to calculate the character index corresponding to the click position.
 
-**尝试的代码：**
+**Attempted Code:**
 ```rust
-// ❌ 编译错误：field `0` of struct `gpui::Pixels` is private
+// ❌ Compilation error: field `0` of struct `gpui::Pixels` is private
 let x = event.position.x.0;
 let y = event.position.y.0;
 ```
 
-**当前解决方案：**
-实现了以下替代交互方式：
-- ✅ 单击：清除选择并聚焦
-- ✅ 双击：选择全部文本
-- ✅ Cmd/Ctrl+A：键盘快捷键全选
-- ✅ 选中高亮：蓝色背景显示
+**Current Workaround:**
+Implemented the following alternative interaction methods:
+- ✅ Click: Clear selection and focus
+- ✅ Double-click: Select all text
+- ✅ Cmd/Ctrl+A: Keyboard shortcut to select all
+- ✅ Selection highlight: Blue background display
 
-**未来展望：**
-如果 GPUI 未来版本提供以下任一方式，即可实现完整的鼠标选择功能：
-1. 将 `Pixels` 的字段设为公开
-2. 添加 `pub fn value(&self) -> f32` 方法
-3. 实现 `Deref<Target = f32>` trait
-4. 提供专门的坐标访问 API
+**Future Outlook:**
+If future versions of GPUI provide any of the following methods, complete mouse selection functionality can be implemented:
+1. Make the `Pixels` field public
+2. Add `pub fn value(&self) -> f32` method
+3. Implement `Deref<Target = f32>` trait
+4. Provide dedicated coordinate access API
 
-**相关链接：**
+**Related Links:**
 - GPUI GitHub: https://github.com/zed-industries/zed
-- GPUI 版本: 0.2.2
+- GPUI Version: 0.2.2
 
-**记录时间：** 2025-10-25
+**Recorded Date:** 2025-10-25
 
 ---
 
-## 如何贡献
+## Contributing
 
-如果你发现此限制已被解决或有其他解决方案，欢迎提交 Issue 或 Pull Request！
+If you discover that this limitation has been resolved or have other solutions, please submit an Issue or Pull Request!
