@@ -162,7 +162,6 @@ cargo run --example tabs_demo
 ## 相关链接
 
 - [GPUI](https://github.com/zed-industries/zed) - 底层 UI 框架
-- [gpui-component](https://github.com/longbridge/gpui-component) - 参考实现
 - [API 文档](https://docs.rs/fluix) - 完整的 API 文档
 - [示例代码](examples/) - 更多示例
 
