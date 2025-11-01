@@ -200,6 +200,12 @@ impl TextInput {
         self
     }
 
+    /// Set validation function
+    pub fn validator(mut self, validator: impl Fn(&str) -> bool + 'static) -> Self {
+        self.validator = Some(Arc::new(validator));
+        self
+    }
+
     /// Hide border (useful for embedded use cases like combobox)
     pub fn no_border(mut self) -> Self {
         self.show_border = false;
