@@ -1,11 +1,9 @@
 <script lang="ts">
-	import { Search, ChevronDown, ExternalLink } from 'lucide-svelte';
+	import { ChevronDown, ExternalLink } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	
-	let searchValue = $state('');
 	let resourcesOpen = $state(false);
 	let githubStars = $state<number | null>(null);
-	let searchInput: HTMLInputElement;
 
 	onMount(async () => {
 		// Fetch GitHub stars (with fallback)
@@ -20,21 +18,6 @@
 			githubStars = null;
 		}
 	});
-
-	function handleSearch(e: KeyboardEvent) {
-		if (e.key === 'Enter' && searchValue.trim()) {
-			// Handle search navigation
-			console.log('Search:', searchValue);
-			// You can implement search navigation here
-		}
-	}
-
-	function handleCmdK(e: KeyboardEvent) {
-		if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-			e.preventDefault();
-			searchInput?.focus();
-		}
-	}
 </script>
 
 
