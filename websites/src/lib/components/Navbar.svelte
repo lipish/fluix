@@ -270,9 +270,10 @@
 	}
 
 	.external-icon {
-		width: 0.875rem;
-		height: 0.875rem;
+		width: 0.75rem;
+		height: 0.75rem;
 		color: var(--muted-foreground);
+		opacity: 0.6;
 	}
 
 	.resources-dropdown {
@@ -281,9 +282,10 @@
 	}
 
 	.chevron-icon {
-		width: 0.875rem;
-		height: 0.875rem;
+		width: 0.75rem;
+		height: 0.75rem;
 		color: var(--muted-foreground);
+		opacity: 0.6;
 		transition: transform 0.2s;
 	}
 
