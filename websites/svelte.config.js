@@ -16,7 +16,11 @@ const config = {
 			fallback: undefined,
 			precompress: false,
 			strict: true
-		})
+		}),
+		// Configure base path for GitHub Pages
+		paths: {
+			base: '/fluix'
+		}
 	}
 };
 
