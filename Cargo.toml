@@ -1,6 +1,6 @@
 [package]
 name = "fluix"
-version = "0.1.20"
+version = "0.1.21"
 edition = "2021"
 authors = ["Fluix Contributors"]
 description = "A comprehensive UI component library for GPUI 0.2 - Modern, performant, and type-safe"
@@ -31,6 +31,26 @@ path = "examples/icon_demo.rs"
 [[example]]
 name = "tabs_demo"
 path = "examples/tabs_demo.rs"
+
+[[example]]
+name = "checkbox_demo"
+path = "examples/checkbox_demo.rs"
+
+[[example]]
+name = "checkbox_group_demo"
+path = "examples/checkbox_group_demo.rs"
+
+[[example]]
+name = "combobox_demo"
+path = "examples/combobox_demo.rs"
+
+[[example]]
+name = "breadcrumb_demo"
+path = "examples/breadcrumb_demo.rs"
+
+[[example]]
+name = "radio_group_demo"
+path = "examples/radio_group_demo.rs"
 
 [dev-dependencies]
 env_logger = "0.11"

@@ -133,6 +133,12 @@ pub struct TextInput {
     last_layout: Option<TextInputLayout>,
     /// Marked text range for IME (Input Method Editor) composition
     marked_range: Option<std::ops::Range<usize>>,
+    /// Whether to show border (for embedded use cases like combobox)
+    show_border: bool,
+    /// Custom background color (None uses default)
+    custom_bg_color: Option<Rgba>,
+    /// Custom border color (None uses default)
+    custom_border_color: Option<Rgba>,
 }
 
 impl TextInput {
@@ -155,6 +161,9 @@ impl TextInput {
             is_dragging: false,
             last_layout: None,
             marked_range: None,
+            show_border: true,
+            custom_bg_color: None,
+            custom_border_color: None,
         }
     }
 
@@ -191,12 +200,27 @@ impl TextInput {
         self
     }
 
-    /// Set a custom validator function
-    pub fn validator<F>(mut self, validator: F) -> Self
-    where
-        F: Fn(&str) -> bool + 'static,
-    {
-        self.validator = Some(Arc::new(validator));
+    /// Hide border (useful for embedded use cases like combobox)
+    pub fn no_border(mut self) -> Self {
+        self.show_border = false;
+        self
+    }
+
+    /// Set custom background color
+    pub fn bg_color(mut self, color: Rgba) -> Self {
+        self.custom_bg_color = Some(color);
+        self
+    }
+
+    /// Set custom border color
+    pub fn border_color(mut self, color: Rgba) -> Self {
+        self.custom_border_color = Some(color);
+        self
+    }
+
+    /// Set transparent background
+    pub fn transparent(mut self) -> Self {
+        self.custom_bg_color = Some(rgba(0x00000000));
         self
     }
 
@@ -931,16 +955,18 @@ impl Render for TextInput {
             .w_full()
             .h(px(36.))
             .px_3()
-            .bg(if disabled {
+            .bg(self.custom_bg_color.unwrap_or(if disabled {
                 rgb(0xF5F5F5)
             } else {
                 rgb(0xFFFFFF)
-            })
-            .border_1()
-            .border_color(if is_focused {
-                rgb(0x696FC7)
-            } else {
-                rgb(0xE0E0E0)
+            }))
+            .when(self.show_border, |this| {
+                this.border_1()
+                    .border_color(self.custom_border_color.unwrap_or(if is_focused {
+                        rgb(0x696FC7)
+                    } else {
+                        rgb(0xE0E0E0)
+                    }))
             })
             .rounded(px(6.))
             .when(!disabled, |this| {
