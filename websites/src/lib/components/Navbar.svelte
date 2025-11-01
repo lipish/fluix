@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Search, ChevronDown, ExternalLink, Github, MoreHorizontal } from 'lucide-svelte';
+	import { Search, ChevronDown, ExternalLink, Github } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	
 	let searchValue = $state('');
@@ -112,11 +112,6 @@
 				<span class="github-stars">GitHub</span>
 			{/if}
 		</a>
-
-		<!-- More Options -->
-		<button class="more-button" aria-label="More options">
-			<MoreHorizontal />
-		</button>
 	</div>
 </nav>
 
@@ -355,30 +350,6 @@
 		font-size: 0.875rem;
 		font-weight: 500;
 		color: var(--foreground);
-	}
-
-	.more-button {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 2rem;
-		height: 2rem;
-		border: none;
-		background: transparent;
-		color: var(--foreground);
-		border-radius: 0.375rem;
-		cursor: pointer;
-		transition: background-color 0.2s;
-		flex-shrink: 0;
-	}
-
-	.more-button:hover {
-		background: var(--secondary);
-	}
-
-	.more-button :global(svg) {
-		width: 1.25rem;
-		height: 1.25rem;
 	}
 
 	/* Responsive */
