@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Search, ChevronDown, ExternalLink, Github } from 'lucide-svelte';
+	import { Search, ChevronDown, ExternalLink } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	
 	let searchValue = $state('');
@@ -105,7 +105,6 @@
 			rel="noopener noreferrer"
 			class="github-link"
 		>
-			<Github class="github-icon" />
 			{#if githubStars !== null}
 				<span class="github-stars">{githubStars >= 1000 ? (githubStars / 1000).toFixed(1) + 'k' : githubStars}</span>
 			{:else}
@@ -338,12 +337,6 @@
 
 	.github-link:hover {
 		background: var(--secondary);
-	}
-
-	.github-icon {
-		width: 1.25rem;
-		height: 1.25rem;
-		color: var(--foreground);
 	}
 
 	.github-stars {
