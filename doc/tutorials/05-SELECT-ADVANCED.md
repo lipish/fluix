@@ -337,8 +337,8 @@ Select::new(cx)
     .variant(SelectVariant::Outline)
     .options(vec![
         SelectOption::new("en", "🇺🇸 English"),
-        SelectOption::new("zh", "🇨🇳 中文"),
-        SelectOption::new("ja", "🇯🇵 日本語"),
+        SelectOption::new("zh", "🇨🇳 Chinese"),
+        SelectOption::new("ja", "🇯🇵 Japanese"),
     ])
 ```
 
