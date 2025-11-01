@@ -1,189 +1,189 @@
 # Fluix Component Library Roadmap
 
-Fluix 是一个基于 GPUI 0.2 的 Rust UI 组件库，目标是提供完整的、易用的组件集合。
+Fluix is a Rust UI component library based on GPUI 0.2, aiming to provide a complete and easy-to-use component collection.
 
-## 项目目标
+## Project Goals
 
-- 提供完整的组件库
-- 保持简洁、高性能的实现
-- 支持主题定制和样式扩展
-- 提供详细的示例和文档
+- Provide a complete component library
+- Maintain simple and high-performance implementation
+- Support theme customization and style extension
+- Provide detailed examples and documentation
 
-## 组件分类与实现状态
+## Component Categories and Implementation Status
 
-### ✅ 已实现组件 (2)
+### ✅ Implemented Components (2)
 
 #### Form Components
-- [x] **TextInput** - 单行文本输入框
-  - 支持 placeholder、password 模式、验证、最大长度
-  - 文件: `src/text_input.rs`
+- [x] **TextInput** - Single-line text input field
+  - Supports placeholder, password mode, validation, max length
+  - File: `src/text_input.rs`
   
-- [x] **TextArea** - 多行文本编辑器
-  - 支持自动扩展高度、Shift+Enter 换行、Enter 提交
-  - 光标位置跟踪和正确显示
-  - 文件: `src/text_area.rs`
+- [x] **TextArea** - Multi-line text editor
+  - Supports auto-expanding height, Shift+Enter for newline, Enter to submit
+  - Cursor position tracking and correct display
+  - File: `src/text_area.rs`
 
 ---
 
-### 📋 待实现组件 (44)
+### 📋 Components To Implement (44)
 
-#### 基础组件 (Basic Components) - 19个
+#### Basic Components - 19 components
 
-- [ ] **Accordion** - 可折叠内容面板
-- [ ] **Alert** - 不同变体的警告消息
-- [ ] **Avatar** - 用户头像（带后备文字）
-- [ ] **Badge** - 计数徽章和指示器
-- [ ] **Button** - 多种变体的交互按钮
+- [ ] **Accordion** - Collapsible content panel
+- [ ] **Alert** - Alert messages with different variants
+- [ ] **Avatar** - User avatar (with fallback text)
+- [ ] **Badge** - Count badge and indicator
+- [ ] **Button** - Interactive buttons with multiple variants
   - Primary, Secondary, Outline, Text
-  - 支持图标、加载状态、禁用状态
-- [ ] **Checkbox** - 复选框控制
-- [ ] **Icon** - 图标显示组件
-  - 集成 Lucide 图标
-- [ ] **Image** - 图片显示（带后备）
-- [ ] **Indicator** - 加载和状态指示器
-- [ ] **Kbd** - 键盘快捷键显示
-- [ ] **Label** - 表单元素文本标签
-- [ ] **Progress** - 进度条
-- [ ] **Radio** - 单选框（多选一）
-- [ ] **Skeleton** - 加载占位符
-- [ ] **Slider** - 范围选择滑块
-- [ ] **Switch** - 开关切换控制
-- [ ] **Tag** - 标签和分类
-- [ ] **Toggle** - 切换按钮状态
-- [ ] **Tooltip** - 悬停提示
+  - Supports icons, loading state, disabled state
+- [ ] **Checkbox** - Checkbox control
+- [ ] **Icon** - Icon display component
+  - Integrated Lucide icons
+- [ ] **Image** - Image display (with fallback)
+- [ ] **Indicator** - Loading and status indicators
+- [ ] **Kbd** - Keyboard shortcut display
+- [ ] **Label** - Form element text label
+- [ ] **Progress** - Progress bar
+- [ ] **Radio** - Radio button (single selection)
+- [ ] **Skeleton** - Loading placeholder
+- [ ] **Slider** - Range selection slider
+- [ ] **Switch** - Toggle switch control
+- [ ] **Tag** - Tags and categories
+- [ ] **Toggle** - Toggle button state
+- [ ] **Tooltip** - Hover tooltip
 
-#### 表单组件 (Form Components) - 6个
+#### Form Components - 6 components
 
-- [ ] **ColorPicker** - 颜色选择界面
-- [ ] **DatePicker** - 日期选择（带日历）
-- [ ] **Dropdown** - 下拉选择
-- [ ] **Form** - 表单容器和布局
-- [ ] **NumberInput** - 数字输入（带增减）
-- [ ] **OtpInput** - 一次性密码输入
-- [ ] **Editor** - 代码编辑器
+- [ ] **ColorPicker** - Color selection interface
+- [ ] **DatePicker** - Date selection (with calendar)
+- [ ] **Dropdown** - Dropdown selection
+- [ ] **Form** - Form container and layout
+- [ ] **NumberInput** - Number input (with increment/decrement)
+- [ ] **OtpInput** - One-time password input
+- [ ] **Editor** - Code editor
 
-#### 布局组件 (Layout Components) - 9个
+#### Layout Components - 9 components
 
-- [ ] **DescriptionList** - 键值对显示
-- [ ] **Drawer** - 从边缘滑入的面板
-- [ ] **GroupBox** - 带边框的分组内容
-- [ ] **Modal** - 对话框和模态窗口
-- [ ] **Notification** - Toast 通知
-- [ ] **Popover** - 浮动内容显示
-- [ ] **Resizable** - 可调整大小的面板
-- [ ] **Scrollable** - 可滚动容器
-- [ ] **Sidebar** - 导航侧边栏
+- [ ] **DescriptionList** - Key-value pair display
+- [ ] **Drawer** - Panel that slides in from edge
+- [ ] **GroupBox** - Grouped content with border
+- [ ] **Modal** - Dialog and modal window
+- [ ] **Notification** - Toast notification
+- [ ] **Popover** - Floating content display
+- [ ] **Resizable** - Resizable panel
+- [ ] **Scrollable** - Scrollable container
+- [ ] **Sidebar** - Navigation sidebar
 
-#### 高级组件 (Advanced Components) - 10个
+#### Advanced Components - 10 components
 
-- [ ] **Calendar** - 日历显示和导航
-- [ ] **Chart** - 数据可视化图表
+- [ ] **Calendar** - Calendar display and navigation
+- [ ] **Chart** - Data visualization charts
   - Line, Bar, Area, Pie
-- [ ] **List** - 列表显示
-- [ ] **PopupMenu** - 菜单和上下文菜单
-- [ ] **Table** - 高性能数据表格
-- [ ] **Tabs** - 选项卡界面
-- [ ] **Tree** - 分层树形数据显示
-- [ ] **VirtualList** - 虚拟化列表（大数据集）
-- [ ] **WebView** - 嵌入式 Web 浏览器
+- [ ] **List** - List display
+- [ ] **PopupMenu** - Menu and context menu
+- [ ] **Table** - High-performance data table
+- [ ] **Tabs** - Tab interface
+- [ ] **Tree** - Hierarchical tree data display
+- [ ] **VirtualList** - Virtualized list (large datasets)
+- [ ] **WebView** - Embedded web browser
 
 ---
 
-## 实施计划
+## Implementation Plan
 
-### Phase 1: 核心基础组件 (优先级: 高)
+### Phase 1: Core Basic Components (Priority: High)
 
-**目标**: 提供最常用的基础 UI 元素
+**Goal**: Provide the most commonly used basic UI elements
 
-1. **Button** - 各种按钮样式
-2. **Icon** - 图标支持
-3. **Label** - 文本标签
-4. **Checkbox** - 复选框
-5. **Radio** - 单选框
-6. **Switch** - 开关
-7. **Badge** - 徽章
-8. **Tag** - 标签
+1. **Button** - Various button styles
+2. **Icon** - Icon support
+3. **Label** - Text label
+4. **Checkbox** - Checkbox
+5. **Radio** - Radio button
+6. **Switch** - Toggle switch
+7. **Badge** - Badge
+8. **Tag** - Tag
 
-**预计时间**: 2-3 周
+**Estimated Time**: 2-3 weeks
 
-### Phase 2: 表单组件 (优先级: 高)
+### Phase 2: Form Components (Priority: High)
 
-**目标**: 完善表单输入能力
+**Goal**: Complete form input capabilities
 
-1. **Dropdown** - 下拉选择
-2. **Form** - 表单容器
-3. **NumberInput** - 数字输入
-4. **ColorPicker** - 颜色选择器
-5. **DatePicker** - 日期选择器
+1. **Dropdown** - Dropdown selection
+2. **Form** - Form container
+3. **NumberInput** - Number input
+4. **ColorPicker** - Color picker
+5. **DatePicker** - Date picker
 
-**预计时间**: 2-3 周
+**Estimated Time**: 2-3 weeks
 
-### Phase 3: 反馈组件 (优先级: 中)
+### Phase 3: Feedback Components (Priority: Medium)
 
-**目标**: 用户反馈和交互提示
+**Goal**: User feedback and interaction hints
 
-1. **Alert** - 警告消息
-2. **Tooltip** - 工具提示
-3. **Modal** - 模态对话框
-4. **Notification** - 通知
-5. **Progress** - 进度条
-6. **Indicator** - 加载指示器
-7. **Skeleton** - 骨架屏
+1. **Alert** - Alert message
+2. **Tooltip** - Tooltip
+3. **Modal** - Modal dialog
+4. **Notification** - Notification
+5. **Progress** - Progress bar
+6. **Indicator** - Loading indicator
+7. **Skeleton** - Skeleton screen
 
-**预计时间**: 2 周
+**Estimated Time**: 2 weeks
 
-### Phase 4: 布局组件 (优先级: 中)
+### Phase 4: Layout Components (Priority: Medium)
 
-**目标**: 页面布局和容器
+**Goal**: Page layout and containers
 
-1. **Drawer** - 抽屉
-2. **Sidebar** - 侧边栏
-3. **Tabs** - 选项卡
-4. **Accordion** - 手风琴
-5. **GroupBox** - 分组框
-6. **Resizable** - 可调整大小
-7. **Scrollable** - 滚动容器
+1. **Drawer** - Drawer
+2. **Sidebar** - Sidebar
+3. **Tabs** - Tabs
+4. **Accordion** - Accordion
+5. **GroupBox** - Group box
+6. **Resizable** - Resizable
+7. **Scrollable** - Scrollable container
 
-**预计时间**: 2-3 周
+**Estimated Time**: 2-3 weeks
 
-### Phase 5: 数据展示组件 (优先级: 中低)
+### Phase 5: Data Display Components (Priority: Medium-Low)
 
-**目标**: 复杂数据展示
+**Goal**: Complex data display
 
-1. **Table** - 数据表格
-2. **List** - 列表
-3. **VirtualList** - 虚拟列表
-4. **Tree** - 树形组件
-5. **Calendar** - 日历
-6. **DescriptionList** - 描述列表
+1. **Table** - Data table
+2. **List** - List
+3. **VirtualList** - Virtual list
+4. **Tree** - Tree component
+5. **Calendar** - Calendar
+6. **DescriptionList** - Description list
 
-**预计时间**: 3-4 周
+**Estimated Time**: 3-4 weeks
 
-### Phase 6: 高级组件 (优先级: 低)
+### Phase 6: Advanced Components (Priority: Low)
 
-**目标**: 高级功能组件
+**Goal**: Advanced feature components
 
-1. **Chart** - 图表组件
-2. **PopupMenu** - 弹出菜单
-3. **Popover** - 气泡卡片
-4. **WebView** - Web 视图
-5. **Editor** - 代码编辑器
-6. **OtpInput** - OTP 输入
+1. **Chart** - Chart component
+2. **PopupMenu** - Popup menu
+3. **Popover** - Popover card
+4. **WebView** - Web view
+5. **Editor** - Code editor
+6. **OtpInput** - OTP input
 
-**预计时间**: 4-5 周
+**Estimated Time**: 4-5 weeks
 
 ---
 
-## 目录结构规划
+## Directory Structure Plan
 
 ```
 crates/fluix/
 ├── src/
-│   ├── lib.rs                    # 库入口
-│   ├── theme.rs                  # 主题系统
+│   ├── lib.rs                    # Library entry point
+│   ├── theme.rs                  # Theme system
 │   ├── components/
-│   │   ├── mod.rs                # 组件模块
-│   │   ├── basic/                # 基础组件
+│   │   ├── mod.rs                # Component module
+│   │   ├── basic/                # Basic components
 │   │   │   ├── mod.rs
 │   │   │   ├── button.rs
 │   │   │   ├── icon.rs
@@ -204,10 +204,10 @@ crates/fluix/
 │   │   │   ├── indicator.rs
 │   │   │   ├── alert.rs
 │   │   │   └── accordion.rs
-│   │   ├── form/                 # 表单组件
+│   │   ├── form/                 # Form components
 │   │   │   ├── mod.rs
-│   │   │   ├── text_input.rs     # ✅ 已实现
-│   │   │   ├── text_area.rs      # ✅ 已实现
+│   │   │   ├── text_input.rs     # ✅ Implemented
+│   │   │   ├── text_area.rs      # ✅ Implemented
 │   │   │   ├── dropdown.rs
 │   │   │   ├── form.rs
 │   │   │   ├── number_input.rs
@@ -215,7 +215,7 @@ crates/fluix/
 │   │   │   ├── date_picker.rs
 │   │   │   ├── otp_input.rs
 │   │   │   └── editor.rs
-│   │   ├── layout/               # 布局组件
+│   │   ├── layout/               # Layout components
 │   │   │   ├── mod.rs
 │   │   │   ├── drawer.rs
 │   │   │   ├── modal.rs
@@ -227,7 +227,7 @@ crates/fluix/
 │   │   │   ├── popover.rs
 │   │   │   ├── notification.rs
 │   │   │   └── description_list.rs
-│   │   └── advanced/             # 高级组件
+│   │   └── advanced/             # Advanced components
 │   │       ├── mod.rs
 │   │       ├── table.rs
 │   │       ├── list.rs
@@ -237,37 +237,37 @@ crates/fluix/
 │   │       ├── chart.rs
 │   │       ├── popup_menu.rs
 │   │       └── webview.rs
-│   └── utils/                    # 工具函数
+│   └── utils/                    # Utility functions
 │       ├── mod.rs
-│       ├── colors.rs             # 颜色工具
-│       └── icons.rs              # 图标工具
+│       ├── colors.rs             # Color utilities
+│       └── icons.rs              # Icon utilities
 ├── examples/
-│   ├── text_input_demo.rs        # ✅ 已有
+│   ├── text_input_demo.rs        # ✅ Existing
 │   ├── button_demo.rs
 │   ├── form_demo.rs
 │   ├── layout_demo.rs
-│   └── showcase.rs               # 所有组件展示
+│   └── showcase.rs               # All components showcase
 ├── Cargo.toml
 ├── README.md
-└── ROADMAP.md                    # 本文件
+└── ROADMAP.md                    # This file
 
 ```
 
 ---
 
-## 设计原则
+## Design Principles
 
-1. **一致性**: 所有组件使用统一的 API 设计模式
-2. **可扩展**: 支持自定义样式和主题
-3. **高性能**: 充分利用 GPUI 的 GPU 加速能力
-4. **类型安全**: 充分利用 Rust 的类型系统
-5. **文档完善**: 每个组件都有详细的示例和文档
+1. **Consistency**: All components use unified API design patterns
+2. **Extensibility**: Support custom styles and themes
+3. **High Performance**: Fully leverage GPUI's GPU acceleration capabilities
+4. **Type Safety**: Fully leverage Rust's type system
+5. **Well Documented**: Each component has detailed examples and documentation
 
-## API 设计规范
+## API Design Standards
 
-### 组件创建模式
+### Component Creation Pattern
 ```rust
-// Builder 模式
+// Builder pattern
 let button = Button::new("Click me")
     .variant(ButtonVariant::Primary)
     .size(Size::Medium)
@@ -275,9 +275,9 @@ let button = Button::new("Click me")
     .on_click(|cx| { /* handler */ });
 ```
 
-### 事件处理模式
+### Event Handling Pattern
 ```rust
-// 使用 EventEmitter trait
+// Using EventEmitter trait
 pub enum ButtonEvent {
     Click,
     DoubleClick,
@@ -286,9 +286,9 @@ pub enum ButtonEvent {
 impl EventEmitter<ButtonEvent> for Button {}
 ```
 
-### 样式定制模式
+### Style Customization Pattern
 ```rust
-// 使用 theme 系统
+// Using theme system
 button.theme(|theme| {
     theme.primary_color(rgb(0x696FC7))
          .border_radius(px(6.))
@@ -297,57 +297,57 @@ button.theme(|theme| {
 
 ---
 
-## 下一步行动
+## Next Steps
 
-### 立即开始 (本周)
+### Immediate Actions (This Week)
 
-1. **重构现有组件**
-   - 将 `text_input.rs` 移到 `src/components/form/`
-   - 将 `text_area.rs` 移到 `src/components/form/`
-   - 创建新的目录结构
+1. **Refactor Existing Components**
+   - Move `text_input.rs` to `src/components/form/`
+   - Move `text_area.rs` to `src/components/form/`
+   - Create new directory structure
 
-2. **创建主题系统**
-   - 定义统一的颜色方案
-   - 创建尺寸规范 (Size enum)
-   - 创建间距规范
+2. **Create Theme System**
+   - Define unified color scheme
+   - Create size standards (Size enum)
+   - Create spacing standards
 
-3. **实现 Button 组件**
-   - 作为第一个新组件
-   - 建立标准的组件实现模式
-   - 创建完整的示例
+3. **Implement Button Component**
+   - As the first new component
+   - Establish standard component implementation pattern
+   - Create complete examples
 
-### 短期目标 (1-2 周)
+### Short-term Goals (1-2 weeks)
 
-- 完成 Phase 1 的前 3 个组件 (Button, Icon, Label)
-- 创建统一的 showcase 示例
-- 编写组件开发指南文档
+- Complete first 3 components of Phase 1 (Button, Icon, Label)
+- Create unified showcase example
+- Write component development guide documentation
 
-### 中期目标 (1-2 月)
+### Medium-term Goals (1-2 months)
 
-- 完成 Phase 1 和 Phase 2 的所有组件
-- 提供完整的表单解决方案
-- 发布 v0.1.0 版本
+- Complete all components in Phase 1 and Phase 2
+- Provide complete form solution
+- Release v0.1.0 version
 
-### 长期目标 (3-6 月)
+### Long-term Goals (3-6 months)
 
-- 完成所有 46 个组件
-- 达到生产环境可用状态
-- 发布 v1.0.0 版本
-
----
-
-## 贡献指南
-
-欢迎贡献！在实现新组件时，请遵循：
-
-1. 保持 API 设计简洁一致
-2. 保持代码风格一致
-3. 编写详细的示例
-4. 添加单元测试（如果适用）
-5. 更新此 ROADMAP 文档
+- Complete all 46 components
+- Reach production-ready status
+- Release v1.0.0 version
 
 ---
 
-**最后更新**: 2025-10-25
-**当前版本**: v0.1.0-dev
-**已实现组件**: 2/46 (4.3%)
+## Contributing Guidelines
+
+Contributions are welcome! When implementing new components, please follow:
+
+1. Keep API design simple and consistent
+2. Maintain consistent code style
+3. Write detailed examples
+4. Add unit tests (if applicable)
+5. Update this ROADMAP document
+
+---
+
+**Last Updated**: 2025-10-25
+**Current Version**: v0.1.0-dev
+**Implemented Components**: 2/46 (4.3%)

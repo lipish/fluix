@@ -26,9 +26,10 @@ impl EventEmitter<ComboboxEvent> for Combobox {}
 
 /// A combobox component that combines text input with dropdown selection
 ///
-/// Combobox 的核心价值在于其灵活性。它主要提供两种交互方式：
-/// 1. 选择预设项：用户可以通过单击控件右侧的箭头按钮展开下拉列表，从一个预设的选项列表中进行选择
-/// 2. 自由输入文本：用户可以直接在文本框部分输入列表中不存在的自定义值
+/// The core value of Combobox lies in its flexibility. It provides two main interaction modes:
+/// 1. Select from preset items: Users can click the arrow button on the right side of the control
+///    to expand the dropdown list and select from a preset list of options
+/// 2. Free text input: Users can directly input custom values in the text box that don't exist in the list
 ///
 /// # Example
 ///

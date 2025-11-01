@@ -85,12 +85,12 @@ pub struct ColorPalette {
 impl Default for ColorPalette {
     fn default() -> Self {
         Self {
-            // Primary colors (紫色系)
+            // Primary colors (purple palette)
             primary: rgb(0x696FC7),
             primary_hover: rgb(0xA7AAE1),
             primary_active: rgb(0x5A5FB0),
             
-            // Secondary colors (灰色系)
+            // Secondary colors (gray palette)
             secondary: rgb(0x666666),
             secondary_hover: rgb(0x888888),
             secondary_active: rgb(0x555555),

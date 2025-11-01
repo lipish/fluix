@@ -980,7 +980,7 @@ impl Render for TextInput {
                     .flex()
                     .items_center()
                     .flex_1()
-                    .min_w(px(0.))  // 允许收缩，防止内容撑开
+                    .min_w(px(0.))  // Allow shrinking to prevent content from expanding
                     .text_sm()
                     .when(show_placeholder, |this| {
                         // Show placeholder with cursor when focused

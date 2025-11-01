@@ -1,38 +1,38 @@
 # Fluix Component
 
-基于 GPUI 0.2 的 Rust UI 组件库，用于构建现代化的跨平台桌面应用。
+Rust UI components for building fantastic cross-platform desktop applications by using GPUI 0.2.
 
-[快速开始](#hello-world) | [组件文档](#组件列表)
+[Get Started](#hello-world) | [Components](#components)
 
 ---
 
-### 46+ 组件
+### 46+ Components
 
-丰富的跨平台桌面 UI 组件库，提供完整的组件集合用于构建功能丰富的应用程序。
+Comprehensive library of cross-platform desktop UI components for building feature-rich applications.
 
-### 高性能
+### High Performance
 
-基于 GPUI 的 GPU 加速渲染，提供流畅的用户体验。
+GPU-accelerated rendering powered by GPUI for smooth user experience.
 
-### 类型安全
+### Type Safe
 
-充分利用 Rust 的类型系统，编译时保证类型安全。
+Leverage Rust's type system for compile-time type safety guarantees.
 
-### 灵活定制
+### Themeable
 
-内置主题系统，支持灵活的主题和样式定制。
+Built-in theme system with flexible theme and style customization support.
 
-### 易于使用
+### Easy to Use
 
-简洁一致的 API 设计，让你快速上手。
+Simple and consistent API design for quick onboarding.
 
-### 完善文档
+### Well Documented
 
-详细的 API 文档、教程和示例代码。
+Comprehensive API documentation, tutorials, and example code.
 
-## 简洁直观的 API
+## Simple and Intuitive API
 
-只需几行代码即可开始使用。无状态组件设计让构建复杂 UI 变得简单。
+Get started with just a few lines of code. Stateless components make it easy to build complex UIs.
 
 ```rust
 Button::new("Click Me")
@@ -41,9 +41,9 @@ Button::new("Click Me")
     .on_click(|_, _, _| println!("Button clicked!"))
 ```
 
-## 安装 Fluix Component
+## Install Fluix Component
 
-在 `Cargo.toml` 中添加以下依赖：
+Add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
@@ -53,7 +53,7 @@ gpui = "0.2"
 
 ## Hello World
 
-以下是一个简单的 "Hello, World!" 应用示例：
+The following `src/main.rs` is a simple "Hello, World!" application:
 
 ```rust
 use gpui::*;
@@ -80,7 +80,7 @@ impl Render for HelloWorld {
 
 fn main() {
     let app = Application::new()
-        .with_assets(fluix::Assets);  // ← 重要！加载 SVG 图标
+        .with_assets(fluix::Assets);  // ← Important! Load SVG icons
 
     app.run(move |cx| {
         cx.spawn(async move |cx| {
@@ -95,76 +95,76 @@ fn main() {
 }
 ```
 
-运行程序：
+Run the program:
 
 ```bash
 $ cargo run
 ```
 
-> ⚠️ **开发中**: Fluix 目前处于早期开发阶段，API 可能会有变化。  
-> 💡 **重要**: 使用 Fluix 时，必须在应用启动时调用 `.with_assets(fluix::Assets)` 来加载 SVG 图标资源！
+> ⚠️ **Work in Progress**: Fluix is currently in early development, APIs may change.  
+> 💡 **Important**: When using Fluix, you must call `.with_assets(fluix::Assets)` at application startup to load SVG icon resources!
 
-## 文档和教程
+## Documentation & Tutorials
 
-### 📚 教程
+### 📚 Tutorials
 
-**新手入门？** 跟随我们的分步教程：
+**New to Fluix?** Follow our step-by-step tutorials:
 
-- **[快速开始](docs/tutorials/01-GETTING-STARTED.md)** ⭐ - 你的第一个 Fluix 应用 (30 分钟)
-- **[使用组件](docs/tutorials/02-COMPONENTS.md)** - 所有组件详解 (45 分钟)
-- **[样式和主题](docs/tutorials/03-STYLING.md)** - 美化你的应用 (30 分钟)
+- **[Getting Started](doc/tutorials/01-GETTING-STARTED.md)** ⭐ - Your first Fluix app (30 min)
+- **[Working with Components](doc/tutorials/02-COMPONENTS.md)** - All components explained (45 min)
+- **[Styling and Theming](doc/tutorials/03-STYLING.md)** - Make it beautiful (30 min)
 
-[查看所有教程 →](docs/tutorials/README.md) | [文档索引 →](docs/DOCUMENTATION-INDEX.md)
+[View All Tutorials →](doc/tutorials/README.md) | [Documentation Index →](doc/DOCUMENTATION-INDEX.md)
 
-### 📖 API 参考
+### 📖 API Reference
 
-- **[组件参考](docs/COMPONENT-REFERENCE.md)** - 所有组件的完整 API 参考
-- **[图标参考](docs/ICON_REFERENCE.md)** - 所有 31 个图标的使用示例
-- **[常见问题](docs/FAQ.md)** - 常见问题解答
-- **[资源加载指南](docs/ASSET_LOADING_GUIDE.md)** - SVG 加载工作原理
+- **[Component Reference](doc/COMPONENT-REFERENCE.md)** - Complete API reference for all components
+- **[Icon Reference](doc/ICON_REFERENCE.md)** - All 31 icons with examples and usage guide
+- **[FAQ](doc/FAQ.md)** - Common questions answered
+- **[Asset Loading Guide](doc/ASSET_LOADING_GUIDE.md)** - How SVG loading works
 
-## 组件列表
+## Components
 
-### ✅ 已实现组件
+### ✅ Implemented Components
 
-**基础组件**: Button, Icon  
-**表单组件**: TextInput, TextArea, Checkbox, Radio, Select, Combobox  
-**布局组件**: Tabs, Breadcrumb
+**Basic Components**: Button, Icon  
+**Form Components**: TextInput, TextArea, Checkbox, Radio, Select, Combobox  
+**Layout Components**: Tabs, Breadcrumb
 
-### 🔄 开发中
+### 🔄 In Development
 
-查看 [ROADMAP.md](ROADMAP.md) 了解详细的开发进度和待实现组件列表。
+See [ROADMAP.md](doc/ROADMAP.md) for detailed development progress and component list.
 
-## 示例
+## Examples
 
-运行示例项目：
+Run example projects:
 
 ```bash
-# Button 组件示例
+# Button component example
 cargo run --example button_demo
 
-# Icon 组件示例  
+# Icon component example  
 cargo run --example icon_demo
 
-# TextInput 和 TextArea 示例
+# TextInput and TextArea examples
 cargo run --example text_input_demo
 
-# Tabs 组件示例
+# Tabs component example
 cargo run --example tabs_demo
 ```
 
-查看更多示例：[examples/](examples/)
+View more examples: [examples/](examples/)
 
-## 贡献
+## Contributing
 
-欢迎贡献！请查看 [ROADMAP.md](ROADMAP.md) 了解当前进度和待实现的组件。
+Contributions are welcome! Please check [ROADMAP.md](doc/ROADMAP.md) for current progress and components to implement.
 
-## 相关链接
+## Related Links
 
-- [GPUI](https://github.com/zed-industries/zed) - 底层 UI 框架
-- [API 文档](https://docs.rs/fluix) - 完整的 API 文档
-- [示例代码](examples/) - 更多示例
+- [GPUI](https://github.com/zed-industries/zed) - Underlying UI framework
+- [API Documentation](https://docs.rs/fluix) - Complete API documentation
+- [Example Code](examples/) - More examples
 
-## 许可证
+## License
 
 MIT License

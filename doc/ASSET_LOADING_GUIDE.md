@@ -1,14 +1,14 @@
-# GPUI 资源加载指南
+# GPUI Asset Loading Guide
 
-## 概述
+## Overview
 
-本文档说明如何在 GPUI 应用中正确加载 SVG 图标和其他资源。
+This document explains how to correctly load SVG icons and other assets in GPUI applications.
 
-## 核心概念
+## Core Concepts
 
 ### AssetSource
 
-GPUI 使用 `AssetSource` trait 来加载资源。`svg().path()` 不会直接读取文件系统，而是调用 `AssetSource::load()` 来获取资源内容。
+GPUI uses the `AssetSource` trait to load assets. `svg().path()` does not directly read the file system, but instead calls `AssetSource::load()` to get the asset content.
 
 ```rust
 pub trait AssetSource {
@@ -17,40 +17,40 @@ pub trait AssetSource {
 }
 ```
 
-### 工作流程
+### Workflow
 
 ```
 svg().path("icons/arrow.svg")
     ↓
 cx.asset_source().load("icons/arrow.svg")
     ↓
-返回 SVG 字节数据
+Returns SVG byte data
     ↓
-usvg/resvg 渲染成像素
+usvg/resvg renders to pixels
     ↓
-显示在屏幕上
+Displayed on screen
 ```
 
-## 两种实现方式
+## Two Implementation Approaches
 
-### 方案 A：嵌入资源（推荐，Zed 使用的方式）
+### Approach A: Embedded Assets (Recommended, used by Zed)
 
-#### 优点
-- ✅ 资源打包到二进制，无需额外文件
-- ✅ 部署简单，单个可执行文件
-- ✅ 加载速度快
-- ✅ 跨平台一致
+#### Advantages
+- ✅ Resources bundled into binary, no additional files needed
+- ✅ Simple deployment, single executable file
+- ✅ Fast loading speed
+- ✅ Cross-platform consistent
 
-#### 实现步骤
+#### Implementation Steps
 
-**1. 添加依赖**
+**1. Add Dependencies**
 
 ```toml
 [dependencies]
 rust-embed = "8"
 ```
 
-**2. 创建目录结构**
+**2. Create Directory Structure**
 
 ```
 your-project/
@@ -66,7 +66,7 @@ your-project/
     └── ...
 ```
 
-**3. 实现 AssetSource**
+**3. Implement AssetSource**
 
 ```rust
 // src/assets.rs
@@ -95,15 +95,15 @@ impl AssetSource for Assets {
 }
 ```
 
-**4. 注册 AssetSource**
+**4. Register AssetSource**
 
 ```rust
-// src/main.rs 或 examples/xxx.rs
+// src/main.rs or examples/xxx.rs
 use gpui::*;
 
 fn main() {
     let app = Application::new()
-        .with_assets(your_crate::Assets);  // 关键！
+        .with_assets(your_crate::Assets);  // Key!
     
     app.run(|cx| {
         cx.open_window(window_options, |window, cx| {
@@ -113,29 +113,29 @@ fn main() {
 }
 ```
 
-**5. 使用资源**
+**5. Use Assets**
 
 ```rust
-// 加载 SVG 图标
+// Load SVG icon
 svg().path("icons/arrow-down.svg")
 
-// 加载图片
+// Load image
 img("images/logo.png")
 ```
 
-### 方案 B：文件系统加载（开发时使用）
+### Approach B: Filesystem Loading (For Development)
 
-#### 优点
-- ✅ 无需重新编译即可更新资源
-- ✅ 适合开发和调试
+#### Advantages
+- ✅ Update assets without recompiling
+- ✅ Good for development and debugging
 
-#### 缺点
-- ❌ 需要分发资源文件
-- ❌ 路径管理复杂
+#### Disadvantages
+- ❌ Need to distribute asset files
+- ❌ Complex path management
 
-#### 实现步骤
+#### Implementation Steps
 
-**1. 实现文件系统 AssetSource**
+**1. Implement Filesystem AssetSource**
 
 ```rust
 // src/assets.rs
@@ -181,7 +181,7 @@ impl AssetSource for FsAssets {
 }
 ```
 
-**2. 注册**
+**2. Register**
 
 ```rust
 fn main() {
@@ -194,43 +194,43 @@ fn main() {
 }
 ```
 
-## 常见问题
+## Common Questions
 
-### Q: 为什么我的 SVG 不显示？
+### Q: Why isn't my SVG displaying?
 
-**A:** 检查以下几点：
+**A:** Check the following:
 
-1. **是否注册了 AssetSource？**
+1. **Is AssetSource registered?**
    ```rust
-   // 必须调用 with_assets()
+   // Must call with_assets()
    Application::new().with_assets(Assets)
    ```
 
-2. **路径是否正确？**
+2. **Is the path correct?**
    ```rust
-   // 路径相对于 assets/ 目录
+   // Path relative to assets/ directory
    svg().path("icons/arrow.svg")  // ✅
    svg().path("assets/icons/arrow.svg")  // ❌
    ```
 
-3. **文件是否存在？**
+3. **Does the file exist?**
    ```bash
    ls assets/icons/arrow.svg
    ```
 
-4. **是否包含在嵌入规则中？**
+4. **Is it included in the embed rules?**
    ```rust
    #[derive(RustEmbed)]
    #[folder = "assets"]
-   #[include = "icons/**/*"]  // 确保包含你的文件
+   #[include = "icons/**/*"]  // Make sure your files are included
    ```
 
-### Q: 如何调试资源加载？
+### Q: How to debug asset loading?
 
-**A:** 添加调试代码：
+**A:** Add debug code:
 
 ```rust
-// 在应用启动后
+// After application startup
 if let Some(data) = cx.asset_source().load("icons/arrow.svg")? {
     println!("✅ Icon loaded: {} bytes", data.len());
 } else {
@@ -238,9 +238,9 @@ if let Some(data) = cx.asset_source().load("icons/arrow.svg")? {
 }
 ```
 
-### Q: 可以混合使用嵌入和文件系统吗？
+### Q: Can I mix embedded and filesystem assets?
 
-**A:** 可以，实现一个组合的 AssetSource：
+**A:** Yes, implement a combined AssetSource:
 
 ```rust
 pub struct HybridAssets {
@@ -250,11 +250,11 @@ pub struct HybridAssets {
 
 impl AssetSource for HybridAssets {
     fn load(&self, path: &str) -> Result<Option<Cow<'static, [u8]>>> {
-        // 先尝试文件系统（开发时）
+        // Try filesystem first (for development)
         if let Some(data) = self.fs.load(path)? {
             return Ok(Some(data));
         }
-        // 回退到嵌入资源（生产环境）
+        // Fall back to embedded assets (for production)
         self.embedded.load(path)
     }
     
@@ -262,38 +262,38 @@ impl AssetSource for HybridAssets {
 }
 ```
 
-### Q: 如何添加新图标？
+### Q: How to add new icons?
 
 **A:** 
 
-1. 将 SVG 文件放到 `assets/icons/`
-2. 在 `IconName` 枚举中添加新项
-3. 在 `path()` 方法中添加映射
-4. 重新编译（嵌入方案）或直接使用（文件系统方案）
+1. Place SVG file in `assets/icons/`
+2. Add new item to `IconName` enum
+3. Add mapping in `path()` method
+4. Recompile (for embedded approach) or use directly (for filesystem approach)
 
-## 性能考虑
+## Performance Considerations
 
-### 嵌入资源
-- **编译时间**：首次编译较慢，增量编译快
-- **二进制大小**：增加（每个 SVG 约 1-5KB）
-- **运行时性能**：最快，资源在内存中
+### Embedded Assets
+- **Compile Time**: Slower initial compile, fast incremental compile
+- **Binary Size**: Increases (each SVG ~1-5KB)
+- **Runtime Performance**: Fastest, assets in memory
 
-### 文件系统
-- **编译时间**：快
-- **二进制大小**：小
-- **运行时性能**：需要 I/O，稍慢
+### Filesystem
+- **Compile Time**: Fast
+- **Binary Size**: Small
+- **Runtime Performance**: Requires I/O, slightly slower
 
-## 最佳实践
+## Best Practices
 
-1. **生产环境使用嵌入资源**
-   - 部署简单
-   - 性能最佳
+1. **Use Embedded Assets for Production**
+   - Simple deployment
+   - Best performance
 
-2. **开发环境可选文件系统**
-   - 快速迭代
-   - 无需重新编译
+2. **Optional Filesystem for Development**
+   - Fast iteration
+   - No recompilation needed
 
-3. **使用条件编译**
+3. **Use Conditional Compilation**
    ```rust
    #[cfg(debug_assertions)]
    let assets = FsAssets::new();
@@ -304,18 +304,17 @@ impl AssetSource for HybridAssets {
    Application::new().with_assets(assets)
    ```
 
-4. **组织资源目录**
+4. **Organize Asset Directories**
    ```
    assets/
-   ├── icons/      # SVG 图标
-   ├── images/     # PNG/JPG 图片
-   ├── fonts/      # 字体文件
-   └── data/       # 其他数据
+   ├── icons/      # SVG icons
+   ├── images/     # PNG/JPG images
+   ├── fonts/      # Font files
+   └── data/       # Other data
    ```
 
-## 参考
+## References
 
-- [rust-embed 文档](https://docs.rs/rust-embed/)
-- [GPUI 示例](https://github.com/zed-industries/zed/tree/main/crates/gpui/examples)
-- [Zed 资源实现](https://github.com/zed-industries/zed/blob/main/crates/zed/src/zed.rs)
-
+- [rust-embed Documentation](https://docs.rs/rust-embed/)
+- [GPUI Examples](https://github.com/zed-industries/zed/tree/main/crates/gpui/examples)
+- [Zed Asset Implementation](https://github.com/zed-industries/zed/blob/main/crates/zed/src/zed.rs)
