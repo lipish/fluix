@@ -1,19 +1,19 @@
-# Fluix 快速开始
+# Fluix Quick Start
 
-5 分钟内开始使用 Fluix！
+Get started with Fluix in 5 minutes!
 
-## 🚀 安装
+## 🚀 Installation
 
-### 创建新项目
+### Create New Project
 
 ```bash
 cargo new my-app
 cd my-app
 ```
 
-### 添加依赖
+### Add Dependencies
 
-编辑 `Cargo.toml`:
+Edit `Cargo.toml`:
 
 ```toml
 [dependencies]
@@ -22,9 +22,9 @@ gpui = "0.2"
 env_logger = "0.11"
 ```
 
-## 📝 第一个应用
+## 📝 First Application
 
-### 1. 创建 main.rs
+### 1. Create main.rs
 
 ```rust
 use gpui::*;
@@ -107,29 +107,29 @@ impl Render for MyApp {
 }
 ```
 
-### 2. 运行
+### 2. Run
 
 ```bash
 cargo run
 ```
 
-你应该看到一个窗口，里面有一个按钮和计数器！
+You should see a window with a button and counter!
 
-## 🎨 使用更多组件
+## 🎨 Using More Components
 
-### TextInput 示例
+### TextInput Example
 
 ```rust
 use fluix::prelude::*;
 
-// 创建文本输入
+// Create text input
 let input = cx.new(|cx| {
     TextInput::new(cx)
         .placeholder("Enter your name...")
         .max_length(50)
 });
 
-// 订阅事件
+// Subscribe to events
 cx.subscribe_in(&input, window, |this, _input, event: &TextInputEvent, _, cx| {
     match event {
         TextInputEvent::Change(value) => {
@@ -142,14 +142,14 @@ cx.subscribe_in(&input, window, |this, _input, event: &TextInputEvent, _, cx| {
     }
 }).detach();
 
-// 在 render 中使用
+// Use in render
 div().child(input.clone())
 ```
 
-### TextArea 示例
+### TextArea Example
 
 ```rust
-// 创建多行文本编辑器
+// Create multi-line text editor
 let textarea = cx.new(|cx| {
     TextArea::new(cx)
         .placeholder("Type your message...")
@@ -157,7 +157,7 @@ let textarea = cx.new(|cx| {
         .max_height(300.0)
 });
 
-// 订阅事件
+// Subscribe to events
 cx.subscribe_in(&textarea, window, |this, _ta, event: &TextAreaEvent, _, cx| {
     match event {
         TextAreaEvent::Submit(value) => {
@@ -168,120 +168,120 @@ cx.subscribe_in(&textarea, window, |this, _ta, event: &TextAreaEvent, _, cx| {
 }).detach();
 ```
 
-### Button 变体
+### Button Variants
 
 ```rust
-// Primary 按钮
+// Primary button
 Button::new("Primary")
     .variant(ButtonVariant::Primary)
 
-// Secondary 按钮
+// Secondary button
 Button::new("Secondary")
     .variant(ButtonVariant::Secondary)
 
-// Outline 按钮
+// Outline button
 Button::new("Outline")
     .variant(ButtonVariant::Outline)
 
-// Text 按钮
+// Text button
 Button::new("Text")
     .variant(ButtonVariant::Text)
 
-// Danger 按钮
+// Danger button
 Button::new("Delete")
     .variant(ButtonVariant::Danger)
 ```
 
-### Button 尺寸
+### Button Sizes
 
 ```rust
-// 不同尺寸
+// Different sizes
 Button::new("XSmall").size(ComponentSize::XSmall)
 Button::new("Small").size(ComponentSize::Small)
-Button::new("Medium").size(ComponentSize::Medium)  // 默认
+Button::new("Medium").size(ComponentSize::Medium)  // Default
 Button::new("Large").size(ComponentSize::Large)
 Button::new("XLarge").size(ComponentSize::XLarge)
 
-// 全宽按钮
+// Full width button
 Button::new("Full Width")
     .full_width(true)
 
-// 禁用按钮
+// Disabled button
 Button::new("Disabled")
     .disabled(true)
 
-// 加载状态
+// Loading state
 Button::new("Loading...")
     .loading(true)
 ```
 
-## 🎨 使用主题
+## 🎨 Using Theme
 
 ```rust
 use fluix::theme::*;
 
-// 获取主题
+// Get theme
 let theme = Theme::default();
 
-// 使用颜色
+// Use colors
 div().bg(theme.colors.primary)
 div().text_color(theme.colors.text)
 
-// 使用间距
+// Use spacing
 div().p(px(Spacing::MD))
 div().gap(px(Spacing::SM))
 
-// 使用圆角
+// Use border radius
 div().rounded(px(BorderRadius::MD))
 ```
 
-## 📚 完整示例
+## 📚 Complete Examples
 
-查看 `examples/` 目录获取更多完整示例：
+View the `examples/` directory for more complete examples:
 
 ```bash
-# 查看 Button 示例
+# View Button example
 cargo run --example button_demo
 
-# 查看 TextInput 示例
+# View TextInput example
 cargo run --example text_input_demo
 ```
 
-## 🔍 学习资源
+## 🔍 Learning Resources
 
-- [README.md](README.md) - 完整文档
-- [ROADMAP.md](ROADMAP.md) - 组件列表和开发计划
-- [CONTRIBUTING.md](CONTRIBUTING.md) - 组件开发指南
-- [examples/](examples/) - 示例代码
+- [README.md](../README.md) - Complete documentation
+- [ROADMAP.md](ROADMAP.md) - Component list and development plan
+- [CONTRIBUTING.md](../CONTRIBUTING.md) - Component development guide
+- [examples/](../examples/) - Example code
 
-## 💡 提示
+## 💡 Tips
 
-1. **事件订阅**: 使用 `cx.subscribe_in()` 订阅组件事件
-2. **状态管理**: 在结构体中保存组件的 `Entity<T>`
-3. **样式**: 使用 GPUI 的链式 API 设置样式
-4. **主题**: 使用 `Theme` 保持一致的设计
+1. **Event Subscription**: Use `cx.subscribe_in()` to subscribe to component events
+2. **State Management**: Store component `Entity<T>` in struct fields
+3. **Styling**: Use GPUI's chained API to set styles
+4. **Theme**: Use `Theme` for consistent design
 
-## 🐛 常见问题
+## 🐛 Common Issues
 
-### Q: 窗口不显示？
-A: 确保调用了 `app.run()` 并正确创建了窗口。
+### Q: Window doesn't show?
+A: Make sure `app.run()` is called and window is created correctly.
 
-### Q: 组件不响应点击？
-A: 检查是否正确订阅了事件并调用了 `.detach()`。
+### Q: Component doesn't respond to clicks?
+A: Check if events are subscribed correctly and `.detach()` is called.
 
-### Q: 样式不生效？
-A: 确保使用了正确的 GPUI API，如 `.bg()`, `.text_color()` 等。
+### Q: Styles don't work?
+A: Make sure you're using correct GPUI APIs like `.bg()`, `.text_color()`, etc.
 
-### Q: 如何更新组件状态？
-A: 修改状态后调用 `cx.notify()` 触发重新渲染。
+### Q: How to update component state?
+A: After modifying state, call `cx.notify()` to trigger re-rendering.
 
-## 🚀 下一步
+## 🚀 Next Steps
 
-- 探索更多组件
-- 自定义主题
-- 创建复杂布局
-- 为 Fluix 贡献代码！
+- Explore more components
+- Customize themes
+- Create complex layouts
+- Contribute to Fluix!
 
 ---
 
-**需要帮助?** 查看 [GitHub Issues](https://github.com/yourusername/fluix/issues)
+**Need help?** Check [GitHub Issues](https://github.com/lipish/fluix/issues)
