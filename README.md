@@ -110,18 +110,18 @@ $ cargo run
 
 **New to Fluix?** Follow our step-by-step tutorials:
 
-- **[Getting Started](doc/tutorials/01-GETTING-STARTED.md)** ⭐ - Your first Fluix app (30 min)
-- **[Working with Components](doc/tutorials/02-COMPONENTS.md)** - All components explained (45 min)
-- **[Styling and Theming](doc/tutorials/03-STYLING.md)** - Make it beautiful (30 min)
+- **[Getting Started](docs/tutorials/01-GETTING-STARTED.md)** ⭐ - Your first Fluix app (30 min)
+- **[Working with Components](docs/tutorials/02-COMPONENTS.md)** - All components explained (45 min)
+- **[Styling and Theming](docs/tutorials/03-STYLING.md)** - Make it beautiful (30 min)
 
-[View All Tutorials →](doc/tutorials/README.md) | [Documentation Index →](doc/DOCUMENTATION-INDEX.md)
+[View All Tutorials →](docs/tutorials/README.md) | [Documentation Index →](docs/DOCUMENTATION-INDEX.md)
 
 ### 📖 API Reference
 
-- **[Component Reference](doc/COMPONENT-REFERENCE.md)** - Complete API reference for all components
-- **[Icon Reference](doc/ICON_REFERENCE.md)** - All 31 icons with examples and usage guide
-- **[FAQ](doc/FAQ.md)** - Common questions answered
-- **[Asset Loading Guide](doc/ASSET_LOADING_GUIDE.md)** - How SVG loading works
+- **[Component Reference](docs/COMPONENT-REFERENCE.md)** - Complete API reference for all components
+- **[Icon Reference](docs/ICON_REFERENCE.md)** - All 31 icons with examples and usage guide
+- **[FAQ](docs/FAQ.md)** - Common questions answered
+- **[Asset Loading Guide](docs/ASSET_LOADING_GUIDE.md)** - How SVG loading works
 
 ## Components
 
@@ -133,7 +133,7 @@ $ cargo run
 
 ### 🔄 In Development
 
-See [ROADMAP.md](doc/ROADMAP.md) for detailed development progress and component list.
+See [ROADMAP.md](docs/ROADMAP.md) for detailed development progress and component list.
 
 ## Examples
 
@@ -157,7 +157,7 @@ View more examples: [examples/](examples/)
 
 ## Contributing
 
-Contributions are welcome! Please check [ROADMAP.md](doc/ROADMAP.md) for current progress and components to implement.
+Contributions are welcome! Please check [ROADMAP.md](docs/ROADMAP.md) for current progress and components to implement.
 
 ## Related Links
 
