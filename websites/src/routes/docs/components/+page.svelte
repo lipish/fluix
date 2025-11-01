@@ -36,6 +36,13 @@
 				`/screenshots/components/textinput-demo2.png`
 			];
 		}
+		if (componentId === 'select') {
+			return [
+				`/screenshots/components/select-demo.png`,
+				`/screenshots/components/select-demo2.png`,
+				`/screenshots/components/select-demo3.png`
+			];
+		}
 		return [getScreenshotPath(componentId)];
 	}
 </script>
@@ -67,7 +74,7 @@
 		</div>
 		
 		<div class="demo-content">
-			{#if selectedComponent === 'icon' || selectedComponent === 'textinput'}
+			{#if selectedComponent === 'icon' || selectedComponent === 'textinput' || selectedComponent === 'select'}
 				<!-- Components with multiple screenshots -->
 				{#each getScreenshotPaths(selectedComponent) as screenshotPath, index}
 					<div class="screenshot-container">
