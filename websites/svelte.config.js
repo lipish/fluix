@@ -9,9 +9,10 @@ const config = {
 
 	kit: {
 		// Use static adapter for GitHub Pages
+		// Build output goes to 'build' directory within websites folder
 		adapter: adapter({
-			pages: '../docs',
-			assets: '../docs',
+			pages: 'build',
+			assets: 'build',
 			fallback: undefined,
 			precompress: false,
 			strict: true
