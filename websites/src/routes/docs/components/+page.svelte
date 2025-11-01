@@ -7,331 +7,569 @@
 		Home, 
 		Star,
 		ChevronDown,
+		ChevronRight,
 		User,
 		Mail,
-		Lock
+		Lock,
+		Eye,
+		EyeOff
 	} from 'lucide-svelte';
 	
-	let selectedValue = $state('');
-	let checkboxChecked = $state(false);
+	let selectedComponent = $state('button');
+	let selectedCategory = $state('variants');
 	let textInputValue = $state('');
+	let passwordVisible = $state(false);
+	let checkboxChecked = $state(false);
+	let checkboxChecked2 = $state(false);
+	let checkboxChecked3 = $state(false);
+	let selectedValue = $state('');
 	let isDropdownOpen = $state(false);
+	let selectOpen = $state(false);
 	
 	const selectOptions = [
-		{ value: 'option1', label: 'Option 1' },
-		{ value: 'option2', label: 'Option 2' },
-		{ value: 'option3', label: 'Option 3' }
+		{ value: 'react', label: 'React' },
+		{ value: 'vue', label: 'Vue.js' },
+		{ value: 'angular', label: 'Angular' },
+		{ value: 'svelte', label: 'Svelte' },
+		{ value: 'solid', label: 'SolidJS' }
 	];
+	
+	const components = {
+		button: {
+			name: 'Button',
+			categories: {
+				variants: { name: 'Variants', icon: Check },
+				sizes: { name: 'Sizes', icon: Settings },
+				states: { name: 'States', icon: Lock },
+				withIcons: { name: 'With Icons', icon: Star }
+			}
+		},
+		icon: {
+			name: 'Icon',
+			categories: {
+				gallery: { name: 'Icon Gallery', icon: Home },
+				sizes: { name: 'Sizes', icon: Settings },
+				colors: { name: 'Colors', icon: Settings }
+			}
+		},
+		textinput: {
+			name: 'TextInput',
+			categories: {
+				basic: { name: 'Basic', icon: Search },
+				states: { name: 'States', icon: Lock },
+				validation: { name: 'Validation', icon: Check }
+			}
+		},
+		checkbox: {
+			name: 'Checkbox',
+			categories: {
+				basic: { name: 'Basic', icon: Check },
+				states: { name: 'States', icon: Lock },
+				group: { name: 'Group', icon: Settings }
+			}
+		},
+		select: {
+			name: 'Select',
+			categories: {
+				basic: { name: 'Basic', icon: ChevronDown },
+				states: { name: 'States', icon: Lock },
+				multiple: { name: 'Multiple', icon: Settings }
+			}
+		}
+	};
+	
+	function selectComponent(component: string) {
+		selectedComponent = component;
+		// 自动选择第一个分类
+		const cats = Object.keys(components[component].categories);
+		if (cats.length > 0) {
+			selectedCategory = cats[0];
+		}
+	}
+	
+	function selectCategory(category: string) {
+		selectedCategory = category;
+	}
 </script>
 
-<div class="page-container">
-	<h1>Components</h1>
-	<p class="intro">Fluix provides a comprehensive library of UI components for building desktop applications. Explore each component below:</p>
+<div class="components-layout">
+	<!-- Sidebar Navigation -->
+	<aside class="sidebar">
+		<h2>Components</h2>
+		<nav class="component-nav">
+			{#each Object.entries(components) as [key, component]}
+				<div class="nav-section">
+					<button 
+						class="nav-item nav-component"
+						class:active={selectedComponent === key}
+						onclick={() => selectComponent(key)}
+					>
+						<span>{component.name}</span>
+						<ChevronRight 
+							size={16} 
+							class={selectedComponent === key ? 'rotate' : ''}
+						/>
+					</button>
+					
+					{#if selectedComponent === key}
+						<div class="nav-submenu">
+							{#each Object.entries(component.categories) as [catKey, category]}
+								<button
+									class="nav-item nav-category"
+									class:active={selectedCategory === catKey}
+									onclick={() => selectCategory(catKey)}
+								>
+									<category.icon size={14} />
+									<span>{category.name}</span>
+								</button>
+							{/each}
+						</div>
+					{/if}
+				</div>
+			{/each}
+		</nav>
+	</aside>
 	
-	<!-- Button Section -->
-	<section class="component-section">
-		<h2>Button</h2>
-		<p class="section-description">Interactive button component with multiple variants and sizes.</p>
-		
-		<div class="demo-group">
-			<h3>Variants</h3>
-			<div class="demo-row">
-				<button class="btn btn-primary">Primary</button>
-				<button class="btn btn-secondary">Secondary</button>
-				<button class="btn btn-outline">Outline</button>
-				<button class="btn btn-ghost">Ghost</button>
-				<button class="btn btn-danger">Danger</button>
-			</div>
-		</div>
-		
-		<div class="demo-group">
-			<h3>Sizes</h3>
-			<div class="demo-row">
-				<button class="btn btn-primary btn-xs">Extra Small</button>
-				<button class="btn btn-primary btn-sm">Small</button>
-				<button class="btn btn-primary btn-md">Medium</button>
-				<button class="btn btn-primary btn-lg">Large</button>
-				<button class="btn btn-primary btn-xl">Extra Large</button>
-			</div>
-		</div>
-		
-		<div class="demo-group">
-			<h3>States</h3>
-			<div class="demo-row">
-				<button class="btn btn-primary">Normal</button>
-				<button class="btn btn-primary" disabled>Disabled</button>
-				<button class="btn btn-primary loading">Loading...</button>
-			</div>
-		</div>
-		
-		<div class="demo-group">
-			<h3>With Icons</h3>
-			<div class="demo-row">
-				<button class="btn btn-primary">
-					<Check size={16} />
-					Save
-				</button>
-				<button class="btn btn-secondary">
-					<X size={16} />
-					Cancel
-				</button>
-				<button class="btn btn-outline">
-					<Search size={16} />
-					Search
-				</button>
-			</div>
-		</div>
-	</section>
-	
-	<!-- Icon Section -->
-	<section class="component-section">
-		<h2>Icon</h2>
-		<p class="section-description">22 built-in icons with customizable sizes and colors.</p>
-		
-		<div class="demo-group">
-			<h3>Icons</h3>
-			<div class="icon-grid">
-				<div class="icon-item">
-					<Home size={24} />
-					<span>Home</span>
-				</div>
-				<div class="icon-item">
-					<User size={24} />
-					<span>User</span>
-				</div>
-				<div class="icon-item">
-					<Settings size={24} />
-					<span>Settings</span>
-				</div>
-				<div class="icon-item">
-					<Search size={24} />
-					<span>Search</span>
-				</div>
-				<div class="icon-item">
-					<Star size={24} />
-					<span>Star</span>
-				</div>
-				<div class="icon-item">
-					<Mail size={24} />
-					<span>Mail</span>
-				</div>
-				<div class="icon-item">
-					<Lock size={24} />
-					<span>Lock</span>
-				</div>
-				<div class="icon-item">
-					<Check size={24} />
-					<span>Check</span>
-				</div>
-			</div>
-		</div>
-		
-		<div class="demo-group">
-			<h3>Sizes</h3>
-			<div class="demo-row icon-sizes">
-				<div class="icon-demo">
-					<Home size={12} />
-					<span>12px</span>
-				</div>
-				<div class="icon-demo">
-					<Home size={16} />
-					<span>16px</span>
-				</div>
-				<div class="icon-demo">
-					<Home size={20} />
-					<span>20px</span>
-				</div>
-				<div class="icon-demo">
-					<Home size={24} />
-					<span>24px</span>
-				</div>
-				<div class="icon-demo">
-					<Home size={32} />
-					<span>32px</span>
-				</div>
-			</div>
-		</div>
-	</section>
-	
-	<!-- TextInput Section -->
-	<section class="component-section">
-		<h2>TextInput</h2>
-		<p class="section-description">Text input field with validation and event handling.</p>
-		
-		<div class="demo-group">
-			<h3>Basic Input</h3>
-			<div class="input-demo">
-				<input 
-					type="text" 
-					class="text-input" 
-					placeholder="Enter text..."
-					bind:value={textInputValue}
-				/>
-			</div>
-		</div>
-		
-		<div class="demo-group">
-			<h3>With Icon</h3>
-			<div class="input-demo">
-				<div class="input-wrapper">
-					<Search size={16} class="input-icon" />
-					<input 
-						type="text" 
-						class="text-input with-icon" 
-						placeholder="Search..."
-					/>
-				</div>
-			</div>
-		</div>
-		
-		<div class="demo-group">
-			<h3>States</h3>
-			<div class="input-demo">
-				<input 
-					type="text" 
-					class="text-input" 
-					placeholder="Normal input"
-				/>
-				<input 
-					type="text" 
-					class="text-input" 
-					placeholder="Disabled input"
-					disabled
-				/>
-			</div>
-		</div>
-	</section>
-	
-	<!-- Checkbox Section -->
-	<section class="component-section">
-		<h2>Checkbox</h2>
-		<p class="section-description">Checkbox component for boolean selections.</p>
-		
-		<div class="demo-group">
-			<h3>Basic Checkbox</h3>
-			<div class="checkbox-demo">
-				<label class="checkbox-label">
-					<input 
-						type="checkbox" 
-						class="checkbox"
-						bind:checked={checkboxChecked}
-					/>
-					<span>Accept terms and conditions</span>
-				</label>
-			</div>
-		</div>
-		
-		<div class="demo-group">
-			<h3>Multiple Checkboxes</h3>
-			<div class="checkbox-demo">
-				<label class="checkbox-label">
-					<input type="checkbox" class="checkbox" />
-					<span>Option 1</span>
-				</label>
-				<label class="checkbox-label">
-					<input type="checkbox" class="checkbox" />
-					<span>Option 2</span>
-				</label>
-				<label class="checkbox-label">
-					<input type="checkbox" class="checkbox" />
-					<span>Option 3</span>
-				</label>
-			</div>
-		</div>
-	</section>
-	
-	<!-- Select Section -->
-	<section class="component-section">
-		<h2>Select</h2>
-		<p class="section-description">Dropdown selection component with single and multiple selection modes.</p>
-		
-		<div class="demo-group">
-			<h3>Basic Select</h3>
-			<div class="select-wrapper">
-				<button 
-					class="select-button"
-					onclick={() => isDropdownOpen = !isDropdownOpen}
-				>
-					<span>{selectedValue || 'Select an option...'}</span>
-					<ChevronDown size={16} class={isDropdownOpen ? 'rotate' : ''} />
-				</button>
-				{#if isDropdownOpen}
-					<div class="select-dropdown">
-						{#each selectOptions as option}
-							<button 
-								class="select-option"
-								onclick={() => {
-									selectedValue = option.label;
-									isDropdownOpen = false;
-								}}
-							>
-								{option.label}
-							</button>
-						{/each}
-					</div>
+	<!-- Main Content -->
+	<main class="content">
+		<div class="content-header">
+			<h1>{components[selectedComponent].name}</h1>
+			<p class="component-description">
+				{#if selectedComponent === 'button'}
+					Interactive button component with multiple variants and sizes.
+				{:else if selectedComponent === 'icon'}
+					22 built-in icons with customizable sizes and colors.
+				{:else if selectedComponent === 'textinput'}
+					Text input field with validation and event handling.
+				{:else if selectedComponent === 'checkbox'}
+					Checkbox component for boolean selections.
+				{:else if selectedComponent === 'select'}
+					Dropdown selection component with single and multiple selection modes.
 				{/if}
-			</div>
+			</p>
 		</div>
-	</section>
-	
-	<div class="section">
-		<h2>Complete Component Reference</h2>
-		<p>For detailed API documentation, see the <a href="https://docs.rs/fluix" target="_blank" rel="noopener noreferrer">API documentation</a>.</p>
-	</div>
+		
+		<div class="demo-content">
+			<!-- Button Demos -->
+			{#if selectedComponent === 'button'}
+				{#if selectedCategory === 'variants'}
+					<section class="demo-section">
+						<h2>Variants</h2>
+						<div class="demo-row">
+							<button class="btn btn-primary">Primary</button>
+							<button class="btn btn-secondary">Secondary</button>
+							<button class="btn btn-outline">Outline</button>
+							<button class="btn btn-ghost">Ghost</button>
+							<button class="btn btn-danger">Danger</button>
+						</div>
+					</section>
+				{:else if selectedCategory === 'sizes'}
+					<section class="demo-section">
+						<h2>Sizes</h2>
+						<div class="demo-row">
+							<button class="btn btn-primary btn-xs">Extra Small</button>
+							<button class="btn btn-primary btn-sm">Small</button>
+							<button class="btn btn-primary btn-md">Medium</button>
+							<button class="btn btn-primary btn-lg">Large</button>
+							<button class="btn btn-primary btn-xl">Extra Large</button>
+						</div>
+					</section>
+				{:else if selectedCategory === 'states'}
+					<section class="demo-section">
+						<h2>States</h2>
+						<div class="demo-row">
+							<button class="btn btn-primary">Normal</button>
+							<button class="btn btn-primary" disabled>Disabled</button>
+							<button class="btn btn-primary loading">Loading...</button>
+						</div>
+					</section>
+				{:else if selectedCategory === 'withIcons'}
+					<section class="demo-section">
+						<h2>With Icons</h2>
+						<div class="demo-row">
+							<button class="btn btn-primary">
+								<Check size={16} />
+								Save
+							</button>
+							<button class="btn btn-secondary">
+								<X size={16} />
+								Cancel
+							</button>
+							<button class="btn btn-outline">
+								<Search size={16} />
+								Search
+							</button>
+						</div>
+					</section>
+				{/if}
+			
+			<!-- Icon Demos -->
+			{:else if selectedComponent === 'icon'}
+				{#if selectedCategory === 'gallery'}
+					<section class="demo-section">
+						<h2>Icon Gallery</h2>
+						<div class="icon-grid">
+							<div class="icon-item"><Home size={24} /><span>Home</span></div>
+							<div class="icon-item"><User size={24} /><span>User</span></div>
+							<div class="icon-item"><Settings size={24} /><span>Settings</span></div>
+							<div class="icon-item"><Search size={24} /><span>Search</span></div>
+							<div class="icon-item"><Star size={24} /><span>Star</span></div>
+							<div class="icon-item"><Mail size={24} /><span>Mail</span></div>
+							<div class="icon-item"><Lock size={24} /><span>Lock</span></div>
+							<div class="icon-item"><Check size={24} /><span>Check</span></div>
+						</div>
+					</section>
+				{:else if selectedCategory === 'sizes'}
+					<section class="demo-section">
+						<h2>Sizes</h2>
+						<div class="demo-row icon-sizes">
+							<div class="icon-demo"><Home size={12} /><span>12px</span></div>
+							<div class="icon-demo"><Home size={16} /><span>16px</span></div>
+							<div class="icon-demo"><Home size={20} /><span>20px</span></div>
+							<div class="icon-demo"><Home size={24} /><span>24px</span></div>
+							<div class="icon-demo"><Home size={32} /><span>32px</span></div>
+						</div>
+					</section>
+				{:else if selectedCategory === 'colors'}
+					<section class="demo-section">
+						<h2>Colors</h2>
+						<div class="demo-row icon-sizes">
+							<div class="icon-demo"><Home size={24} style="color: var(--primary);" /><span>Primary</span></div>
+							<div class="icon-demo"><Home size={24} style="color: var(--muted-foreground);" /><span>Muted</span></div>
+							<div class="icon-demo"><Home size={24} style="color: #ef4444;" /><span>Red</span></div>
+							<div class="icon-demo"><Home size={24} style="color: #22c55e;" /><span>Green</span></div>
+							<div class="icon-demo"><Home size={24} style="color: #3b82f6;" /><span>Blue</span></div>
+						</div>
+					</section>
+				{/if}
+			
+			<!-- TextInput Demos -->
+			{:else if selectedComponent === 'textinput'}
+				{#if selectedCategory === 'basic'}
+					<section class="demo-section">
+						<h2>Basic Input</h2>
+						<div class="input-demo">
+							<input type="text" class="text-input" placeholder="Enter text..." bind:value={textInputValue} />
+						</div>
+					</section>
+					<section class="demo-section">
+						<h2>With Icon</h2>
+						<div class="input-demo">
+							<div class="input-wrapper">
+								<Search size={16} class="input-icon" />
+								<input type="text" class="text-input with-icon" placeholder="Search..." />
+							</div>
+						</div>
+					</section>
+				{:else if selectedCategory === 'states'}
+					<section class="demo-section">
+						<h2>States</h2>
+						<div class="input-demo">
+							<input type="text" class="text-input" placeholder="Normal input" />
+							<input type="text" class="text-input" placeholder="Disabled input" disabled />
+						</div>
+					</section>
+					<section class="demo-section">
+						<h2>Password Input</h2>
+						<div class="input-demo">
+							<div class="input-wrapper">
+								<input 
+									type={passwordVisible ? "text" : "password"} 
+									class="text-input with-icon" 
+									placeholder="Enter password..." 
+								/>
+								<button 
+									class="password-toggle"
+									onclick={() => passwordVisible = !passwordVisible}
+								>
+									{#if passwordVisible}
+										<EyeOff size={16} />
+									{:else}
+										<Eye size={16} />
+									{/if}
+								</button>
+							</div>
+						</div>
+					</section>
+				{:else if selectedCategory === 'validation'}
+					<section class="demo-section">
+						<h2>Max Length</h2>
+						<div class="input-demo">
+							<input type="text" class="text-input" placeholder="Max 10 characters" maxlength="10" />
+						</div>
+					</section>
+					<section class="demo-section">
+						<h2>Number Only</h2>
+						<div class="input-demo">
+							<input type="text" class="text-input" placeholder="Numbers only..." pattern="[0-9]*" />
+						</div>
+					</section>
+				{/if}
+			
+			<!-- Checkbox Demos -->
+			{:else if selectedComponent === 'checkbox'}
+				{#if selectedCategory === 'basic'}
+					<section class="demo-section">
+						<h2>Basic Checkbox</h2>
+						<div class="checkbox-demo">
+							<label class="checkbox-label">
+								<input type="checkbox" class="checkbox" bind:checked={checkboxChecked} />
+								<span>Accept terms and conditions</span>
+							</label>
+						</div>
+					</section>
+				{:else if selectedCategory === 'states'}
+					<section class="demo-section">
+						<h2>States</h2>
+						<div class="checkbox-demo">
+							<label class="checkbox-label">
+								<input type="checkbox" class="checkbox" />
+								<span>Unchecked</span>
+							</label>
+							<label class="checkbox-label">
+								<input type="checkbox" class="checkbox" checked />
+								<span>Checked</span>
+							</label>
+							<label class="checkbox-label">
+								<input type="checkbox" class="checkbox" disabled />
+								<span>Disabled</span>
+							</label>
+							<label class="checkbox-label">
+								<input type="checkbox" class="checkbox" checked disabled />
+								<span>Checked & Disabled</span>
+							</label>
+						</div>
+					</section>
+				{:else if selectedCategory === 'group'}
+					<section class="demo-section">
+						<h2>Checkbox Group</h2>
+						<div class="checkbox-demo">
+							<label class="checkbox-label">
+								<input type="checkbox" class="checkbox" bind:checked={checkboxChecked} />
+								<span>Option 1</span>
+							</label>
+							<label class="checkbox-label">
+								<input type="checkbox" class="checkbox" bind:checked={checkboxChecked2} />
+								<span>Option 2</span>
+							</label>
+							<label class="checkbox-label">
+								<input type="checkbox" class="checkbox" bind:checked={checkboxChecked3} />
+								<span>Option 3</span>
+							</label>
+						</div>
+					</section>
+				{/if}
+			
+			<!-- Select Demos -->
+			{:else if selectedComponent === 'select'}
+				{#if selectedCategory === 'basic'}
+					<section class="demo-section">
+						<h2>Basic Select</h2>
+						<div class="select-wrapper">
+							<button class="select-button" onclick={() => selectOpen = !selectOpen}>
+								<span>{selectedValue || 'Select an option...'}</span>
+								<ChevronDown size={16} class={selectOpen ? 'rotate' : ''} />
+							</button>
+							{#if selectOpen}
+								<div class="select-dropdown">
+									{#each selectOptions as option}
+										<button 
+											class="select-option"
+											onclick={() => {
+												selectedValue = option.label;
+												selectOpen = false;
+											}}
+										>
+											{option.label}
+										</button>
+									{/each}
+								</div>
+							{/if}
+						</div>
+					</section>
+				{:else if selectedCategory === 'states'}
+					<section class="demo-section">
+						<h2>States</h2>
+						<div class="select-wrapper">
+							<button class="select-button">
+								<span>Normal Select</span>
+								<ChevronDown size={16} />
+							</button>
+						</div>
+						<div class="select-wrapper">
+							<button class="select-button" disabled>
+								<span>Disabled Select</span>
+								<ChevronDown size={16} />
+							</button>
+						</div>
+					</section>
+				{:else if selectedCategory === 'multiple'}
+					<section class="demo-section">
+						<h2>Multiple Selection</h2>
+						<p class="hint">Select multiple options:</p>
+						<div class="checkbox-demo">
+							{#each selectOptions as option}
+								<label class="checkbox-label">
+									<input type="checkbox" class="checkbox" />
+									<span>{option.label}</span>
+								</label>
+							{/each}
+						</div>
+					</section>
+				{/if}
+			{/if}
+		</div>
+	</main>
 </div>
 
 <style>
-	.page-container {
-		max-width: 1280px;
-		margin: 0 auto;
+	.components-layout {
+		display: flex;
+		gap: 2rem;
+		min-height: calc(100vh - 4rem);
 	}
 
-	h1 {
+	/* Sidebar */
+	.sidebar {
+		width: 280px;
+		flex-shrink: 0;
+		padding: 1.5rem;
+		border-right: 1px solid var(--border);
+		background: var(--card);
+		position: sticky;
+		top: 4rem;
+		height: fit-content;
+		max-height: calc(100vh - 4rem);
+		overflow-y: auto;
+	}
+
+	.sidebar h2 {
+		font-size: 1.125rem;
+		font-weight: 600;
+		margin-bottom: 1rem;
+		color: var(--foreground);
+	}
+
+	.component-nav {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+	}
+
+	.nav-section {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.nav-item {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 0.5rem 0.75rem;
+		border: none;
+		background: transparent;
+		color: var(--foreground);
+		font-size: 0.875rem;
+		cursor: pointer;
+		border-radius: 0.375rem;
+		transition: background-color 0.2s;
+		text-align: left;
+		gap: 0.5rem;
+	}
+
+	.nav-component {
+		font-weight: 500;
+	}
+
+	.nav-component:hover {
+		background: var(--secondary);
+	}
+
+	.nav-component.active {
+		background: var(--secondary);
+		color: var(--primary);
+	}
+
+	.nav-component :global(svg) {
+		transition: transform 0.2s;
+	}
+
+	.nav-component.active :global(svg.rotate) {
+		transform: rotate(90deg);
+	}
+
+	.nav-submenu {
+		margin-left: 1rem;
+		margin-top: 0.25rem;
+		margin-bottom: 0.5rem;
+		padding-left: 0.5rem;
+		border-left: 2px solid var(--border);
+		display: flex;
+		flex-direction: column;
+		gap: 0.125rem;
+	}
+
+	.nav-category {
+		font-weight: 400;
+		font-size: 0.8125rem;
+		padding-left: 0.5rem;
+	}
+
+	.nav-category:hover {
+		background: var(--secondary);
+	}
+
+	.nav-category.active {
+		background: var(--primary);
+		color: var(--primary-foreground);
+	}
+
+	.nav-category :global(svg) {
+		opacity: 0.7;
+	}
+
+	.nav-category.active :global(svg) {
+		opacity: 1;
+	}
+
+	/* Content */
+	.content {
+		flex: 1;
+		padding: 2rem;
+		max-width: 1200px;
+	}
+
+	.content-header h1 {
 		font-size: 2rem;
 		font-weight: 700;
 		margin-bottom: 0.5rem;
 		color: var(--primary);
 	}
 
-	h2 {
-		font-size: 1.5rem;
-		font-weight: 600;
-		margin-bottom: 0.5rem;
-		margin-top: 2rem;
-		color: var(--foreground);
-	}
-
-	h3 {
-		font-size: 1rem;
-		font-weight: 600;
-		margin-bottom: 0.75rem;
-		color: var(--foreground);
-	}
-
-	.intro {
+	.component-description {
 		color: var(--muted-foreground);
 		margin-bottom: 2rem;
 		font-size: 1rem;
 	}
 
-	.component-section {
-		margin-bottom: 3rem;
-		padding-bottom: 2rem;
-		border-bottom: 1px solid var(--border);
+	.demo-content {
+		display: flex;
+		flex-direction: column;
+		gap: 2rem;
 	}
 
-	.component-section:last-of-type {
-		border-bottom: none;
+	.demo-section {
+		padding: 1.5rem;
+		border: 1px solid var(--border);
+		border-radius: 0.5rem;
+		background: var(--card);
 	}
 
-	.section-description {
-		color: var(--muted-foreground);
-		margin-bottom: 1.5rem;
-		font-size: 0.875rem;
-	}
-
-	.demo-group {
-		margin-bottom: 2rem;
+	.demo-section h2 {
+		font-size: 1.125rem;
+		font-weight: 600;
+		margin-bottom: 1rem;
+		color: var(--foreground);
 	}
 
 	.demo-row {
@@ -463,7 +701,7 @@
 		padding: 1rem;
 		border: 1px solid var(--border);
 		border-radius: 0.5rem;
-		background: var(--card);
+		background: var(--background);
 		color: var(--foreground);
 	}
 
@@ -527,11 +765,28 @@
 
 	.text-input.with-icon {
 		padding-left: 2.5rem;
+		padding-right: 2.5rem;
 	}
 
 	.text-input:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
+	}
+
+	.password-toggle {
+		position: absolute;
+		right: 0.75rem;
+		background: none;
+		border: none;
+		color: var(--muted-foreground);
+		cursor: pointer;
+		padding: 0;
+		display: flex;
+		align-items: center;
+	}
+
+	.password-toggle:hover {
+		color: var(--foreground);
 	}
 
 	/* Checkbox Styles */
@@ -578,8 +833,13 @@
 		transition: border-color 0.2s;
 	}
 
-	.select-button:hover {
+	.select-button:hover:not(:disabled) {
 		border-color: var(--primary);
+	}
+
+	.select-button:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
 	}
 
 	.select-button :global(svg) {
@@ -620,23 +880,28 @@
 		background: var(--secondary);
 	}
 
-	.section {
-		margin-top: 3rem;
-		padding-top: 2rem;
-		border-top: 1px solid var(--border);
-	}
-
-	.section p {
+	.hint {
 		color: var(--muted-foreground);
-		margin-top: 0.5rem;
+		margin-bottom: 0.75rem;
+		font-size: 0.875rem;
 	}
 
-	.section a {
-		color: var(--primary);
-		text-decoration: none;
-	}
+	/* Responsive */
+	@media (max-width: 768px) {
+		.components-layout {
+			flex-direction: column;
+		}
 
-	.section a:hover {
-		text-decoration: underline;
+		.sidebar {
+			width: 100%;
+			position: relative;
+			top: 0;
+			border-right: none;
+			border-bottom: 1px solid var(--border);
+		}
+
+		.content {
+			padding: 1.5rem 1rem;
+		}
 	}
 </style>
