@@ -4,9 +4,10 @@ This directory contains the GitHub Pages website for Fluix.
 
 ## Structure
 
-- `index.html` - Main page with component documentation
-- `styles.css` - Styling for the website
-- `script.js` - JavaScript for interactivity
+- `index.html` - Redirect page to `pages/index.html`
+- `pages/index.html` - Main page with component documentation
+- `pages/styles.css` - Styling for the website
+- `pages/script.js` - JavaScript for interactivity
 
 ## Deployment
 
@@ -33,7 +34,8 @@ python3 -m http.server 8000 --directory docs
 # Using Node.js (if you have http-server installed)
 npx http-server docs -p 8000
 
-# Then open http://localhost:8000 in your browser
+# Then open http://localhost:8000/pages/index.html in your browser
+# Or http://localhost:8000/ which will redirect to pages/index.html
 ```
 
 ## Updating Content
