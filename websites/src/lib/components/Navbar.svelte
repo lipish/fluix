@@ -27,11 +27,11 @@
 			<a href="/docs/components" class="nav-link">Components</a>
 			<a href="https://docs.rs/fluix" target="_blank" rel="noopener noreferrer" class="nav-link">
 				API Doc
-				<ExternalLink class="external-icon" />
+				<ExternalLink class="external-icon" size={12} />
 			</a>
 			<div class="nav-link resources-dropdown" onmouseenter={() => resourcesOpen = true} onmouseleave={() => resourcesOpen = false}>
 				<span>Resources</span>
-				<ChevronDown class="chevron-icon" />
+				<ChevronDown class="chevron-icon" size={12} />
 				{#if resourcesOpen}
 					<div class="dropdown-menu">
 						<a href="/docs/tutorials" class="dropdown-item">Tutorials</a>
@@ -52,7 +52,7 @@
 			rel="noopener noreferrer"
 			class="github-link"
 		>
-			<span class="github-stars">GitHub</span>
+			<img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" alt="GitHub" class="github-icon" />
 		</a>
 	</div>
 </nav>
@@ -143,10 +143,18 @@
 	}
 
 	.external-icon {
-		width: 0.625rem;
-		height: 0.625rem;
+		width: 0.75rem;
+		height: 0.75rem;
 		color: var(--muted-foreground);
-		opacity: 0.5;
+		opacity: 0.6;
+		flex-shrink: 0;
+	}
+
+	.external-icon :global(svg) {
+		width: 0.75rem;
+		height: 0.75rem;
+		color: var(--muted-foreground);
+		opacity: 0.6;
 	}
 
 	.resources-dropdown {
@@ -155,11 +163,19 @@
 	}
 
 	.chevron-icon {
-		width: 0.625rem;
-		height: 0.625rem;
+		width: 0.75rem;
+		height: 0.75rem;
 		color: var(--muted-foreground);
-		opacity: 0.5;
+		opacity: 0.6;
 		transition: transform 0.2s;
+		flex-shrink: 0;
+	}
+
+	.chevron-icon :global(svg) {
+		width: 0.75rem;
+		height: 0.75rem;
+		color: var(--muted-foreground);
+		opacity: 0.6;
 	}
 
 	.resources-dropdown:hover .chevron-icon {
@@ -218,10 +234,16 @@
 		background: var(--secondary);
 	}
 
-	.github-stars {
-		font-size: 0.875rem;
-		font-weight: 500;
-		color: var(--foreground);
+	.github-icon {
+		width: 1.25rem;
+		height: 1.25rem;
+		display: block;
+		opacity: 0.8;
+		transition: opacity 0.2s;
+	}
+
+	.github-link:hover .github-icon {
+		opacity: 1;
 	}
 
 	/* Responsive */
