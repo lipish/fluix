@@ -1,20 +1,6 @@
 <script lang="ts">
 	// Getting Started page
-</script>
-
-<div class="page-container">
-	<h1>Getting Started</h1>
-	
-	<div class="section">
-		<h2>Installation</h2>
-		<p>Add Fluix to your <code>Cargo.toml</code>:</p>
-		<pre><code>fluix = "0.1"</code></pre>
-	</div>
-	
-	<div class="section">
-		<h2>Your First App</h2>
-		<p>Create a simple app with a button:</p>
-		<pre><code>use fluix::*;
+	const exampleCode = `use fluix::*;
 use gpui::*;
 
 fn main() {
@@ -29,7 +15,22 @@ fn main() {
                     .build(cx)
             })
     });
-}</code></pre>
+}`;
+</script>
+
+<div class="page-container">
+	<h1>Getting Started</h1>
+	
+	<div class="section">
+		<h2>Installation</h2>
+		<p>Add Fluix to your <code>Cargo.toml</code>:</p>
+		<pre><code>fluix = "0.1"</code></pre>
+	</div>
+	
+	<div class="section">
+		<h2>Your First App</h2>
+		<p>Create a simple app with a button:</p>
+		<pre><code>{exampleCode}</code></pre>
 	</div>
 	
 	<div class="section">
