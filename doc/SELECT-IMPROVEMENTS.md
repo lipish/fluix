@@ -1,100 +1,100 @@
 # Select Component Improvements
 
-## ✅ 已实现的改进
+## ✅ Implemented Improvements
 
-### 1. 变体系统 (Variant System)
+### 1. Variant System
 
-添加了 `SelectVariant` 枚举，支持不同的视觉样式：
+Added `SelectVariant` enum supporting different visual styles:
 
 ```rust
 pub enum SelectVariant {
-    Default,    // 默认样式（有边框和背景）
-    Ghost,      // 无边框，透明背景
-    Outline,    // 仅边框，透明背景
+    Default,    // Default style (with border and background)
+    Ghost,      // No border, transparent background
+    Outline,    // Border only, transparent background
 }
 ```
 
-#### 使用方法
+#### Usage
 
 ```rust
-// 默认变体
+// Default variant
 Select::new(cx)
     .variant(SelectVariant::Default)
     .options(vec![...])
 
-// Ghost 变体（无边框，透明背景）
+// Ghost variant (no border, transparent background)
 Select::new(cx)
     .variant(SelectVariant::Ghost)
     .options(vec![...])
 
-// Outline 变体（仅边框，透明背景）
+// Outline variant (border only, transparent background)
 Select::new(cx)
     .variant(SelectVariant::Outline)
     .options(vec![...])
 ```
 
-### 2. 下拉方向控制 (Dropdown Direction)
+### 2. Dropdown Direction Control
 
-添加了 `DropdownDirection` 枚举，支持向上或向下展开：
+Added `DropdownDirection` enum supporting expansion up or down:
 
 ```rust
 pub enum DropdownDirection {
-    Down,   // 向下展开（默认）
-    Up,     // 向上展开
-    Auto,   // 自动检测（未来实现）
+    Down,   // Expand downward (default)
+    Up,     // Expand upward
+    Auto,   // Auto-detect (future implementation)
 }
 ```
 
-#### 使用方法
+#### Usage
 
 ```rust
-// 向下展开（默认）
+// Expand downward (default)
 Select::new(cx)
     .dropdown_direction(DropdownDirection::Down)
     .options(vec![...])
 
-// 向上展开
+// Expand upward
 Select::new(cx)
     .dropdown_direction(DropdownDirection::Up)
     .options(vec![...])
 ```
 
-### 2.5. 下拉宽度控制 (Dropdown Width) ⭐ NEW
+### 2.5. Dropdown Width Control ⭐ NEW
 
-添加了 `DropdownWidth` 枚举，支持自定义下拉菜单宽度：
+Added `DropdownWidth` enum supporting custom dropdown menu width:
 
 ```rust
 pub enum DropdownWidth {
-    MatchTrigger,      // 匹配触发器宽度（默认）
-    Fixed(Pixels),     // 固定宽度
-    MinWidth(Pixels),  // 最小宽度
-    MaxWidth(Pixels),  // 最大宽度
+    MatchTrigger,      // Match trigger width (default)
+    Fixed(Pixels),     // Fixed width
+    MinWidth(Pixels),  // Minimum width
+    MaxWidth(Pixels),  // Maximum width
 }
 ```
 
-#### 使用方法
+#### Usage
 
 ```rust
-// 匹配触发器宽度（默认）
+// Match trigger width (default)
 Select::new(cx)
     .options(vec![...])
 
-// 固定宽度
+// Fixed width
 Select::new(cx)
     .fixed_width(px(120.))
     .options(vec![...])
 
-// 最小宽度
+// Minimum width
 Select::new(cx)
     .min_width(px(300.))
     .options(vec![...])
 
-// 最大宽度
+// Maximum width
 Select::new(cx)
     .max_width(px(200.))
     .options(vec![...])
 
-// 组合使用：窄宽度 + 紧凑 + 右对齐
+// Combined: narrow width + compact + right align
 Select::new(cx)
     .fixed_width(px(100.))
     .compact()
@@ -102,112 +102,112 @@ Select::new(cx)
     .options(vec![...])
 ```
 
-### 2.6. 下拉对齐控制 (Dropdown Alignment)
+### 2.6. Dropdown Alignment Control
 
-添加了 `DropdownAlignment` 枚举，支持左对齐、右对齐、居中对齐：
+Added `DropdownAlignment` enum supporting left, right, and center alignment:
 
 ```rust
 pub enum DropdownAlignment {
-    Left,    // 左对齐（默认）
-    Right,   // 右对齐
-    Center,  // 居中对齐
+    Left,    // Left align (default)
+    Right,   // Right align
+    Center,  // Center align
 }
 ```
 
-#### 使用方法
+#### Usage
 
 ```rust
-// 左对齐（默认）
+// Left align (default)
 Select::new(cx)
     .align_left()
     .options(vec![...])
 
-// 右对齐
+// Right align
 Select::new(cx)
     .align_right()
     .options(vec![...])
 
-// 居中对齐
+// Center align
 Select::new(cx)
     .align_center()
     .options(vec![...])
 
-// 组合使用：右对齐 + 向上展开
+// Combined: right align + expand upward
 Select::new(cx)
     .align_right()
     .dropdown_direction(DropdownDirection::Up)
     .options(vec![...])
 ```
 
-### 3. 便捷方法 (Convenience Methods)
+### 3. Convenience Methods
 
-添加了快捷方法，简化常见用例：
+Added shortcut methods for common use cases:
 
 ```rust
-// 移除边框
+// Remove border
 Select::new(cx)
     .no_border()
     .options(vec![...])
 
-// 移除阴影
+// Remove shadow
 Select::new(cx)
     .no_shadow()
     .options(vec![...])
 
-// 透明背景
+// Transparent background
 Select::new(cx)
     .transparent()
     .options(vec![...])
 
-// 清爽样式（无边框、无阴影、透明背景）
+// Clean style (no border, no shadow, transparent background)
 Select::new(cx)
     .clean()
     .options(vec![...])
 
-// 紧凑间距（NEW!）
+// Compact spacing (NEW!)
 Select::new(cx)
     .compact()
     .options(vec![...])
 
-// 自定义边框颜色
+// Custom border color
 Select::new(cx)
     .border_color(rgb(0x999999))
     .options(vec![...])
 ```
 
-## 🎯 完整示例
+## 🎯 Complete Examples
 
-### 示例 1: Ghost 变体（适用于嵌入式场景）
+### Example 1: Ghost Variant (For Embedded Scenarios)
 
 ```rust
 Select::new(cx)
-    .placeholder("选择选项")
+    .placeholder("Select option")
     .variant(SelectVariant::Ghost)
     .text_color(rgb(0x999999))
     .size(ComponentSize::Small)
     .options(vec![
-        SelectOption::new("1", "选项 1"),
-        SelectOption::new("2", "选项 2"),
+        SelectOption::new("1", "Option 1"),
+        SelectOption::new("2", "Option 2"),
     ])
 ```
 
-### 示例 2: 向上展开的下拉菜单
+### Example 2: Dropdown Expanding Upward
 
 ```rust
 Select::new(cx)
-    .placeholder("选择选项")
+    .placeholder("Select option")
     .dropdown_direction(DropdownDirection::Up)
     .options(vec![
-        SelectOption::new("1", "选项 1"),
-        SelectOption::new("2", "选项 2"),
+        SelectOption::new("1", "Option 1"),
+        SelectOption::new("2", "Option 2"),
     ])
 ```
 
-### 示例 3: 完全自定义
+### Example 3: Fully Customized
 
 ```rust
 Select::new(cx)
-    .placeholder("自定义 Select")
+    .placeholder("Custom Select")
     .variant(SelectVariant::Outline)
     .size(ComponentSize::Small)
     .font_size(px(12.))
@@ -218,50 +218,50 @@ Select::new(cx)
     .options(vec![...])
 ```
 
-## 📊 API 参考
+## 📊 API Reference
 
-### 新增方法
+### New Methods
 
-| 方法 | 参数 | 描述 |
-|------|------|------|
-| `.variant()` | `SelectVariant` | 设置视觉变体 |
-| `.dropdown_direction()` | `DropdownDirection` | 设置下拉方向 |
-| `.dropdown_alignment()` | `DropdownAlignment` | 设置下拉对齐 ⭐ NEW |
-| `.dropdown_width()` | `DropdownWidth` | 设置下拉宽度 ⭐ NEW |
-| `.fixed_width()` | `Pixels` | 固定宽度（便捷方法） ⭐ NEW |
-| `.min_width()` | `Pixels` | 最小宽度（便捷方法） ⭐ NEW |
-| `.max_width()` | `Pixels` | 最大宽度（便捷方法） ⭐ NEW |
-| `.align_left()` | - | 左对齐（便捷方法） |
-| `.align_right()` | - | 右对齐（便捷方法） |
-| `.align_center()` | - | 居中对齐（便捷方法） |
-| `.border_color()` | `Rgba` | 设置边框颜色 |
-| `.no_border()` | - | 移除边框（便捷方法） |
-| `.no_shadow()` | - | 移除阴影（便捷方法） |
-| `.transparent()` | - | 透明背景（便捷方法） |
-| `.clean()` | - | 清爽样式：无边框、无阴影、透明（便捷方法） |
-| `.compact()` | - | 紧凑间距（便捷方法） ⭐ NEW |
+| Method | Parameter | Description |
+|--------|-----------|-------------|
+| `.variant()` | `SelectVariant` | Set visual variant |
+| `.dropdown_direction()` | `DropdownDirection` | Set dropdown direction |
+| `.dropdown_alignment()` | `DropdownAlignment` | Set dropdown alignment ⭐ NEW |
+| `.dropdown_width()` | `DropdownWidth` | Set dropdown width ⭐ NEW |
+| `.fixed_width()` | `Pixels` | Fixed width (convenience) ⭐ NEW |
+| `.min_width()` | `Pixels` | Minimum width (convenience) ⭐ NEW |
+| `.max_width()` | `Pixels` | Maximum width (convenience) ⭐ NEW |
+| `.align_left()` | - | Left align (convenience) |
+| `.align_right()` | - | Right align (convenience) |
+| `.align_center()` | - | Center align (convenience) |
+| `.border_color()` | `Rgba` | Set border color |
+| `.no_border()` | - | Remove border (convenience) |
+| `.no_shadow()` | - | Remove shadow (convenience) |
+| `.transparent()` | - | Transparent background (convenience) |
+| `.clean()` | - | Clean style: no border, no shadow, transparent (convenience) |
+| `.compact()` | - | Compact spacing (convenience) ⭐ NEW |
 
-### 新增类型
+### New Types
 
 ```rust
-// 视觉变体
+// Visual variants
 pub enum SelectVariant {
-    Default,    // 默认样式
-    Ghost,      // 无边框，透明
-    Outline,    // 仅边框
+    Default,    // Default style
+    Ghost,      // No border, transparent
+    Outline,    // Border only
 }
 
-// 下拉方向
+// Dropdown direction
 pub enum DropdownDirection {
-    Down,   // 向下
-    Up,     // 向上
-    Auto,   // 自动（未来）
+    Down,   // Downward
+    Up,     // Upward
+    Auto,   // Auto (future)
 }
 ```
 
-## 🎨 使用场景
+## 🎨 Use Cases
 
-### 场景 1: 嵌入式 Select（Settings 视图）
+### Use Case 1: Embedded Select (Settings View)
 
 ```rust
 // Provider Select in Settings
@@ -272,12 +272,12 @@ Select::new(cx)
     .options(providers)
 ```
 
-**优点**：
-- 无边框，融入背景
-- 小尺寸，节省空间
-- 自定义文字颜色，匹配设计
+**Advantages**:
+- No border, blends with background
+- Small size, saves space
+- Custom text color, matches design
 
-### 场景 2: 底部工具栏的 Select
+### Use Case 2: Select in Bottom Toolbar
 
 ```rust
 // Select in bottom toolbar
@@ -287,11 +287,11 @@ Select::new(cx)
     .options(options)
 ```
 
-**优点**：
-- 向上展开，避免被遮挡
-- Outline 样式，清晰可见
+**Advantages**:
+- Expands upward, avoids being blocked
+- Outline style, clearly visible
 
-### 场景 3: 表单中的 Select
+### Use Case 3: Select in Form
 
 ```rust
 // Select in form
@@ -301,15 +301,15 @@ Select::new(cx)
     .options(options)
 ```
 
-**优点**：
-- 默认样式，清晰明确
-- 中等尺寸，易于点击
+**Advantages**:
+- Default style, clear and explicit
+- Medium size, easy to click
 
-## 🔧 实现细节
+## 🔧 Implementation Details
 
-### 变体实现
+### Variant Implementation
 
-变体通过条件渲染实现：
+Variants are implemented through conditional rendering:
 
 ```rust
 .map(|this| match self.variant {
@@ -327,74 +327,73 @@ Select::new(cx)
 })
 ```
 
-### 下拉方向实现
+### Dropdown Direction Implementation
 
-通过改变绝对定位实现：
+Implemented by changing absolute positioning:
 
 ```rust
 .map(|this| match self.dropdown_direction {
     DropdownDirection::Down | DropdownDirection::Auto => {
-        this.top_full().mt_1()  // 在下方
+        this.top_full().mt_1()  // Below
     }
     DropdownDirection::Up => {
-        this.bottom_full().mb_1()  // 在上方
+        this.bottom_full().mb_1()  // Above
     }
 })
 ```
 
-## 🚀 运行 Demo
+## 🚀 Run Demo
 
 ```bash
 cargo run --example select_variants_demo
 ```
 
-Demo 展示了：
-- ✅ 所有 3 种变体
-- ✅ 向上和向下展开
-- ✅ 便捷方法
-- ✅ 自定义组合
+Demo shows:
+- ✅ All 3 variants
+- ✅ Upward and downward expansion
+- ✅ Convenience methods
+- ✅ Custom combinations
 
-## 📝 向后兼容性
+## 📝 Backward Compatibility
 
-所有新功能都是**完全向后兼容**的：
+All new features are **fully backward compatible**:
 
-- ✅ 默认变体是 `SelectVariant::Default`
-- ✅ 默认方向是 `DropdownDirection::Down`
-- ✅ 现有代码无需修改
+- ✅ Default variant is `SelectVariant::Default`
+- ✅ Default direction is `DropdownDirection::Down`
+- ✅ Existing code requires no changes
 
-## 🎊 总结
+## 🎊 Summary
 
-### 新增功能
+### New Features
 
-1. ✅ **变体系统** - Default, Ghost, Outline
-2. ✅ **下拉方向** - Down, Up, Auto
-3. ✅ **便捷方法** - no_border(), no_shadow(), transparent(), clean()
-4. ✅ **边框颜色** - border_color()
+1. ✅ **Variant System** - Default, Ghost, Outline
+2. ✅ **Dropdown Direction** - Down, Up, Auto
+3. ✅ **Convenience Methods** - no_border(), no_shadow(), transparent(), clean()
+4. ✅ **Border Color** - border_color()
 
-### 使用场景
+### Use Cases
 
-- ✅ 嵌入式 Select（Ghost 变体）
-- ✅ 底部工具栏（向上展开）
-- ✅ 表单（默认样式）
-- ✅ 完全自定义
+- ✅ Embedded Select (Ghost variant)
+- ✅ Bottom toolbar (upward expansion)
+- ✅ Forms (default style)
+- ✅ Fully customized
 
-### 完整定制能力
+### Complete Customization Capability
 
-现在 Select 组件支持：
+The Select component now supports:
 
-| 属性 | 方法 | 版本 |
-|------|------|------|
-| 组件尺寸 | `.size()` | v0.1.0+ |
-| 字体大小 | `.font_size()` | v0.1.8+ |
-| 背景颜色 | `.bg_color()` | v0.1.9+ |
-| 文字颜色 | `.text_color()` | v0.1.10+ |
-| **视觉变体** | `.variant()` | **v0.1.11+** ⭐ |
-| **下拉方向** | `.dropdown_direction()` | **v0.1.11+** ⭐ |
-| **边框颜色** | `.border_color()` | **v0.1.11+** ⭐ |
-| **无边框** | `.no_border()` | **v0.1.11+** ⭐ |
-| **无阴影** | `.no_shadow()` | **v0.1.11+** ⭐ |
-| **透明背景** | `.transparent()` | **v0.1.11+** ⭐ |
-| **清爽样式** | `.clean()` | **v0.1.11+** ⭐ |
+| Property | Method | Version |
+|----------|--------|---------|
+| Component Size | `.size()` | v0.1.0+ |
+| Font Size | `.font_size()` | v0.1.8+ |
+| Background Color | `.bg_color()` | v0.1.9+ |
+| Text Color | `.text_color()` | v0.1.10+ |
+| **Visual Variant** | `.variant()` | **v0.1.11+** ⭐ |
+| **Dropdown Direction** | `.dropdown_direction()` | **v0.1.11+** ⭐ |
+| **Border Color** | `.border_color()` | **v0.1.11+** ⭐ |
+| **No Border** | `.no_border()` | **v0.1.11+** ⭐ |
+| **No Shadow** | `.no_shadow()` | **v0.1.11+** ⭐ |
+| **Transparent Background** | `.transparent()` | **v0.1.11+** ⭐ |
+| **Clean Style** | `.clean()` | **v0.1.11+** ⭐ |
 
-**Fluix Select 现在是完全可定制的组件！** 🎨✨
-
+**Fluix Select is now a fully customizable component!** 🎨✨
