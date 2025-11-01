@@ -22,6 +22,16 @@
 	function getScreenshotPath(componentId: string): string {
 		return `/screenshots/components/${componentId}-demo.png`;
 	}
+	
+	function getScreenshotPaths(componentId: string): string[] {
+		if (componentId === 'icon') {
+			return [
+				`/screenshots/components/icon-demo.png`,
+				`/screenshots/components/icon-demo2.png`
+			];
+		}
+		return [getScreenshotPath(componentId)];
+	}
 </script>
 
 <div class="components-layout">
@@ -51,33 +61,63 @@
 		</div>
 		
 		<div class="demo-content">
-			<div class="screenshot-container">
-				<img 
-					src={getScreenshotPath(selectedComponent)}
-					alt="{components.find(c => c.id === selectedComponent)?.name} Demo"
-					class="component-screenshot"
-					onerror={(e) => {
-						const img = e.target as HTMLImageElement;
-						img.style.display = 'none';
-						const placeholder = img.nextElementSibling as HTMLElement;
-						if (placeholder) placeholder.style.display = 'flex';
-					}}
-				/>
-				<div class="screenshot-placeholder" style="display: none;">
-					<div class="placeholder-content">
-						<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-							<rect x="3" y="3" width="18" height="18" rx="2" stroke-dasharray="4 4"/>
-							<path d="M8 12h8M12 8v8"/>
-						</svg>
-						<h3>截图未找到</h3>
-						<p>请运行以下命令并截图：</p>
-						<code class="code-block">
-							cargo run --example {components.find(c => c.id === selectedComponent)?.demo}
-						</code>
-						<p class="hint">截图保存位置：<code>websites/static/screenshots/components/{selectedComponent}-demo.png</code></p>
+			{#if selectedComponent === 'icon'}
+				<!-- Icon with two screenshots -->
+				{#each getScreenshotPaths(selectedComponent) as screenshotPath, index}
+					<div class="screenshot-container">
+						<img 
+							src={screenshotPath}
+							alt="{components.find(c => c.id === selectedComponent)?.name} Demo {index + 1}"
+							class="component-screenshot"
+							onerror={(e) => {
+								const img = e.target as HTMLImageElement;
+								img.style.display = 'none';
+								const placeholder = img.nextElementSibling as HTMLElement;
+								if (placeholder) placeholder.style.display = 'flex';
+							}}
+						/>
+						<div class="screenshot-placeholder" style="display: none;">
+							<div class="placeholder-content">
+								<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+									<rect x="3" y="3" width="18" height="18" rx="2" stroke-dasharray="4 4"/>
+									<path d="M8 12h8M12 8v8"/>
+								</svg>
+								<h3>截图未找到</h3>
+								<p class="hint">截图保存位置：<code>websites/static/screenshots/components/{screenshotPath.split('/').pop()}</code></p>
+							</div>
+						</div>
+					</div>
+				{/each}
+			{:else}
+				<!-- Other components with single screenshot -->
+				<div class="screenshot-container">
+					<img 
+						src={getScreenshotPath(selectedComponent)}
+						alt="{components.find(c => c.id === selectedComponent)?.name} Demo"
+						class="component-screenshot"
+						onerror={(e) => {
+							const img = e.target as HTMLImageElement;
+							img.style.display = 'none';
+							const placeholder = img.nextElementSibling as HTMLElement;
+							if (placeholder) placeholder.style.display = 'flex';
+						}}
+					/>
+					<div class="screenshot-placeholder" style="display: none;">
+						<div class="placeholder-content">
+							<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+								<rect x="3" y="3" width="18" height="18" rx="2" stroke-dasharray="4 4"/>
+								<path d="M8 12h8M12 8v8"/>
+							</svg>
+							<h3>截图未找到</h3>
+							<p>请运行以下命令并截图：</p>
+							<code class="code-block">
+								cargo run --example {components.find(c => c.id === selectedComponent)?.demo}
+							</code>
+							<p class="hint">截图保存位置：<code>websites/static/screenshots/components/{selectedComponent}-demo.png</code></p>
+						</div>
 					</div>
 				</div>
-			</div>
+			{/if}
 		</div>
 	</main>
 </div>
