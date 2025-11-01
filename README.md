@@ -1,6 +1,6 @@
 # Fluix Component
 
-Rust UI components for building fantastic cross-platform desktop applications by using GPUI 0.2.
+Rust UI components for GPUI
 
 [Get Started](#hello-world) | [Components](#components)
 
