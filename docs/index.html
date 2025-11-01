@@ -1,13 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fluix Component - Rust UI Component Library</title>
+    <title>Fluix Component</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <nav class="navbar">
@@ -29,17 +26,53 @@
             <div class="container">
                 <h1 class="hero-title">Fluix Component</h1>
                 <p class="hero-subtitle">基于 GPUI 0.2 的 Rust UI 组件库，用于构建现代化的跨平台桌面应用</p>
-                <div class="hero-badges">
-                    <span class="badge">46+ 组件</span>
-                    <span class="badge">高性能</span>
-                    <span class="badge">类型安全</span>
-                    <span class="badge">灵活定制</span>
-                    <span class="badge">易于使用</span>
-                    <span class="badge">完善文档</span>
-                </div>
                 <div class="hero-actions">
-                    <a href="#quick-start" class="btn btn-primary">快速开始</a>
+                    <a href="#installation" class="btn btn-primary">快速开始</a>
                     <a href="#components" class="btn btn-secondary">查看组件</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="features">
+            <div class="container">
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <h3>46+ 组件</h3>
+                        <p>丰富的跨平台桌面 UI 组件库，提供完整的组件集合用于构建功能丰富的应用程序</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>高性能</h3>
+                        <p>基于 GPUI 的 GPU 加速渲染，提供流畅的用户体验</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>类型安全</h3>
+                        <p>充分利用 Rust 的类型系统，编译时保证类型安全</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>灵活定制</h3>
+                        <p>内置主题系统，支持灵活的主题和样式定制</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>易于使用</h3>
+                        <p>简洁一致的 API 设计，让你快速上手</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>完善文档</h3>
+                        <p>详细的 API 文档、教程和示例代码</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="api" class="section">
+            <div class="container">
+                <h2>简洁直观的 API</h2>
+                <p class="section-description">只需几行代码即可开始使用。无状态组件设计让构建复杂 UI 变得简单。</p>
+                <div class="code-block">
+                    <pre><code>Button::new("ok")
+    .primary()
+    .label("Click Me")
+    .on_click(|_, _, _| println!("Button clicked!"))</code></pre>
                 </div>
             </div>
         </section>
@@ -49,22 +82,8 @@
                 <h2>安装 Fluix Component</h2>
                 <p>在 <code>Cargo.toml</code> 中添加以下依赖：</p>
                 <div class="code-block">
-                    <pre><code>[dependencies]
-fluix = "0.1.20"
-gpui = "0.2"</code></pre>
-                </div>
-            </div>
-        </section>
-
-        <section id="quick-start" class="section">
-            <div class="container">
-                <h2>简洁直观的 API</h2>
-                <p class="section-description">只需几行代码即可开始使用。无状态组件设计让构建复杂 UI 变得简单。</p>
-                <div class="code-block">
-                    <pre><code>Button::new("Click Me")
-    .variant(ButtonVariant::Primary)
-    .size(ComponentSize::Medium)
-    .on_click(|_, _, _| println!("Button clicked!"))</code></pre>
+                    <pre><code>gpui = "0.2"
+fluix = "0.1.20"</code></pre>
                 </div>
             </div>
         </section>
@@ -112,8 +131,8 @@ fn main() {
     });
 }</code></pre>
                 </div>
-                <p class="section-description">运行程序：</p>
-                <div class="code-block">
+                <p class="run-command">运行程序：</p>
+                <div class="code-block code-block-terminal">
                     <pre><code>$ cargo run</code></pre>
                 </div>
             </div>
@@ -125,7 +144,6 @@ fn main() {
                 <p class="section-description">丰富的跨平台桌面 UI 组件库，提供完整的组件集合用于构建功能丰富的应用程序</p>
                 
                 <div class="component-grid">
-                    <!-- Basic Components -->
                     <div class="component-card">
                         <h3>基础组件</h3>
                         <ul class="component-list">
@@ -134,7 +152,6 @@ fn main() {
                         </ul>
                     </div>
 
-                    <!-- Form Components -->
                     <div class="component-card">
                         <h3>表单组件</h3>
                         <ul class="component-list">
@@ -148,7 +165,6 @@ fn main() {
                         </ul>
                     </div>
 
-                    <!-- Layout Components -->
                     <div class="component-card">
                         <h3>布局组件</h3>
                         <ul class="component-list">
@@ -160,13 +176,12 @@ fn main() {
             </div>
         </section>
 
-        <!-- Component Details -->
         <section id="button" class="component-section">
             <div class="container">
                 <h2>Button</h2>
-                <p class="component-description">Interactive button component with multiple variants and sizes.</p>
+                <p class="component-description">交互式按钮组件，支持多种变体和尺寸。</p>
                 
-                <h3>Variants</h3>
+                <h3>变体</h3>
                 <div class="code-block">
                     <pre><code>Button::new("Primary")
     .variant(ButtonVariant::Primary)
@@ -175,76 +190,7 @@ Button::new("Secondary")
     .variant(ButtonVariant::Secondary)
 
 Button::new("Outline")
-    .variant(ButtonVariant::Outline)
-
-Button::new("Text")
-    .variant(ButtonVariant::Text)
-
-Button::new("Danger")
-    .variant(ButtonVariant::Danger)</code></pre>
-                </div>
-
-                <h3>Sizes</h3>
-                <div class="code-block">
-                    <pre><code>Button::new("Small")
-    .size(ComponentSize::Small)
-
-Button::new("Medium")
-    .size(ComponentSize::Medium)  // Default
-
-Button::new("Large")
-    .size(ComponentSize::Large)</code></pre>
-                </div>
-
-                <h3>Properties</h3>
-                <table class="props-table">
-                    <thead>
-                        <tr>
-                            <th>Property</th>
-                            <th>Type</th>
-                            <th>Default</th>
-                            <th>Description</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><code>variant</code></td>
-                            <td><code>ButtonVariant</code></td>
-                            <td><code>Primary</code></td>
-                            <td>Visual style variant</td>
-                        </tr>
-                        <tr>
-                            <td><code>size</code></td>
-                            <td><code>ComponentSize</code></td>
-                            <td><code>Medium</code></td>
-                            <td>Button size</td>
-                        </tr>
-                        <tr>
-                            <td><code>disabled</code></td>
-                            <td><code>bool</code></td>
-                            <td><code>false</code></td>
-                            <td>Disable button interaction</td>
-                        </tr>
-                        <tr>
-                            <td><code>loading</code></td>
-                            <td><code>bool</code></td>
-                            <td><code>false</code></td>
-                            <td>Show loading state</td>
-                        </tr>
-                        <tr>
-                            <td><code>full_width</code></td>
-                            <td><code>bool</code></td>
-                            <td><code>false</code></td>
-                            <td>Make button full width</td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <h3>Events</h3>
-                <div class="code-block">
-                    <pre><code>pub enum ButtonEvent {
-    Click,  // Button was clicked
-}</code></pre>
+    .variant(ButtonVariant::Outline)</code></pre>
                 </div>
             </div>
         </section>
@@ -252,288 +198,19 @@ Button::new("Large")
         <section id="icon" class="component-section">
             <div class="container">
                 <h2>Icon</h2>
-                <p class="component-description">SVG icon component with predefined icons and custom support.</p>
+                <p class="component-description">SVG 图标组件，支持预定义图标和自定义图标。</p>
                 
-                <h3>Usage</h3>
+                <h3>使用方式</h3>
                 <div class="code-block">
-                    <pre><code>// Using predefined icon names
+                    <pre><code>// 使用预定义图标名称
 Icon::new(IconName::Star)
     .large()
     .color(rgb(0xF59E0B))
 
-// Custom size
+// 自定义尺寸
 Icon::new(IconName::Heart)
     .size(IconSize::Custom(28.0))
     .color(rgb(0xEF4444))</code></pre>
-                </div>
-
-                <h3>Available Icons</h3>
-                <div class="icon-grid">
-                    <div class="icon-item">ArrowLeft</div>
-                    <div class="icon-item">ArrowRight</div>
-                    <div class="icon-item">ArrowUp</div>
-                    <div class="icon-item">ArrowDown</div>
-                    <div class="icon-item">Check</div>
-                    <div class="icon-item">ChevronUp</div>
-                    <div class="icon-item">ChevronDown</div>
-                    <div class="icon-item">ChevronUpDown</div>
-                    <div class="icon-item">Close</div>
-                    <div class="icon-item">Plus</div>
-                    <div class="icon-item">Minus</div>
-                    <div class="icon-item">Search</div>
-                    <div class="icon-item">Settings</div>
-                    <div class="icon-item">Home</div>
-                    <div class="icon-item">User</div>
-                    <div class="icon-item">UserPlus</div>
-                    <div class="icon-item">Bell</div>
-                    <div class="icon-item">Star</div>
-                    <div class="icon-item">Heart</div>
-                    <div class="icon-item">Menu</div>
-                    <div class="icon-item">Info</div>
-                    <div class="icon-item">Warning</div>
-                    <div class="icon-item">Error</div>
-                    <div class="icon-item">Success</div>
-                    <div class="icon-item">AlertCircle</div>
-                    <div class="icon-item">AlertTriangle</div>
-                    <div class="icon-item">UnfoldMore</div>
-                    <div class="icon-item">Send</div>
-                    <div class="icon-item">Attachment</div>
-                    <div class="icon-item">Image</div>
-                    <div class="icon-item">LogIn</div>
-                    <div class="icon-item">Task</div>
-                </div>
-            </div>
-        </section>
-
-        <section id="text-input" class="component-section">
-            <div class="container">
-                <h2>TextInput</h2>
-                <p class="component-description">Single-line text input component with IME support and validation.</p>
-                
-                <h3>Usage</h3>
-                <div class="code-block">
-                    <pre><code>let input = cx.new(|cx| {
-    TextInput::new(cx)
-        .placeholder("Enter your name...")
-        .max_length(50)
-});
-
-cx.subscribe_in(&input, window, |_, _, event: &TextInputEvent, _, _| {
-    match event {
-        TextInputEvent::Change(value) => println!("Value: {}", value),
-        TextInputEvent::Submit(value) => println!("Submitted: {}", value),
-        _ => {}
-    }
-}).detach();</code></pre>
-                </div>
-
-                <h3>Properties</h3>
-                <table class="props-table">
-                    <thead>
-                        <tr>
-                            <th>Property</th>
-                            <th>Type</th>
-                            <th>Default</th>
-                            <th>Description</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><code>placeholder</code></td>
-                            <td><code>String</code></td>
-                            <td><code>""</code></td>
-                            <td>Placeholder text</td>
-                        </tr>
-                        <tr>
-                            <td><code>value</code></td>
-                            <td><code>String</code></td>
-                            <td><code>""</code></td>
-                            <td>Initial value</td>
-                        </tr>
-                        <tr>
-                            <td><code>disabled</code></td>
-                            <td><code>bool</code></td>
-                            <td><code>false</code></td>
-                            <td>Disable input</td>
-                        </tr>
-                        <tr>
-                            <td><code>is_password</code></td>
-                            <td><code>bool</code></td>
-                            <td><code>false</code></td>
-                            <td>Password mode</td>
-                        </tr>
-                        <tr>
-                            <td><code>max_length</code></td>
-                            <td><code>Option&lt;usize&gt;</code></td>
-                            <td><code>None</code></td>
-                            <td>Maximum length</td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <h3>Features</h3>
-                <ul class="feature-list">
-                    <li>✨ Full IME support (Chinese, Japanese, Korean, etc.)</li>
-                    <li>🖱️ Mouse selection (click, drag, shift+click)</li>
-                    <li>⌨️ Keyboard navigation (arrow keys, home/end)</li>
-                    <li>🎯 Accurate cursor positioning for multi-byte characters</li>
-                    <li>🔒 Password mode with masked input</li>
-                    <li>✂️ Copy/paste/cut support</li>
-                </ul>
-            </div>
-        </section>
-
-        <section id="text-area" class="component-section">
-            <div class="container">
-                <h2>TextArea</h2>
-                <p class="component-description">Multi-line text editor component with auto-height and scroll support.</p>
-                
-                <h3>Usage</h3>
-                <div class="code-block">
-                    <pre><code>let textarea = cx.new(|cx| {
-    TextArea::new(cx)
-        .placeholder("Type your message...")
-        .min_height(80.0)
-        .max_height(200.0)
-});</code></pre>
-                </div>
-            </div>
-        </section>
-
-        <section id="select" class="component-section">
-            <div class="container">
-                <h2>Select</h2>
-                <p class="component-description">Dropdown selection component supporting single and multiple selection.</p>
-                
-                <h3>Usage</h3>
-                <div class="code-block">
-                    <pre><code>let select = cx.new(|cx| {
-    Select::new(cx)
-        .placeholder("Choose an option...")
-        .options(vec![
-            SelectOption::new("react", "React"),
-            SelectOption::new("vue", "Vue"),
-            SelectOption::new("angular", "Angular"),
-        ])
-        .multiple(false)
-});</code></pre>
-                </div>
-            </div>
-        </section>
-
-        <section id="checkbox" class="component-section">
-            <div class="container">
-                <h2>Checkbox</h2>
-                <p class="component-description">Checkbox component for boolean values.</p>
-                
-                <h3>Usage</h3>
-                <div class="code-block">
-                    <pre><code>let checkbox = cx.new(|cx| {
-    Checkbox::new(cx)
-        .label("Accept terms")
-        .checked(true)
-        .size(ComponentSize::Medium)
-});</code></pre>
-                </div>
-            </div>
-        </section>
-
-        <section id="checkbox-group" class="component-section">
-            <div class="container">
-                <h2>CheckboxGroup</h2>
-                <p class="component-description">Group of checkboxes for multiple selections.</p>
-                
-                <h3>Usage</h3>
-                <div class="code-block">
-                    <pre><code>let checkbox_group = cx.new(|cx| {
-    CheckboxGroup::new(cx)
-        .options(vec![
-            CheckboxOption::new("apple", "Apple"),
-            CheckboxOption::new("banana", "Banana"),
-            CheckboxOption::new("orange", "Orange"),
-        ])
-        .direction(CheckboxGroupDirection::Vertical)
-});</code></pre>
-                </div>
-            </div>
-        </section>
-
-        <section id="radio-group" class="component-section">
-            <div class="container">
-                <h2>RadioGroup</h2>
-                <p class="component-description">Radio button group for single selection.</p>
-                
-                <h3>Usage</h3>
-                <div class="code-block">
-                    <pre><code>let radio_group = cx.new(|cx| {
-    RadioGroup::new(cx)
-        .options(vec![
-            RadioOption::new("small", "Small"),
-            RadioOption::new("medium", "Medium"),
-            RadioOption::new("large", "Large"),
-        ])
-        .direction(RadioGroupDirection::Horizontal)
-});</code></pre>
-                </div>
-            </div>
-        </section>
-
-        <section id="combobox" class="component-section">
-            <div class="container">
-                <h2>Combobox</h2>
-                <p class="component-description">Combobox component combining text input with dropdown selection.</p>
-                
-                <h3>Usage</h3>
-                <div class="code-block">
-                    <pre><code>let combobox = cx.new(|cx| {
-    Combobox::new(cx)
-        .placeholder("Search or select...")
-        .options(vec![
-            SelectOption::new("react", "React"),
-            SelectOption::new("vue", "Vue"),
-            SelectOption::new("angular", "Angular"),
-        ])
-});</code></pre>
-                </div>
-            </div>
-        </section>
-
-        <section id="tabs" class="component-section">
-            <div class="container">
-                <h2>Tabs</h2>
-                <p class="component-description">Tab navigation component for organizing content.</p>
-                
-                <h3>Usage</h3>
-                <div class="code-block">
-                    <pre><code>let tabs = cx.new(|cx| {
-    Tabs::new(cx)
-        .items(vec![
-            TabItem::new("tab1", "Tab 1"),
-            TabItem::new("tab2", "Tab 2"),
-            TabItem::new("tab3", "Tab 3"),
-        ])
-        .active("tab1")
-});</code></pre>
-                </div>
-            </div>
-        </section>
-
-        <section id="breadcrumb" class="component-section">
-            <div class="container">
-                <h2>Breadcrumb</h2>
-                <p class="component-description">Breadcrumb navigation component showing the current path.</p>
-                
-                <h3>Usage</h3>
-                <div class="code-block">
-                    <pre><code>let breadcrumb = cx.new(|cx| {
-    Breadcrumb::new(cx)
-        .items(vec![
-            BreadcrumbItem::new("home", "Home"),
-            BreadcrumbItem::new("category", "Category"),
-            BreadcrumbItem::new("page", "Current Page"),
-        ])
-        .separator(BreadcrumbSeparator::Slash)
-});</code></pre>
                 </div>
             </div>
         </section>
@@ -542,33 +219,18 @@ cx.subscribe_in(&input, window, |_, _, event: &TextInputEvent, _, _| {
             <div class="container">
                 <h2>示例</h2>
                 <p class="section-description">运行示例项目：</p>
-                <div class="code-block">
-                    <pre><code># Button component
+                <div class="code-block code-block-terminal">
+                    <pre><code># Button 组件示例
 cargo run --example button_demo
 
-# Icon component
+# Icon 组件示例  
 cargo run --example icon_demo
 
-# TextInput component
+# TextInput 和 TextArea 示例
 cargo run --example text_input_demo
 
-# Tabs component
-cargo run --example tabs_demo
-
-# Checkbox component
-cargo run --example checkbox_demo
-
-# CheckboxGroup component
-cargo run --example checkbox_group_demo
-
-# Combobox component
-cargo run --example combobox_demo
-
-# Breadcrumb component
-cargo run --example breadcrumb_demo
-
-# RadioGroup component
-cargo run --example radio_group_demo</code></pre>
+# Tabs 组件示例
+cargo run --example tabs_demo</code></pre>
                 </div>
             </div>
         </section>
@@ -584,7 +246,5 @@ cargo run --example radio_group_demo</code></pre>
             </p>
         </div>
     </footer>
-
-    <script src="script.js"></script>
 </body>
 </html>
