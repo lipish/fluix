@@ -1,5 +1,6 @@
 <script lang="ts">
 	// Tutorials page
+	import { base } from '$app/paths';
 </script>
 
 <div class="page-container">
@@ -9,13 +10,13 @@
 		<div class="tutorial-card">
 			<h2>Getting Started</h2>
 			<p>Install Fluix and build your first application.</p>
-			<a href="/docs/getting-started" class="link">Read Tutorial →</a>
+			<a href="{base}/docs/getting-started" class="link">Read Tutorial →</a>
 		</div>
 		
 		<div class="tutorial-card">
 			<h2>Working with Components</h2>
 			<p>Learn how to use all available components.</p>
-			<a href="/docs/components" class="link">Read Tutorial →</a>
+			<a href="{base}/docs/components" class="link">Read Tutorial →</a>
 		</div>
 		
 		<div class="tutorial-card">

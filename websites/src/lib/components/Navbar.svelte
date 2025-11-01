@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { ChevronDown, ExternalLink } from 'lucide-svelte';
+	import { base } from '$app/paths';
 	
 	let resourcesOpen = $state(false);
 </script>
@@ -8,7 +9,7 @@
 <nav class="navbar">
 	<div class="nav-container">
 		<!-- Logo -->
-		<a href="/" class="logo-link">
+		<a href="{base}/" class="logo-link">
 			<div class="logo-icon-wrapper">
 				<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
 					<rect x="3" y="3" width="8" height="8" fill="currentColor" stroke="none"/>
@@ -22,9 +23,9 @@
 
 		<!-- Navigation Links -->
 		<div class="nav-links">
-			<a href="/" class="nav-link">Home</a>
-			<a href="/docs/getting-started" class="nav-link">Getting Started</a>
-			<a href="/docs/components" class="nav-link">Components</a>
+			<a href="{base}/" class="nav-link">Home</a>
+			<a href="{base}/docs/getting-started" class="nav-link">Getting Started</a>
+			<a href="{base}/docs/components" class="nav-link">Components</a>
 			<a href="https://docs.rs/fluix" target="_blank" rel="noopener noreferrer" class="nav-link">
 				API Doc
 				<ExternalLink class="external-icon" size={12} />
@@ -34,8 +35,8 @@
 				<ChevronDown class="chevron-icon" size={12} />
 				{#if resourcesOpen}
 					<div class="dropdown-menu">
-						<a href="/docs/tutorials" class="dropdown-item">Tutorials</a>
-						<a href="/docs/faq" class="dropdown-item">FAQ</a>
+						<a href="{base}/docs/tutorials" class="dropdown-item">Tutorials</a>
+						<a href="{base}/docs/faq" class="dropdown-item">FAQ</a>
 						<a href="https://github.com/lipish/fluix/releases" target="_blank" rel="noopener noreferrer" class="dropdown-item">
 							Releases
 							<ExternalLink class="external-icon-small" />

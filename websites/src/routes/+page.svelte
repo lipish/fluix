@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Blocks, Zap, Palette, Layout, BarChart3, SquareCode } from 'lucide-svelte';
+	import { base } from '$app/paths';
 </script>
 
 <div class="banner">
@@ -8,8 +9,8 @@
 		Rust UI components for building fantastic cross-platform desktop applications by using GPUI 0.2.
 	</div>
 	<div class="actions">
-		<a href="/docs/getting-started" class="btn-primary">Get Started</a>
-		<a href="/docs/components">
+		<a href="{base}/docs/getting-started" class="btn-primary">Get Started</a>
+		<a href="{base}/docs/components">
 			<Blocks />
 			Components
 		</a>

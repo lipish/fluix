@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { base } from '$app/paths';
+	
 	const components = [
 		{ id: 'button', name: 'Button', demo: 'button_demo' },
 		{ id: 'icon', name: 'Icon', demo: 'icon_demo' },
@@ -20,27 +22,27 @@
 	};
 	
 	function getScreenshotPath(componentId: string): string {
-		return `/screenshots/components/${componentId}-demo.png`;
+		return `${base}/screenshots/components/${componentId}-demo.png`;
 	}
 	
 	function getScreenshotPaths(componentId: string): string[] {
 		if (componentId === 'icon') {
 			return [
-				`/screenshots/components/icon-demo.png`,
-				`/screenshots/components/icon-demo2.png`
+				`${base}/screenshots/components/icon-demo.png`,
+				`${base}/screenshots/components/icon-demo2.png`
 			];
 		}
 		if (componentId === 'textinput') {
 			return [
-				`/screenshots/components/textinput-demo.png`,
-				`/screenshots/components/textinput-demo2.png`
+				`${base}/screenshots/components/textinput-demo.png`,
+				`${base}/screenshots/components/textinput-demo2.png`
 			];
 		}
 		if (componentId === 'select') {
 			return [
-				`/screenshots/components/select-demo.png`,
-				`/screenshots/components/select-demo2.png`,
-				`/screenshots/components/select-demo3.png`
+				`${base}/screenshots/components/select-demo.png`,
+				`${base}/screenshots/components/select-demo2.png`,
+				`${base}/screenshots/components/select-demo3.png`
 			];
 		}
 		return [getScreenshotPath(componentId)];

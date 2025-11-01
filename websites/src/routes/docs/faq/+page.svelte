@@ -1,5 +1,6 @@
 <script lang="ts">
 	// FAQ page
+	import { base } from '$app/paths';
 </script>
 
 <div class="page-container">
@@ -15,7 +16,7 @@
 		
 		<div class="faq-item">
 			<h3>How do I get started?</h3>
-			<p>Check out our <a href="/docs/getting-started">Getting Started guide</a>.</p>
+			<p>Check out our <a href="{base}/docs/getting-started">Getting Started guide</a>.</p>
 		</div>
 		
 		<div class="faq-item">
@@ -29,7 +30,7 @@
 		
 		<div class="faq-item">
 			<h3>What components are available?</h3>
-			<p>Fluix includes Button, Icon, Select, TextInput, and Checkbox components. See the <a href="/docs/components">Components page</a> for details.</p>
+			<p>Fluix includes Button, Icon, Select, TextInput, and Checkbox components. See the <a href="{base}/docs/components">Components page</a> for details.</p>
 		</div>
 		
 		<div class="faq-item">
@@ -48,7 +49,7 @@
 		
 		<div class="faq-item">
 			<h3>What are the requirements?</h3>
-			<p>Fluix requires Rust and GPUI 0.2. See the <a href="/docs/getting-started">Getting Started guide</a> for details.</p>
+			<p>Fluix requires Rust and GPUI 0.2. See the <a href="{base}/docs/getting-started">Getting Started guide</a> for details.</p>
 		</div>
 	</div>
 </div>

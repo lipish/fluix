@@ -1,5 +1,7 @@
 <script lang="ts">
 	// Getting Started page
+	import { base } from '$app/paths';
+	
 	const exampleCode = `use fluix::*;
 use gpui::*;
 
@@ -36,7 +38,7 @@ fn main() {
 	<div class="section">
 		<h2>Next Steps</h2>
 		<ul>
-			<li><a href="/docs/components">Learn about Components</a></li>
+			<li><a href="{base}/docs/components">Learn about Components</a></li>
 			<li><a href="https://docs.rs/fluix" target="_blank" rel="noopener noreferrer">View API Documentation</a></li>
 			<li><a href="https://github.com/lipish/fluix" target="_blank" rel="noopener noreferrer">Check out Examples</a></li>
 		</ul>
