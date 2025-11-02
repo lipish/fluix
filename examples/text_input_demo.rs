@@ -1,5 +1,6 @@
 use gpui::*;
 use fluix::{TextInput, TextInputEvent, TextArea, TextAreaEvent};
+use fluix::components::form::text_input::PasswordMaskMode;
 
 // ============================================================================
 // Demo App
@@ -11,6 +12,8 @@ struct TextInputDemo {
     basic_input: Entity<TextInput>,
     #[allow(dead_code)]
     password_input: Entity<TextInput>,
+    #[allow(dead_code)]
+    partial_mask_input: Entity<TextInput>,
     #[allow(dead_code)]
     limited_input: Entity<TextInput>,
     #[allow(dead_code)]
@@ -26,6 +29,7 @@ struct TextInputDemo {
     // Display results
     basic_value: String,
     password_value: String,
+    partial_mask_value: String,
     limited_value: String,
     validated_value: String,
     textarea_value: String,
@@ -46,6 +50,17 @@ impl TextInputDemo {
             TextInput::new(cx)
                 .placeholder("Enter password...")
                 .password(true)
+        });
+
+        // Partial mask password input
+        let partial_mask_input = cx.new(|cx| {
+            TextInput::new(cx)
+                .placeholder("Enter password (partial mask)...")
+                .password(true)
+                .password_mask_mode(PasswordMaskMode::Partial {
+                    prefix_len: 2,
+                    suffix_len: 2,
+                })
         });
 
         // Limited length input
@@ -99,6 +114,7 @@ impl TextInputDemo {
         // Subscribe to events
         cx.subscribe_in(&basic_input, window, Self::on_basic_change).detach();
         cx.subscribe_in(&password_input, window, Self::on_password_change).detach();
+        cx.subscribe_in(&partial_mask_input, window, Self::on_partial_mask_change).detach();
         cx.subscribe_in(&limited_input, window, Self::on_limited_change).detach();
         cx.subscribe_in(&validated_input, window, Self::on_validated_change).detach();
         cx.subscribe_in(&text_area, window, Self::on_textarea_change).detach();
@@ -107,6 +123,7 @@ impl TextInputDemo {
             scroll_handle,
             basic_input,
             password_input,
+            partial_mask_input,
             limited_input,
             validated_input,
             disabled_input,
@@ -115,6 +132,7 @@ impl TextInputDemo {
             borderless_area,
             basic_value: String::new(),
             password_value: String::new(),
+            partial_mask_value: String::new(),
             limited_value: String::new(),
             validated_value: String::new(),
             textarea_value: String::new(),
@@ -154,6 +172,25 @@ impl TextInputDemo {
             }
             TextInputEvent::Submit(value) => {
                 println!("Password submitted: {}", value);
+            }
+            _ => {}
+        }
+    }
+
+    fn on_partial_mask_change(
+        &mut self,
+        _input: &Entity<TextInput>,
+        event: &TextInputEvent,
+        _: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        match event {
+            TextInputEvent::Change(value) => {
+                self.partial_mask_value = value.clone();
+                cx.notify();
+            }
+            TextInputEvent::Submit(value) => {
+                println!("Partial mask password submitted: {}", value);
             }
             _ => {}
         }
@@ -361,6 +398,31 @@ impl Render for TextInputDemo {
                                             .text_xs()
                                             .text_color(rgb(0x666666))
                                             .child(format!("Length: {}", self.password_value.len()))
+                                    )
+                            )
+                            .child(
+                                div()
+                                    .flex()
+                                    .flex_col()
+                                    .gap_2()
+                                    .w_full()
+                                    .child(
+                                        div()
+                                            .text_sm()
+                                            .font_weight(FontWeight::SEMIBOLD)
+                                            .text_color(rgb(0x333333))
+                                            .child("Partial Mask Password")
+                                    )
+                                    .child(
+                                        div()
+                                            .w_full()
+                                            .child(self.partial_mask_input.clone())
+                                    )
+                                    .child(
+                                        div()
+                                            .text_xs()
+                                            .text_color(rgb(0x666666))
+                                            .child(format!("Length: {} (shows first 2 and last 2 chars)", self.partial_mask_value.len()))
                                     )
                             )
                     )

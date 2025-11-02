@@ -428,11 +428,46 @@ TextInput includes many advanced features:
 
 ### Password Input
 
+TextInput supports password mode with flexible masking options:
+
 ```rust
-TextInput::new(cx)
-    .placeholder("Enter password")
-    .password(true)  // Mask characters with bullets
+use fluix::components::form::text_input::PasswordMaskMode;
+
+// Basic password input (full mask)
+let password_input = cx.new(|cx| {
+    TextInput::new(cx)
+        .placeholder("Enter password")
+        .password(true)  // Mask all characters with bullets (•)
+});
+
+// Partial mask mode - show first 2 and last 2 characters
+// Example: password "f26612345678944u9" displays as "f2••••••••••••••44u9"
+let partial_mask_input = cx.new(|cx| {
+    TextInput::new(cx)
+        .placeholder("Enter password")
+        .password(true)
+        .password_mask_mode(PasswordMaskMode::Partial {
+            prefix_len: 2,  // Show first 2 characters
+            suffix_len: 2,  // Show last 2 characters
+        })
+});
+
+// Toggle password visibility programmatically
+password_input.update(cx, |input, cx| {
+    input.toggle_password_visibility(cx);
+});
+
+// Set initial visibility state
+let visible_password = cx.new(|cx| {
+    TextInput::new(cx)
+        .password(true)
+        .show_password(true)  // Start with password visible
+});
 ```
+
+**Password Mask Modes:**
+- `PasswordMaskMode::All` - All characters masked with bullets (default)
+- `PasswordMaskMode::Partial { prefix_len, suffix_len }` - Show prefix and suffix, mask middle
 
 ### Input Validation
 

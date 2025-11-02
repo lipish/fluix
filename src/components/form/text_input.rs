@@ -79,19 +79,250 @@ impl Element for TextInputElement {
 }
 
 // ============================================================================
+// Password Mask Mode
+// ============================================================================
+
+/// Password masking mode for TextInput component.
+///
+/// Controls how password characters are displayed when `password` mode is enabled
+/// and `password_visible` is `false`.
+///
+/// # Examples
+///
+/// ## Full Mask Mode (Default)
+///
+/// All characters are masked with bullets:
+///
+/// ```rust,no_run
+/// use fluix::components::form::text_input::PasswordMaskMode;
+/// use fluix::TextInput;
+/// use gpui::*;
+///
+/// # fn example(cx: &mut Context<TextInput>) {
+/// let password_input = TextInput::new(cx)
+///     .password(true)
+///     .password_mask_mode(PasswordMaskMode::All);
+/// // Password "f26612345678944u9" displays as "•••••••••••••••••"
+/// # }
+/// ```
+///
+/// ## Partial Mask Mode
+///
+/// Show first and last few characters, mask the middle:
+///
+/// ```rust,no_run
+/// use fluix::components::form::text_input::PasswordMaskMode;
+/// use fluix::TextInput;
+/// use gpui::*;
+///
+/// # fn example(cx: &mut Context<TextInput>) {
+/// let password_input = TextInput::new(cx)
+///     .password(true)
+///     .password_mask_mode(PasswordMaskMode::Partial {
+///         prefix_len: 2,  // Show first 2 characters
+///         suffix_len: 2,  // Show last 2 characters
+///     });
+/// // Password "f26612345678944u9" displays as "f2••••••••••••••44u9"
+/// # }
+/// ```
+///
+/// If the password is too short (length <= prefix_len + suffix_len),
+/// all characters will be masked regardless of the mode.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PasswordMaskMode {
+    /// Mask all characters with bullets (•).
+    ///
+    /// This is the default masking mode and provides maximum security
+    /// by hiding all password characters.
+    ///
+    /// # Example
+    ///
+    /// ```rust,no_run
+    /// use fluix::components::form::text_input::PasswordMaskMode;
+    ///
+    /// let mode = PasswordMaskMode::All;
+    /// ```
+    All,
+    /// Show first and last few characters, mask the middle part.
+    ///
+    /// This mode provides a balance between security and usability,
+    /// allowing users to verify they're typing the correct password
+    /// while still hiding most of it.
+    ///
+    /// # Parameters
+    ///
+    /// * `prefix_len` - Number of characters to show at the start (typically 2-4)
+    /// * `suffix_len` - Number of characters to show at the end (typically 2-4)
+    ///
+    /// # Example
+    ///
+    /// ```rust,no_run
+    /// use fluix::components::form::text_input::PasswordMaskMode;
+    ///
+    /// // Show first 3 and last 3 characters
+    /// let mode = PasswordMaskMode::Partial {
+    ///     prefix_len: 3,
+    ///     suffix_len: 3,
+    /// };
+    /// ```
+    ///
+    /// # Display Format
+    ///
+    /// The display format is: `{prefix}{masked_middle}{suffix}`
+    ///
+    /// For example, with `prefix_len: 2` and `suffix_len: 2`:
+    /// - Input: `"password123"`
+    /// - Display: `"pa••••••••23"`
+    Partial {
+        /// Number of characters to show at the start of the password.
+        ///
+        /// Must be a positive integer. Typically 2-4 characters.
+        prefix_len: usize,
+        /// Number of characters to show at the end of the password.
+        ///
+        /// Must be a positive integer. Typically 2-4 characters.
+        suffix_len: usize,
+    },
+}
+
+impl Default for PasswordMaskMode {
+    fn default() -> Self {
+        Self::All
+    }
+}
+
+// ============================================================================
 // Events
 // ============================================================================
 
-/// Events emitted by TextInput
+/// Events emitted by the TextInput component.
+///
+/// These events allow you to react to user interactions with the input.
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// use fluix::TextInput;
+/// use gpui::*;
+///
+/// # fn example(cx: &mut Context<TextInput>) {
+/// let input = cx.new(|cx| {
+///     TextInput::new(cx)
+///         .placeholder("Enter text")
+/// });
+///
+/// # let window = todo!();
+/// cx.subscribe_in(&input, window, |_, _, event, _, _| {
+///     match event {
+///         fluix::TextInputEvent::Change(value) => {
+///             println!("Value changed to: {}", value);
+///         }
+///         fluix::TextInputEvent::Submit(value) => {
+///             println!("User pressed Enter with value: {}", value);
+///         }
+///         fluix::TextInputEvent::Focus => {
+///             println!("Input gained focus");
+///         }
+///         fluix::TextInputEvent::Blur => {
+///             println!("Input lost focus");
+///         }
+///     }
+/// }).detach();
+/// # }
+/// ```
 #[derive(Clone, Debug)]
 pub enum TextInputEvent {
-    /// The input value has changed
+    /// The input value has changed.
+    ///
+    /// This event is emitted whenever the user types, deletes, or the value
+    /// is changed programmatically (via `set_value` or `clear`).
+    ///
+    /// The event contains the new value as a `String`.
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// # use fluix::TextInput;
+    /// # use gpui::*;
+    /// # fn example(cx: &mut Context<TextInput>) {
+    /// # let input = cx.new(|cx| TextInput::new(cx));
+    /// # let window = todo!();
+    /// cx.subscribe_in(&input, window, |_, _, event, _, _| {
+    ///     if let fluix::TextInputEvent::Change(value) = event {
+    ///         // Validate or process the new value
+    ///         println!("New value: {}", value);
+    ///     }
+    /// }).detach();
+    /// # }
+    /// ```
     Change(String),
-    /// Enter key was pressed
+    /// Enter key was pressed.
+    ///
+    /// This event is emitted when the user presses the Enter key while
+    /// the input is focused. It's commonly used to submit forms or
+    /// trigger actions.
+    ///
+    /// The event contains the current value as a `String`.
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// # use fluix::TextInput;
+    /// # use gpui::*;
+    /// # fn example(cx: &mut Context<TextInput>) {
+    /// # let input = cx.new(|cx| TextInput::new(cx));
+    /// # let window = todo!();
+    /// cx.subscribe_in(&input, window, |_, _, event, _, _| {
+    ///     if let fluix::TextInputEvent::Submit(value) = event {
+    ///         // Process the submission
+    ///         println!("Submitted: {}", value);
+    ///     }
+    /// }).detach();
+    /// # }
+    /// ```
     Submit(String),
-    /// Input gained focus
+    /// Input gained focus.
+    ///
+    /// This event is emitted when the input receives keyboard focus,
+    /// either by clicking on it or programmatically via `focus()`.
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// # use fluix::TextInput;
+    /// # use gpui::*;
+    /// # fn example(cx: &mut Context<TextInput>) {
+    /// # let input = cx.new(|cx| TextInput::new(cx));
+    /// # let window = todo!();
+    /// cx.subscribe_in(&input, window, |_, _, event, _, _| {
+    ///     if let fluix::TextInputEvent::Focus = event {
+    ///         println!("Input is now focused");
+    ///     }
+    /// }).detach();
+    /// # }
+    /// ```
     Focus,
-    /// Input lost focus
+    /// Input lost focus.
+    ///
+    /// This event is emitted when the input loses keyboard focus,
+    /// typically when the user clicks elsewhere or tabs away.
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// # use fluix::TextInput;
+    /// # use gpui::*;
+    /// # fn example(cx: &mut Context<TextInput>) {
+    /// # let input = cx.new(|cx| TextInput::new(cx));
+    /// # let window = todo!();
+    /// cx.subscribe_in(&input, window, |_, _, event, _, _| {
+    ///     if let fluix::TextInputEvent::Blur = event {
+    ///         println!("Input lost focus - validate now");
+    ///         // Perform validation or cleanup
+    ///     }
+    /// }).detach();
+    /// # }
+    /// ```
     Blur,
 }
 
@@ -99,7 +330,67 @@ pub enum TextInputEvent {
 // TextInput Component
 // ============================================================================
 
-/// A simple, customizable text input component
+/// A powerful single-line text input component with full editing capabilities.
+///
+/// `TextInput` provides a complete text editing experience with features like:
+/// - Full keyboard and mouse support
+/// - Text selection and cursor management
+/// - Password masking with multiple modes
+/// - Input validation
+/// - IME (Input Method Editor) support for Chinese, Japanese, and Korean
+///
+/// # Basic Usage
+///
+/// ```rust,no_run
+/// use fluix::TextInput;
+/// use gpui::*;
+///
+/// # fn example(cx: &mut Context<TextInput>) {
+/// let input = cx.new(|cx| {
+///     TextInput::new(cx)
+///         .placeholder("Enter your name")
+/// });
+///
+/// // Subscribe to events
+/// # let window = todo!();
+/// cx.subscribe_in(&input, window, |_, _, event, _, _| {
+///     match event {
+///         fluix::TextInputEvent::Change(value) => {
+///             println!("Value changed: {}", value);
+///         }
+///         fluix::TextInputEvent::Submit(value) => {
+///             println!("Submitted: {}", value);
+///         }
+///         _ => {}
+///     }
+/// }).detach();
+/// # }
+/// ```
+///
+/// # Password Input
+///
+/// ```rust,no_run
+/// use fluix::components::form::text_input::PasswordMaskMode;
+/// use fluix::TextInput;
+/// use gpui::*;
+///
+/// # fn example(cx: &mut Context<TextInput>) {
+/// let password_input = cx.new(|cx| {
+///     TextInput::new(cx)
+///         .password(true)
+///         .password_mask_mode(PasswordMaskMode::Partial {
+///             prefix_len: 2,
+///             suffix_len: 2,
+///         })
+///         .placeholder("Enter password")
+/// });
+/// # }
+/// ```
+///
+/// # See Also
+///
+/// - [`PasswordMaskMode`] - Password masking modes
+/// - [`TextInputEvent`] - Events emitted by TextInput
 pub struct TextInput {
     /// Current input value
     value: String,
@@ -117,6 +408,10 @@ pub struct TextInput {
     disabled: bool,
     /// Whether to show as password (mask characters)
     is_password: bool,
+    /// Whether password is visible (only applies when is_password is true)
+    password_visible: bool,
+    /// Password masking mode
+    password_mask_mode: PasswordMaskMode,
     /// Maximum length (None for unlimited)
     max_length: Option<usize>,
     /// Custom validation function
@@ -142,7 +437,44 @@ pub struct TextInput {
 }
 
 impl TextInput {
-    /// Create a new TextInput
+    /// Create a new TextInput component.
+    ///
+    /// This constructor creates a new text input with default settings:
+    /// - Empty value
+    /// - No placeholder
+    /// - Enabled (not disabled)
+    /// - Password mode disabled
+    /// - Password mask mode: `All`
+    /// - Password not visible
+    /// - No maximum length limit
+    /// - No validator
+    /// - Border visible
+    ///
+    /// # Arguments
+    ///
+    /// * `cx` - The component context
+    ///
+    /// # Returns
+    ///
+    /// A new `TextInput` instance ready to be configured with builder methods.
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// use fluix::TextInput;
+    /// use gpui::*;
+    ///
+    /// # fn example(cx: &mut Context<TextInput>) {
+    /// // Create a basic input
+    /// let input = TextInput::new(cx);
+    ///
+    /// // Create and configure in one go
+    /// let configured_input = TextInput::new(cx)
+    ///     .placeholder("Enter text")
+    ///     .value("Initial value")
+    ///     .max_length(100);
+    /// # }
+    /// ```
     pub fn new(cx: &mut Context<Self>) -> Self {
         Self {
             value: String::new(),
@@ -153,6 +485,8 @@ impl TextInput {
             focus_handle: cx.focus_handle(),
             disabled: false,
             is_password: false,
+            password_visible: false,
+            password_mask_mode: PasswordMaskMode::All,
             max_length: None,
             validator: None,
             blink_epoch: 0,
@@ -167,13 +501,54 @@ impl TextInput {
         }
     }
 
-    /// Set the placeholder text
+    /// Set the placeholder text displayed when the input is empty.
+    ///
+    /// The placeholder is shown in a lighter color when the input has no value.
+    /// It disappears as soon as the user starts typing.
+    ///
+    /// # Arguments
+    ///
+    /// * `placeholder` - The placeholder text to display
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// use fluix::TextInput;
+    /// use gpui::*;
+    ///
+    /// # fn example(cx: &mut Context<TextInput>) {
+    /// let input = TextInput::new(cx)
+    ///     .placeholder("Enter your name");
+    /// # }
+    /// ```
     pub fn placeholder(mut self, placeholder: impl Into<String>) -> Self {
         self.placeholder = placeholder.into();
         self
     }
 
-    /// Set the initial value
+    /// Set the initial value for the input.
+    ///
+    /// This method sets the initial text content and positions the cursor
+    /// at the end of the text. Any existing selection is cleared.
+    ///
+    /// # Arguments
+    ///
+    /// * `value` - The initial value to set
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// use fluix::TextInput;
+    /// use gpui::*;
+    ///
+    /// # fn example(cx: &mut Context<TextInput>) {
+    /// let input = TextInput::new(cx)
+    ///     .value("Initial value")
+    ///     .placeholder("Enter text");
+    ///
+    /// // Input starts with "Initial value" and cursor at the end
+    /// # }
+    /// ```
     pub fn value(mut self, value: impl Into<String>) -> Self {
         self.value = value.into();
         self.cursor_position = self.value.len();
@@ -182,60 +557,463 @@ impl TextInput {
         self
     }
 
-    /// Set disabled state
+    /// Enable or disable the input.
+    ///
+    /// When disabled, the input cannot be focused or edited.
+    /// It appears with reduced opacity to indicate the disabled state.
+    ///
+    /// # Arguments
+    ///
+    /// * `disabled` - `true` to disable the input, `false` to enable it
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// use fluix::TextInput;
+    /// use gpui::*;
+    ///
+    /// # fn example(cx: &mut Context<TextInput>) {
+    /// let disabled_input = TextInput::new(cx)
+    ///     .value("Cannot edit this")
+    ///     .disabled(true);
+    ///
+    /// let enabled_input = TextInput::new(cx)
+    ///     .placeholder("Can edit this")
+    ///     .disabled(false);
+    /// # }
+    /// ```
     pub fn disabled(mut self, disabled: bool) -> Self {
         self.disabled = disabled;
         self
     }
 
-    /// Set password mode (mask characters)
+    /// Enable or disable password mode (mask characters).
+    ///
+    /// When `is_password` is `true`, the input will mask characters according to
+    /// the current `password_mask_mode` and `password_visible` settings.
+    ///
+    /// # Arguments
+    ///
+    /// * `is_password` - `true` to enable password mode, `false` to disable
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// use fluix::TextInput;
+    /// use gpui::*;
+    ///
+    /// # fn example(cx: &mut Context<TextInput>) {
+    /// // Enable password mode
+    /// let password_input = TextInput::new(cx)
+    ///     .password(true)
+    ///     .placeholder("Enter password");
+    ///
+    /// // Disable password mode (normal text input)
+    /// let normal_input = TextInput::new(cx)
+    ///     .password(false)
+    ///     .placeholder("Enter text");
+    /// # }
+    /// ```
     pub fn password(mut self, is_password: bool) -> Self {
         self.is_password = is_password;
         self
     }
 
-    /// Set maximum length
+    /// Toggle password visibility programmatically.
+    ///
+    /// This method switches between showing and hiding password characters.
+    /// It only works when password mode is enabled (`password(true)`).
+    ///
+    /// # Behavior
+    ///
+    /// * If password mode is disabled, this method has no effect
+    /// * If password is currently visible, it will be hidden
+    /// * If password is currently hidden, it will be shown
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// use fluix::TextInput;
+    /// use gpui::*;
+    ///
+    /// # fn example(cx: &mut Context<TextInput>) {
+    /// let password_input = cx.new(|cx| {
+    ///     TextInput::new(cx)
+    ///         .password(true)
+    ///         .placeholder("Enter password")
+    /// });
+    ///
+    /// // Toggle visibility when user clicks a button
+    /// password_input.update(cx, |input, cx| {
+    ///     input.toggle_password_visibility(cx);
+    /// });
+    /// # }
+    /// ```
+    pub fn toggle_password_visibility(&mut self, cx: &mut Context<Self>) {
+        if self.is_password {
+            self.password_visible = !self.password_visible;
+            cx.notify();
+        }
+    }
+
+    /// Set password visibility state.
+    ///
+    /// This method sets the initial visibility state of password characters.
+    /// It only has effect when password mode is enabled (`password(true)`).
+    ///
+    /// # Arguments
+    ///
+    /// * `visible` - `true` to show password characters, `false` to mask them
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// use fluix::TextInput;
+    /// use gpui::*;
+    ///
+    /// # fn example(cx: &mut Context<TextInput>) {
+    /// // Password visible by default (not recommended for security)
+    /// let visible_password = TextInput::new(cx)
+    ///     .password(true)
+    ///     .show_password(true)
+    ///     .placeholder("Enter password");
+    ///
+    /// // Password hidden by default (recommended)
+    /// let hidden_password = TextInput::new(cx)
+    ///     .password(true)
+    ///     .show_password(false)  // This is the default
+    ///     .placeholder("Enter password");
+    /// # }
+    /// ```
+    pub fn show_password(mut self, visible: bool) -> Self {
+        self.password_visible = visible;
+        self
+    }
+
+    /// Set the password masking mode.
+    ///
+    /// This method controls how password characters are displayed when
+    /// password mode is enabled and password is not visible.
+    ///
+    /// # Arguments
+    ///
+    /// * `mode` - The masking mode to use. See [`PasswordMaskMode`] for details.
+    ///
+    /// # Examples
+    ///
+    /// ## Full Mask Mode (Default)
+    ///
+    /// ```rust,no_run
+    /// use fluix::components::form::text_input::PasswordMaskMode;
+    /// use fluix::TextInput;
+    /// use gpui::*;
+    ///
+    /// # fn example(cx: &mut Context<TextInput>) {
+    /// let password_input = TextInput::new(cx)
+    ///     .password(true)
+    ///     .password_mask_mode(PasswordMaskMode::All)
+    ///     .placeholder("Enter password");
+    /// // All characters will be masked: "••••••••"
+    /// # }
+    /// ```
+    ///
+    /// ## Partial Mask Mode
+    ///
+    /// ```rust,no_run
+    /// use fluix::components::form::text_input::PasswordMaskMode;
+    /// use fluix::TextInput;
+    /// use gpui::*;
+    ///
+    /// # fn example(cx: &mut Context<TextInput>) {
+    /// let password_input = TextInput::new(cx)
+    ///     .password(true)
+    ///     .password_mask_mode(PasswordMaskMode::Partial {
+    ///         prefix_len: 2,  // Show first 2 characters
+    ///         suffix_len: 2,  // Show last 2 characters
+    ///     })
+    ///     .placeholder("Enter password");
+    /// // Password "password123" displays as "pa••••••••23"
+    /// # }
+    /// ```
+    ///
+    /// ## Combined with Visibility Toggle
+    ///
+    /// ```rust,no_run
+    /// use fluix::components::form::text_input::PasswordMaskMode;
+    /// use fluix::TextInput;
+    /// use gpui::*;
+    ///
+    /// # fn example(cx: &mut Context<TextInput>) {
+    /// let password_input = cx.new(|cx| {
+    ///     TextInput::new(cx)
+    ///         .password(true)
+    ///         .password_mask_mode(PasswordMaskMode::Partial {
+    ///             prefix_len: 2,
+    ///             suffix_len: 2,
+    ///         })
+    ///         .show_password(false)  // Start hidden
+    /// });
+    ///
+    /// // User can toggle visibility
+    /// password_input.update(cx, |input, cx| {
+    ///     input.toggle_password_visibility(cx);
+    /// });
+    /// # }
+    /// ```
+    pub fn password_mask_mode(mut self, mode: PasswordMaskMode) -> Self {
+        self.password_mask_mode = mode;
+        self
+    }
+
+    /// Set the maximum allowed length for the input value.
+    ///
+    /// This method limits the number of characters that can be entered.
+    /// Attempts to exceed this limit will be rejected.
+    ///
+    /// # Arguments
+    ///
+    /// * `max_length` - Maximum number of characters allowed
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// use fluix::TextInput;
+    /// use gpui::*;
+    ///
+    /// # fn example(cx: &mut Context<TextInput>) {
+    /// // Limit input to 10 characters
+    /// let limited_input = TextInput::new(cx)
+    ///     .placeholder("Max 10 chars")
+    ///     .max_length(10);
+    ///
+    /// // User cannot type more than 10 characters
+    /// # }
+    /// ```
     pub fn max_length(mut self, max_length: usize) -> Self {
         self.max_length = Some(max_length);
         self
     }
 
-    /// Set validation function
+    /// Set a validation function for the input.
+    ///
+    /// This method sets a custom validator function that is called whenever
+    /// the input value changes. If the validator returns `false`, the change
+    /// is rejected and the value remains unchanged.
+    ///
+    /// # Arguments
+    ///
+    /// * `validator` - A function that takes a `&str` and returns `bool`
+    ///   - `true` means the value is valid and accepted
+    ///   - `false` means the value is invalid and rejected
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// use fluix::TextInput;
+    /// use gpui::*;
+    ///
+    /// # fn example(cx: &mut Context<TextInput>) {
+    /// // Only allow numeric input
+    /// let numeric_input = TextInput::new(cx)
+    ///     .validator(|value| value.chars().all(|c| c.is_numeric()))
+    ///     .placeholder("Numbers only");
+    ///
+    /// // Email validation
+    /// let email_input = TextInput::new(cx)
+    ///     .validator(|value| value.contains('@') && value.contains('.'))
+    ///     .placeholder("Enter email");
+    ///
+    /// // Minimum length validation
+    /// let password_input = TextInput::new(cx)
+    ///     .password(true)
+    ///     .validator(|value| value.len() >= 8)
+    ///     .placeholder("Password (min 8 chars)");
+    /// # }
+    /// ```
     pub fn validator(mut self, validator: impl Fn(&str) -> bool + 'static) -> Self {
         self.validator = Some(Arc::new(validator));
         self
     }
 
-    /// Hide border (useful for embedded use cases like combobox)
+    /// Hide the border around the input.
+    ///
+    /// This method removes the border, making the input borderless.
+    /// Useful for embedded use cases like combobox components.
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// use fluix::TextInput;
+    /// use gpui::*;
+    ///
+    /// # fn example(cx: &mut Context<TextInput>) {
+    /// let borderless_input = TextInput::new(cx)
+    ///     .placeholder("No border")
+    ///     .no_border();
+    /// # }
+    /// ```
     pub fn no_border(mut self) -> Self {
         self.show_border = false;
         self
     }
 
-    /// Set custom background color
+    /// Set a custom background color for the input.
+    ///
+    /// # Arguments
+    ///
+    /// * `color` - The background color to use
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// use fluix::TextInput;
+    /// use gpui::*;
+    ///
+    /// # fn example(cx: &mut Context<TextInput>) {
+    /// let styled_input = TextInput::new(cx)
+    ///     .placeholder("Light blue background")
+    ///     .bg_color(rgb(0xF0F9FF));  // Light blue
+    /// # }
+    /// ```
     pub fn bg_color(mut self, color: Rgba) -> Self {
         self.custom_bg_color = Some(color);
         self
     }
 
-    /// Set custom border color
+    /// Set a custom border color for the input.
+    ///
+    /// # Arguments
+    ///
+    /// * `color` - The border color to use
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// use fluix::TextInput;
+    /// use gpui::*;
+    ///
+    /// # fn example(cx: &mut Context<TextInput>) {
+    /// let styled_input = TextInput::new(cx)
+    ///     .placeholder("Blue border")
+    ///     .border_color(rgb(0x3B82F6));  // Blue
+    /// # }
+    /// ```
     pub fn border_color(mut self, color: Rgba) -> Self {
         self.custom_border_color = Some(color);
         self
     }
 
-    /// Set transparent background
+    /// Set the background to transparent.
+    ///
+    /// This is a convenience method equivalent to `.bg_color(rgba(0x00000000))`.
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// use fluix::TextInput;
+    /// use gpui::*;
+    ///
+    /// # fn example(cx: &mut Context<TextInput>) {
+    /// let transparent_input = TextInput::new(cx)
+    ///     .placeholder("Transparent background")
+    ///     .transparent()
+    ///     .no_border();
+    /// # }
+    /// ```
     pub fn transparent(mut self) -> Self {
         self.custom_bg_color = Some(rgba(0x00000000));
         self
     }
 
-    /// Get the current value
+    /// Get the current input value (read-only).
+    ///
+    /// This method returns a reference to the current value string.
+    /// It does not include any masking characters - you get the actual value.
+    ///
+    /// # Returns
+    ///
+    /// A string slice containing the current input value.
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// use fluix::TextInput;
+    /// use gpui::*;
+    ///
+    /// # fn example(cx: &mut Context<TextInput>) {
+    /// let input = cx.new(|cx| {
+    ///     TextInput::new(cx)
+    ///         .value("Hello, World!")
+    /// });
+    ///
+    /// // Read the current value
+    /// let current_value = input.read(cx).get_value();
+    /// println!("Current value: {}", current_value);  // "Hello, World!"
+    ///
+    /// // For password inputs, this returns the actual password, not the masked version
+    /// let password_input = cx.new(|cx| {
+    ///     TextInput::new(cx)
+    ///         .password(true)
+    ///         .value("secret123")
+    /// });
+    /// let password = password_input.read(cx).get_value();
+    /// println!("Password: {}", password);  // "secret123" (actual value, not masked)
+    /// # }
+    /// ```
     pub fn get_value(&self) -> &str {
         &self.value
     }
 
-    /// Set the value programmatically
+    /// Set the value programmatically.
+    ///
+    /// This method allows you to set the input value programmatically.
+    /// It performs validation and length checking before setting the value.
+    ///
+    /// # Arguments
+    ///
+    /// * `value` - The new value to set
+    /// * `cx` - The component context
+    ///
+    /// # Behavior
+    ///
+    /// * Validates the value using the validator function (if set)
+    /// * Checks against maximum length (if set)
+    /// * Moves cursor to the end of the text
+    /// * Clears any existing selection
+    /// * Emits a `Change` event
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// use fluix::TextInput;
+    /// use gpui::*;
+    ///
+    /// # fn example(cx: &mut Context<TextInput>) {
+    /// let input = cx.new(|cx| {
+    ///     TextInput::new(cx)
+    ///         .placeholder("Enter text")
+    /// });
+    ///
+    /// // Set value programmatically
+    /// input.update(cx, |input, cx| {
+    ///     input.set_value("New value".to_string(), cx);
+    /// });
+    ///
+    /// // With validation
+    /// let validated_input = cx.new(|cx| {
+    ///     TextInput::new(cx)
+    ///         .validator(|v| v.len() >= 3)
+    /// });
+    ///
+    /// validated_input.update(cx, |input, cx| {
+    ///     input.set_value("Valid".to_string(), cx);  // OK
+    /// });
+    ///
+    /// validated_input.update(cx, |input, cx| {
+    ///     input.set_value("AB".to_string(), cx);  // Rejected (too short)
+    /// });
+    /// # }
+    /// ```
     pub fn set_value(&mut self, value: String, cx: &mut Context<Self>) {
         if let Some(ref validator) = self.validator {
             if !validator(&value) {
@@ -257,7 +1035,37 @@ impl TextInput {
         cx.notify();
     }
 
-    /// Clear the input
+    /// Clear all text from the input.
+    ///
+    /// This method removes all text, resets the cursor position, and clears
+    /// any selection. It emits a `Change` event with an empty string.
+    ///
+    /// # Arguments
+    ///
+    /// * `cx` - The component context
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// use fluix::TextInput;
+    /// use gpui::*;
+    ///
+    /// # fn example(cx: &mut Context<TextInput>) {
+    /// let input = cx.new(|cx| {
+    ///     TextInput::new(cx)
+    ///         .value("Some text")
+    /// });
+    ///
+    /// // Clear the input
+    /// input.update(cx, |input, cx| {
+    ///     input.clear(cx);
+    /// });
+    ///
+    /// // Input is now empty
+    /// let value = input.read(cx).get_value();
+    /// assert_eq!(value, "");
+    /// # }
+    /// ```
     pub fn clear(&mut self, cx: &mut Context<Self>) {
         self.value.clear();
         self.cursor_position = 0;
@@ -267,12 +1075,72 @@ impl TextInput {
         cx.notify();
     }
 
-    /// Focus the input
+    /// Focus the input programmatically.
+    ///
+    /// This method moves keyboard focus to the input, making it ready
+    /// for text input. The cursor will be visible and blinking.
+    ///
+    /// # Arguments
+    ///
+    /// * `window` - The window containing the input
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// use fluix::TextInput;
+    /// use gpui::*;
+    ///
+    /// # fn example(window: &mut Window, cx: &mut Context<TextInput>) {
+    /// let input = cx.new(|cx| {
+    ///     TextInput::new(cx)
+    ///         .placeholder("Enter text")
+    /// });
+    ///
+    /// // Focus the input (e.g., when a button is clicked)
+    /// input.read(cx).focus(window);
+    ///
+    /// // Now the user can type directly without clicking
+    /// # }
+    /// ```
     pub fn focus(&self, window: &mut Window) {
         self.focus_handle.focus(window);
     }
 
-    /// Select all text
+    /// Select all text in the input.
+    ///
+    /// This method selects all text, making it easy to replace or delete
+    /// all content at once. The selection is highlighted visually.
+    ///
+    /// # Arguments
+    ///
+    /// * `cx` - The component context
+    ///
+    /// # Behavior
+    ///
+    /// * If the input is empty, this method has no effect
+    /// * Sets `selection_start` to 0 and `selection_end` to the end
+    /// * Triggers a re-render to show the selection highlight
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// use fluix::TextInput;
+    /// use gpui::*;
+    ///
+    /// # fn example(cx: &mut Context<TextInput>) {
+    /// let input = cx.new(|cx| {
+    ///     TextInput::new(cx)
+    ///         .value("Select all this text")
+    /// });
+    ///
+    /// // Select all text programmatically
+    /// input.update(cx, |input, cx| {
+    ///     input.select_all(cx);
+    /// });
+    ///
+    /// // Now user can type to replace, or press Delete/Backspace to clear
+    /// # }
+    /// ```
     pub fn select_all(&mut self, cx: &mut Context<Self>) {
         if !self.value.is_empty() {
             self.selection_start = Some(0);
@@ -364,12 +1232,62 @@ impl TextInput {
         let byte_index = layout.shaped_line.closest_index_for_x(relative_x);
         
         // For password mode, we need to convert from display text index to actual value index
-        if self.is_password {
-            // Each bullet is 3 bytes, each character in value is variable bytes
-            let bullet_len = "•".len(); // 3 bytes
-            let char_index = byte_index / bullet_len;
-            // Convert character index to byte index in actual value
-            self.value.char_indices().nth(char_index).map(|(i, _)| i).unwrap_or(self.value.len())
+        if self.is_password && !self.password_visible {
+            match self.password_mask_mode {
+                PasswordMaskMode::All => {
+                    // Each bullet is 3 bytes, each character in value is variable bytes
+                    let bullet_len = "•".len(); // 3 bytes
+                    let char_index = byte_index / bullet_len;
+                    // Convert character index to byte index in actual value
+                    self.value.char_indices().nth(char_index).map(|(i, _)| i).unwrap_or(self.value.len())
+                }
+                PasswordMaskMode::Partial { prefix_len, suffix_len } => {
+                    // For partial mode, map display byte position to value byte position
+                    let chars: Vec<char> = self.value.chars().collect();
+                    let len = chars.len();
+                    
+                    if len <= prefix_len + suffix_len {
+                        // Too short, treat as all masked
+                        let bullet_len = "•".len();
+                        let char_index = byte_index / bullet_len;
+                        self.value.char_indices().nth(char_index).map(|(i, _)| i).unwrap_or(self.value.len())
+                    } else {
+                        // Map display byte position to value byte position
+                        let mut display_pos = 0;
+                        let mut value_pos = 0;
+                        
+                        for (i, ch) in chars.iter().enumerate() {
+                            let ch_bytes = ch.len_utf8();
+                            
+                            if i < prefix_len {
+                                // Prefix characters are visible
+                                if display_pos + ch_bytes > byte_index {
+                                    break;
+                                }
+                                display_pos += ch_bytes;
+                                value_pos += ch_bytes;
+                            } else if i >= len - suffix_len {
+                                // Suffix characters are visible
+                                if display_pos + ch_bytes > byte_index {
+                                    break;
+                                }
+                                display_pos += ch_bytes;
+                                value_pos += ch_bytes;
+                            } else {
+                                // Middle characters are masked
+                                let bullet_len = "•".len();
+                                if display_pos + bullet_len > byte_index {
+                                    break;
+                                }
+                                display_pos += bullet_len;
+                                value_pos += ch_bytes;
+                            }
+                        }
+                        
+                        value_pos.min(self.value.len())
+                    }
+                }
+            }
         } else {
             byte_index.min(self.value.len())
         }
@@ -377,8 +1295,8 @@ impl TextInput {
 
     /// Build TextRun array for rendering with selection support
     fn build_text_runs(&self, font: Font, _font_size: Pixels) -> (String, Vec<TextRun>) {
-        let display_text = if self.is_password {
-            "•".repeat(self.value.len())
+        let display_text = if self.is_password && !self.password_visible {
+            self.build_password_display_text()
         } else {
             self.value.clone()
         };
@@ -428,13 +1346,64 @@ impl TextInput {
 
         // For password mode, we need to calculate positions in the display text
         // Each character in value becomes one bullet point (•) in display_text
-        let (display_sel_start, display_sel_end) = if self.is_password {
-            // Count characters, not bytes
-            let char_start = self.value[..sel_start].chars().count();
-            let char_end = self.value[..sel_end].chars().count();
-            // Each bullet point is "•".len() = 3 bytes
-            let bullet_len = "•".len();
-            (char_start * bullet_len, char_end * bullet_len)
+        let (display_sel_start, display_sel_end) = if self.is_password && !self.password_visible {
+            match self.password_mask_mode {
+                PasswordMaskMode::All => {
+                    // Count characters, not bytes
+                    let char_start = self.value[..sel_start].chars().count();
+                    let char_end = self.value[..sel_end].chars().count();
+                    // Each bullet point is "•".len() = 3 bytes
+                    let bullet_len = "•".len();
+                    (char_start * bullet_len, char_end * bullet_len)
+                }
+                PasswordMaskMode::Partial { prefix_len, suffix_len } => {
+                    // For partial mode, we need to map byte positions to display positions
+                    let chars: Vec<char> = self.value.chars().collect();
+                    let len = chars.len();
+                    
+                    if len <= prefix_len + suffix_len {
+                        // Too short, treat as all masked
+                        let char_start = self.value[..sel_start].chars().count();
+                        let char_end = self.value[..sel_end].chars().count();
+                        let bullet_len = "•".len();
+                        (char_start * bullet_len, char_end * bullet_len)
+                    } else {
+                        // Calculate display positions by iterating through characters
+                        let mut display_start = 0;
+                        let mut display_end = 0;
+                        
+                        // Convert byte positions to character indices
+                        let sel_start_chars = self.value[..sel_start.min(self.value.len())].chars().count();
+                        let sel_end_chars = self.value[..sel_end.min(self.value.len())].chars().count();
+                        
+                        for (char_idx, ch) in chars.iter().enumerate() {
+                            if char_idx < sel_start_chars {
+                                if char_idx < prefix_len {
+                                    // In prefix - each char is 1 char in display
+                                    display_start += ch.len_utf8();
+                                } else if char_idx >= len - suffix_len {
+                                    // In suffix - each char is 1 char in display
+                                    display_start += ch.len_utf8();
+                                } else {
+                                    // In middle - each char is 1 bullet (3 bytes)
+                                    display_start += "•".len();
+                                }
+                            }
+                            if char_idx < sel_end_chars {
+                                if char_idx < prefix_len {
+                                    display_end += ch.len_utf8();
+                                } else if char_idx >= len - suffix_len {
+                                    display_end += ch.len_utf8();
+                                } else {
+                                    display_end += "•".len();
+                                }
+                            }
+                        }
+                        
+                        (display_start, display_end)
+                    }
+                }
+            }
         } else {
             (sel_start, sel_end)
         };
@@ -760,9 +1729,37 @@ impl TextInput {
         cx.emit(TextInputEvent::Submit(self.value.clone()));
     }
 
+    /// Build password display text based on mask mode
+    fn build_password_display_text(&self) -> String {
+        if self.value.is_empty() {
+            return String::new();
+        }
+
+        match self.password_mask_mode {
+            PasswordMaskMode::All => {
+                "•".repeat(self.value.len())
+            }
+            PasswordMaskMode::Partial { prefix_len, suffix_len } => {
+                let chars: Vec<char> = self.value.chars().collect();
+                let len = chars.len();
+                
+                // If password is too short, just mask all
+                if len <= prefix_len + suffix_len {
+                    return "•".repeat(len);
+                }
+                
+                let prefix: String = chars[..prefix_len.min(len)].iter().collect();
+                let suffix: String = chars[len.saturating_sub(suffix_len)..].iter().collect();
+                let mask_len = len - prefix_len - suffix_len;
+                
+                format!("{}{}{}", prefix, "•".repeat(mask_len), suffix)
+            }
+        }
+    }
+
     fn render_display_text(&self) -> String {
-        if self.is_password && !self.value.is_empty() {
-            "•".repeat(self.value.len())
+        if self.is_password && !self.password_visible && !self.value.is_empty() {
+            self.build_password_display_text()
         } else {
             self.value.clone()
         }
@@ -1038,12 +2035,51 @@ impl Render for TextInput {
                         let has_selection = self.has_selection();
                         let cursor_visible = self.cursor_visible;
                         let is_password = self.is_password;
+                        let password_visible = self.password_visible;
                         
                         // Calculate display cursor position (for password mode)
-                        let display_cursor_pos = if is_password {
-                            // Convert byte index to character count, then to display bytes
-                            let char_count = self.value[..cursor_pos.min(self.value.len())].chars().count();
-                            char_count * "•".len()
+                        let display_cursor_pos = if is_password && !password_visible {
+                            // Calculate cursor position in display text
+                            match self.password_mask_mode {
+                                PasswordMaskMode::All => {
+                                    // Count characters, not bytes
+                                    let char_count = self.value[..cursor_pos.min(self.value.len())].chars().count();
+                                    char_count * "•".len()
+                                }
+                                PasswordMaskMode::Partial { prefix_len, suffix_len } => {
+                                    let chars: Vec<char> = self.value.chars().collect();
+                                    let len = chars.len();
+                                    
+                                    if len <= prefix_len + suffix_len {
+                                        // Too short, treat as all masked
+                                        let char_count = self.value[..cursor_pos.min(self.value.len())].chars().count();
+                                        char_count * "•".len()
+                                    } else {
+                                        // Calculate display position based on prefix/suffix
+                                        let mut display_pos = 0;
+                                        
+                                        for (i, ch) in chars.iter().enumerate() {
+                                            let value_byte_pos = self.value[..i].len() + ch.len_utf8();
+                                            if value_byte_pos > cursor_pos {
+                                                break;
+                                            }
+                                            
+                                            if i < prefix_len {
+                                                // Prefix characters are visible
+                                                display_pos += ch.len_utf8();
+                                            } else if i >= len - suffix_len {
+                                                // Suffix characters are visible
+                                                display_pos += ch.len_utf8();
+                                            } else {
+                                                // Middle characters are masked
+                                                display_pos += "•".len();
+                                            }
+                                        }
+                                        
+                                        display_pos
+                                    }
+                                }
+                            }
                         } else {
                             cursor_pos
                         };
