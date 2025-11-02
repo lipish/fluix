@@ -1,6 +1,6 @@
 [package]
 name = "fluix"
-version = "0.1.22"
+version = "0.1.23"
 edition = "2021"
 authors = ["Fluix Contributors"]
 description = "Rust UI components for GPUI"
@@ -15,6 +15,10 @@ readme = "README.md"
 gpui = "0.2"
 anyhow = "1.0"
 rust-embed = "8"
+
+[[example]]
+name = "button_variants_demo"
+path = "examples/button_variants_demo.rs"
 
 [[example]]
 name = "text_input_demo"

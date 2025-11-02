@@ -249,6 +249,7 @@ impl Render for Button {
         let loading = self.loading;
         let size = self.size;
         let (padding_y, padding_x) = size.padding();
+        let min_width = size.min_width();
         let text_color = self.text_color(&theme);
         let bg_color = self.background_color(&theme, false, false);
         
@@ -262,6 +263,7 @@ impl Render for Button {
             .gap_2()
             .py(padding_y)
             .px(padding_x)
+            .min_w(min_width)  // Apply standard minimum width
             .rounded(px(BorderRadius::LG))
             .text_size(size.font_size())
             .font_weight(FontWeight::MEDIUM)

@@ -45,6 +45,17 @@ impl ComponentSize {
             ComponentSize::XLarge => (px(12.0), px(24.0)),
         }
     }
+
+    /// Get minimum width for buttons
+    pub fn min_width(&self) -> Pixels {
+        match self {
+            ComponentSize::XSmall => px(60.0),
+            ComponentSize::Small => px(72.0),
+            ComponentSize::Medium => px(88.0),
+            ComponentSize::Large => px(104.0),
+            ComponentSize::XLarge => px(120.0),
+        }
+    }
 }
 
 /// Color palette for the theme

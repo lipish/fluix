@@ -147,6 +147,64 @@ let xlarge = cx.new(|_| {
 });
 ```
 
+### Size Standards
+
+All buttons follow standardized dimensions based on their `ComponentSize`. These standards ensure consistency across all buttons regardless of text content.
+
+#### Height Standards
+
+Button height is determined by `padding_y` (vertical padding) + font line height:
+
+| Size | padding_y | Font Size | Approx. Height |
+|------|-----------|-----------|-----------------|
+| XSmall | 4px | 11px | ~20px |
+| Small | 6px | 13px | ~28px |
+| Medium | 8px | 14px | ~36px |
+| Large | 10px | 16px | ~44px |
+| XLarge | 12px | 18px | ~52px |
+
+#### Width Standards
+
+Button width follows these rules:
+
+1. **Minimum Width**: Each size has a standard minimum width
+2. **Auto-expand**: If text content exceeds minimum width, button automatically expands to fit content
+3. **Manual Override**: Use `.full_width(true)` to make button fill container width
+
+| Size | Minimum Width | padding_x |
+|------|---------------|-----------|
+| XSmall | 60px | 8px |
+| Small | 72px | 12px |
+| Medium | 88px | 16px |
+| Large | 104px | 20px |
+| XLarge | 120px | 24px |
+
+#### Color Standards
+
+All button variants follow standardized color definitions:
+
+| Variant | Background | Text Color | Border |
+|---------|------------|------------|--------|
+| Primary | `#696FC7` (Purple) | `#FFFFFF` (White) | None |
+| Secondary | `#FFFFFF` (White) | `#333333` (Dark Gray) | `#E0E0E0` |
+| Outline | Transparent | `#333333` (Dark Gray) | `#E0E0E0` |
+| Text | Transparent | `#333333` (Dark Gray) | None (can be added via custom styling) |
+| Danger | `#E74C3C` (Red) | `#FFFFFF` (White) | None |
+
+#### State Effects
+
+- **Hover**: Background color lightens or darkens by 10%
+- **Pressed**: Background color darkens by 10%
+- **Disabled**: Opacity reduced to 64%
+- **Shadow**: Primary and Secondary variants have shadow effects
+
+**Design Principles:**
+
+1. **Consistency**: All buttons of the same size have identical height and minimum width
+2. **Usability**: Minimum width ensures buttons are not too small and easy to click
+3. **Flexibility**: Supports content-based expansion and manual width adjustment
+4. **Aesthetics**: Standardized dimensions and colors maintain UI consistency
+
 #### With Icons
 
 ```rust
@@ -1027,13 +1085,25 @@ Standard size enum used by buttons and other components.
 
 ```rust
 pub enum ComponentSize {
-    XSmall,   // 11px font, 20px height, 4px padding
-    Small,    // 13px font, 28px height, 6px padding
-    Medium,   // 14px font, 36px height, 8px padding (default)
-    Large,    // 16px font, 44px height, 10px padding
-    XLarge,   // 18px font, 52px height, 12px padding
+    XSmall,   // 11px font, 20px height, 4px padding, 60px min width
+    Small,    // 13px font, 28px height, 6px padding, 72px min width
+    Medium,   // 14px font, 36px height, 8px padding, 88px min width (default)
+    Large,    // 16px font, 44px height, 10px padding, 104px min width
+    XLarge,   // 18px font, 52px height, 12px padding, 120px min width
 }
 ```
+
+**Size Standards:**
+
+All components using `ComponentSize` follow standardized dimensions:
+
+| Size | Font Size | Height | Padding (Y/X) | Min Width |
+|------|-----------|--------|---------------|-----------|
+| XSmall | 11px | ~20px | 4px / 8px | 60px |
+| Small | 13px | ~28px | 6px / 12px | 72px |
+| Medium | 14px | ~36px | 8px / 16px | 88px |
+| Large | 16px | ~44px | 10px / 20px | 104px |
+| XLarge | 18px | ~52px | 12px / 24px | 120px |
 
 **Size Details:**
 - **XSmall**: Compact buttons, dense UIs
@@ -1041,6 +1111,11 @@ pub enum ComponentSize {
 - **Medium**: Standard buttons, most common use case (default)
 - **Large**: Primary actions, prominent buttons
 - **XLarge**: Hero buttons, very prominent actions
+
+**Width Behavior:**
+- All buttons have a standard minimum width based on their size
+- Buttons automatically expand if content exceeds minimum width
+- Use `.full_width(true)` to make button fill container width
 
 **Usage:**
 ```rust

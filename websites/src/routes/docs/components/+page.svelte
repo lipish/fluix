@@ -138,7 +138,7 @@ div()
 			]
 		},
 		icon: {
-			description: '22 built-in icons with customizable sizes and colors.',
+			description: '31 built-in icons with customizable sizes and colors.',
 			installation: 'fluix = "0.1.22"',
 			usage: 'Import and use the Icon component:',
 			usageCode: `use fluix::{Icon, IconName, IconSize};
@@ -152,9 +152,90 @@ let icon = cx.new(|cx| {
 				{
 					title: 'Default',
 					code: `let icon = cx.new(|cx| {
-    Icon::new(IconName::Check)
+    Icon::new(IconName::Bell)
 });`,
-					screenshot: 'icon-demo.png'
+					screenshot: 'icon-default.png'
+				},
+				{
+					title: 'Sizes',
+					code: `let icon_xsmall = cx.new(|cx| {
+    Icon::new(IconName::Star).xsmall()
+});
+
+let icon_small = cx.new(|cx| {
+    Icon::new(IconName::Star).small()
+});
+
+let icon_medium = cx.new(|cx| {
+    Icon::new(IconName::Star).medium()
+});
+
+let icon_large = cx.new(|cx| {
+    Icon::new(IconName::Star).large()
+});
+
+let icon_xlarge = cx.new(|cx| {
+    Icon::new(IconName::Star).xlarge()
+});`,
+					screenshot: 'icon-sizes.png'
+				},
+				{
+					title: 'Colors',
+					code: `use gpui::*;
+
+let icon_red = cx.new(|cx| {
+    Icon::new(IconName::Heart).color(rgb(0xEF4444))
+});
+
+let icon_green = cx.new(|cx| {
+    Icon::new(IconName::Success).color(rgb(0x22C55E))
+});
+
+let icon_blue = cx.new(|cx| {
+    Icon::new(IconName::Info).color(rgb(0x3B82F6))
+});
+
+let icon_orange = cx.new(|cx| {
+    Icon::new(IconName::Warning).color(rgb(0xF59E0B))
+});`,
+					screenshot: 'icon-colors.png'
+				},
+				{
+					title: 'All Icons',
+					code: `// All 31 built-in icons
+Icon::new(IconName::ArrowLeft)
+Icon::new(IconName::ArrowRight)
+Icon::new(IconName::ArrowUp)
+Icon::new(IconName::ArrowDown)
+Icon::new(IconName::Check)
+Icon::new(IconName::ChevronUpDown)
+Icon::new(IconName::ChevronUp)
+Icon::new(IconName::ChevronDown)
+Icon::new(IconName::Close)
+Icon::new(IconName::Plus)
+Icon::new(IconName::Minus)
+Icon::new(IconName::Search)
+Icon::new(IconName::Settings)
+Icon::new(IconName::Home)
+Icon::new(IconName::User)
+Icon::new(IconName::UserPlus)
+Icon::new(IconName::Bell)
+Icon::new(IconName::Star)
+Icon::new(IconName::Heart)
+Icon::new(IconName::Menu)
+Icon::new(IconName::Info)
+Icon::new(IconName::Warning)
+Icon::new(IconName::Error)
+Icon::new(IconName::Success)
+Icon::new(IconName::AlertCircle)
+Icon::new(IconName::AlertTriangle)
+Icon::new(IconName::UnfoldMore)
+Icon::new(IconName::Send)
+Icon::new(IconName::Attachment)
+Icon::new(IconName::Image)
+Icon::new(IconName::LogIn)
+Icon::new(IconName::Task)`,
+					screenshot: 'icon-all.png'
 				}
 			]
 		},
@@ -176,7 +257,43 @@ let input = cx.new(|cx| {
     TextInput::new(cx)
         .placeholder("Enter text...")
 });`,
-					screenshot: 'textinput-demo.png'
+					screenshot: 'textinput-default.png'
+				},
+				{
+					title: 'Password',
+					code: `let password_input = cx.new(|cx| {
+    TextInput::new(cx)
+        .placeholder("Enter password...")
+        .password(true)
+});`,
+					screenshot: 'textinput-password.png'
+				},
+				{
+					title: 'Disabled',
+					code: `let disabled_input = cx.new(|cx| {
+    TextInput::new(cx)
+        .value("This is disabled")
+        .disabled(true)
+});`,
+					screenshot: 'textinput-disabled.png'
+				},
+				{
+					title: 'Max Length',
+					code: `let limited_input = cx.new(|cx| {
+    TextInput::new(cx)
+        .placeholder("Max 10 characters")
+        .max_length(10)
+});`,
+					screenshot: 'textinput-maxlength.png'
+				},
+				{
+					title: 'Validator',
+					code: `let validated_input = cx.new(|cx| {
+    TextInput::new(cx)
+        .placeholder("Numbers only...")
+        .validator(|text| text.chars().all(|c| c.is_numeric()))
+});`,
+					screenshot: 'textinput-validator.png'
 				}
 			]
 		},
@@ -198,7 +315,60 @@ let checkbox = cx.new(|cx| {
     Checkbox::new(cx)
         .label("Accept terms")
 });`,
-					screenshot: 'checkbox-demo.png'
+					screenshot: 'checkbox-default.png'
+				},
+				{
+					title: 'Checked',
+					code: `let checked_checkbox = cx.new(|cx| {
+    Checkbox::new(cx)
+        .label("Newsletter subscription")
+        .checked(true)
+});`,
+					screenshot: 'checkbox-checked.png'
+				},
+				{
+					title: 'Disabled',
+					code: `let disabled_checkbox = cx.new(|cx| {
+    Checkbox::new(cx)
+        .label("Disabled checkbox")
+        .disabled(true)
+});`,
+					screenshot: 'checkbox-disabled.png'
+				},
+				{
+					title: 'Sizes',
+					code: `use fluix::ComponentSize;
+
+let xsmall = cx.new(|cx| {
+    Checkbox::new(cx)
+        .label("XSmall checkbox")
+        .size(ComponentSize::XSmall)
+});
+
+let small = cx.new(|cx| {
+    Checkbox::new(cx)
+        .label("Small checkbox")
+        .size(ComponentSize::Small)
+});
+
+let medium = cx.new(|cx| {
+    Checkbox::new(cx)
+        .label("Medium checkbox")
+        .size(ComponentSize::Medium)
+});
+
+let large = cx.new(|cx| {
+    Checkbox::new(cx)
+        .label("Large checkbox")
+        .size(ComponentSize::Large)
+});
+
+let xlarge = cx.new(|cx| {
+    Checkbox::new(cx)
+        .label("XLarge checkbox")
+        .size(ComponentSize::XLarge)
+});`,
+					screenshot: 'checkbox-sizes.png'
 				}
 			]
 		},
@@ -221,12 +391,61 @@ let select = cx.new(|cx| {
 					title: 'Default',
 					code: `let select = cx.new(|cx| {
     Select::new(cx)
+        .placeholder("Select framework...")
         .options(vec![
-            SelectOption::new("Option 1", "1"),
-            SelectOption::new("Option 2", "2"),
+            SelectOption::new("react", "React"),
+            SelectOption::new("vue", "Vue.js"),
+            SelectOption::new("angular", "Angular"),
         ])
 });`,
-					screenshot: 'select-demo.png'
+					screenshot: 'select-default.png'
+				},
+				{
+					title: 'Disabled',
+					code: `let disabled_select = cx.new(|cx| {
+    Select::new(cx)
+        .placeholder("Disabled select...")
+        .disabled(true)
+        .options(vec![
+            SelectOption::new("option1", "Option 1"),
+            SelectOption::new("option2", "Option 2"),
+        ])
+});`,
+					screenshot: 'select-disabled.png'
+				},
+				{
+					title: 'Multiple',
+					code: `let multi_select = cx.new(|cx| {
+    Select::new(cx)
+        .placeholder("Select languages...")
+        .multiple(true)
+        .options(vec![
+            SelectOption::new("rust", "Rust"),
+            SelectOption::new("typescript", "TypeScript"),
+            SelectOption::new("python", "Python"),
+        ])
+});`,
+					screenshot: 'select-multiple.png'
+				},
+				{
+					title: 'Grouped',
+					code: `use fluix::SelectOptionGroup;
+
+let grouped_select = cx.new(|cx| {
+    Select::new(cx)
+        .placeholder("Select country...")
+        .option_groups(vec![
+            SelectOptionGroup::new("North America", vec![
+                SelectOption::new("us", "United States"),
+                SelectOption::new("ca", "Canada"),
+            ]),
+            SelectOptionGroup::new("Europe", vec![
+                SelectOption::new("uk", "United Kingdom"),
+                SelectOption::new("de", "Germany"),
+            ]),
+        ])
+});`,
+					screenshot: 'select-grouped.png'
 				}
 			]
 		},
@@ -249,12 +468,42 @@ let combobox = cx.new(|cx| {
 					title: 'Default',
 					code: `let combobox = cx.new(|cx| {
     Combobox::new(cx)
+        .placeholder("Search or select a framework...")
         .options(vec![
-            SelectOption::new("Option 1", "1"),
-            SelectOption::new("Option 2", "2"),
+            SelectOption::new("react", "React"),
+            SelectOption::new("vue", "Vue.js"),
+            SelectOption::new("angular", "Angular"),
         ])
 });`,
-					screenshot: 'combobox-demo.png'
+					screenshot: 'combobox-default.png'
+				},
+				{
+					title: 'Pre-selected',
+					code: `let combobox = cx.new(|cx| {
+    Combobox::new(cx)
+        .placeholder("Search or select a language...")
+        .value("rust")
+        .input_value("Rust")
+        .options(vec![
+            SelectOption::new("rust", "Rust"),
+            SelectOption::new("typescript", "TypeScript"),
+            SelectOption::new("python", "Python"),
+        ])
+});`,
+					screenshot: 'combobox-preselected.png'
+				},
+				{
+					title: 'Disabled',
+					code: `let disabled_combobox = cx.new(|cx| {
+    Combobox::new(cx)
+        .placeholder("Disabled combobox...")
+        .disabled(true)
+        .options(vec![
+            SelectOption::new("option1", "Option 1"),
+            SelectOption::new("option2", "Option 2"),
+        ])
+});`,
+					screenshot: 'combobox-disabled.png'
 				}
 			]
 		}
@@ -781,11 +1030,29 @@ let custom_theme = Theme::custom(custom_colors);`} language="rust" />
 						
 						<div class="example-content">
 							{#if currentTab === 'preview'}
-								<div class="preview-container">
+								<div 
+									class="preview-container" 
+									class:all-icons-preview={selectedComponent === 'icon' && example.title === 'All Icons'}
+									class:icon-preview={selectedComponent === 'icon' && example.title !== 'All Icons'}
+									class:form-preview={selectedComponent === 'textinput' || (selectedComponent === 'checkbox' && example.title !== 'Sizes')}
+									class:form-sizes-preview={selectedComponent === 'checkbox' && example.title === 'Sizes'}
+									class:select-preview={selectedComponent === 'select' && example.title !== 'Disabled'}
+									class:select-disabled-preview={selectedComponent === 'select' && example.title === 'Disabled'}
+									class:combobox-preview={selectedComponent === 'combobox' && example.title !== 'Disabled'}
+									class:combobox-disabled-preview={selectedComponent === 'combobox' && example.title === 'Disabled'}
+								>
 									<img 
 										src={getScreenshotPath(selectedComponent, example.screenshot)}
 										alt="{example.title} preview"
 										class="preview-image"
+										class:all-icons-image={selectedComponent === 'icon' && example.title === 'All Icons'}
+										class:icon-image={selectedComponent === 'icon' && example.title !== 'All Icons'}
+										class:form-image={selectedComponent === 'textinput' || (selectedComponent === 'checkbox' && example.title !== 'Sizes')}
+										class:form-sizes-image={selectedComponent === 'checkbox' && example.title === 'Sizes'}
+										class:select-image={selectedComponent === 'select' && example.title !== 'Disabled'}
+										class:select-disabled-image={selectedComponent === 'select' && example.title === 'Disabled'}
+										class:combobox-image={selectedComponent === 'combobox' && example.title !== 'Disabled'}
+										class:combobox-disabled-image={selectedComponent === 'combobox' && example.title === 'Disabled'}
 										onerror={(e) => {
 											const img = e.target as HTMLImageElement;
 											img.style.display = 'none';
@@ -1130,6 +1397,91 @@ let custom_theme = Theme::custom(custom_colors);`} language="rust" />
 		height: auto;
 		border-radius: 0.25rem;
 		object-fit: contain;
+		max-width: 100%;
+	}
+
+	.preview-container.icon-preview {
+		padding: 1.5rem;
+		min-height: 150px;
+	}
+
+	.preview-image.icon-image {
+		max-height: 60px;
+		height: auto;
+	}
+
+	.preview-container.form-preview {
+		padding: 1.5rem;
+		min-height: 150px;
+	}
+
+	.preview-image.form-image {
+		max-height: 50px !important;
+		height: auto !important;
+	}
+
+	.preview-container.form-sizes-preview {
+		padding: 2rem;
+		min-height: auto;
+		overflow-x: auto;
+		justify-content: flex-start;
+	}
+
+	.preview-image.form-sizes-image {
+		max-height: none !important;
+		height: auto !important;
+	}
+
+	.preview-container.select-preview {
+		padding: 1.5rem;
+		min-height: 200px;
+	}
+
+	.preview-image.select-image {
+		max-height: 250px !important;
+		height: auto !important;
+	}
+
+	.preview-container.select-disabled-preview {
+		padding: 1.5rem;
+		min-height: 200px;
+	}
+
+	.preview-image.select-disabled-image {
+		max-height: 60px !important;
+		height: auto !important;
+	}
+
+	.preview-container.combobox-preview {
+		padding: 1.5rem;
+		min-height: 200px;
+	}
+
+	.preview-image.combobox-image {
+		max-height: 250px !important;
+		height: auto !important;
+	}
+
+	.preview-container.combobox-disabled-preview {
+		padding: 1.5rem;
+		min-height: 200px;
+	}
+
+	.preview-image.combobox-disabled-image {
+		max-height: 60px !important;
+		height: auto !important;
+	}
+
+	.preview-container.all-icons-preview {
+		padding: 2rem;
+		min-height: auto;
+		overflow-x: auto;
+		justify-content: flex-start;
+	}
+
+	.preview-image.all-icons-image {
+		max-height: none;
+		height: auto;
 	}
 
 	.preview-placeholder {
