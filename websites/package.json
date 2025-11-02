@@ -26,6 +26,8 @@
 		"vite": "^7.1.10"
 	},
 	"dependencies": {
-		"lucide-svelte": "^0.552.0"
+		"@types/prismjs": "^1.26.5",
+		"lucide-svelte": "^0.552.0",
+		"prismjs": "^1.30.0"
 	}
 }

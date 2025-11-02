@@ -44,7 +44,7 @@
 		
 		<div class="faq-item">
 			<h3>How do I install Fluix?</h3>
-			<p>Add <code>fluix = "0.1"</code> to your <code>Cargo.toml</code> dependencies.</p>
+			<p>Add <code>fluix = "0.1.22"</code> to your <code>Cargo.toml</code> dependencies.</p>
 		</div>
 		
 		<div class="faq-item">

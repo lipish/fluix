@@ -2,6 +2,7 @@
 	import favicon from '$lib/assets/favicon.svg';
 	import Navbar from '$lib/components/Navbar.svelte';
 	import '../app.css';
+	import 'prismjs/themes/prism.css';
 
 	let { children } = $props();
 </script>

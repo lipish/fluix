@@ -1,6 +1,7 @@
 <script lang="ts">
 	// Getting Started page
 	import { base } from '$app/paths';
+	import CodeBlock from '$lib/components/CodeBlock.svelte';
 	
 	const exampleCode = `use fluix::*;
 use gpui::*;
@@ -26,13 +27,13 @@ fn main() {
 	<div class="section">
 		<h2>Installation</h2>
 		<p>Add Fluix to your <code>Cargo.toml</code>:</p>
-		<pre><code>fluix = "0.1"</code></pre>
+		<CodeBlock code={'fluix = "0.1.22"'} language="toml" filename="Cargo.toml" />
 	</div>
 	
 	<div class="section">
 		<h2>Your First App</h2>
 		<p>Create a simple app with a button:</p>
-		<pre><code>{exampleCode}</code></pre>
+		<CodeBlock code={exampleCode} language="rust" />
 	</div>
 	
 	<div class="section">

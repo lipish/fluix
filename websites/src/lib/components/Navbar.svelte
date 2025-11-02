@@ -3,6 +3,21 @@
 	import { base } from '$app/paths';
 	
 	let resourcesOpen = $state(false);
+	let dropdownTimeout: number | null = null;
+
+	function handleMouseEnter() {
+		if (dropdownTimeout) {
+			clearTimeout(dropdownTimeout);
+			dropdownTimeout = null;
+		}
+		resourcesOpen = true;
+	}
+
+	function handleMouseLeave() {
+		dropdownTimeout = setTimeout(() => {
+			resourcesOpen = false;
+		}, 150); // 150ms delay to allow moving to dropdown menu
+	}
 </script>
 
 
@@ -26,15 +41,12 @@
 			<a href="{base}/" class="nav-link">Home</a>
 			<a href="{base}/docs/getting-started" class="nav-link">Getting Started</a>
 			<a href="{base}/docs/components" class="nav-link">Components</a>
-			<a href="https://docs.rs/fluix" target="_blank" rel="noopener noreferrer" class="nav-link">
-				API Doc
-				<ExternalLink class="external-icon" size={12} />
-			</a>
-			<div class="nav-link resources-dropdown" onmouseenter={() => resourcesOpen = true} onmouseleave={() => resourcesOpen = false}>
+			<a href="{base}/docs/api-doc" class="nav-link">Documents</a>
+			<div class="nav-link resources-dropdown" onmouseenter={handleMouseEnter} onmouseleave={handleMouseLeave}>
 				<span>Resources</span>
 				<ChevronDown class="chevron-icon" size={12} />
 				{#if resourcesOpen}
-					<div class="dropdown-menu">
+					<div class="dropdown-menu" onmouseenter={handleMouseEnter} onmouseleave={handleMouseLeave}>
 						<a href="{base}/docs/tutorials" class="dropdown-item">Tutorials</a>
 						<a href="{base}/docs/faq" class="dropdown-item">FAQ</a>
 						<a href="https://github.com/lipish/fluix/releases" target="_blank" rel="noopener noreferrer" class="dropdown-item">
@@ -194,6 +206,7 @@
 		padding: 0.5rem;
 		min-width: 12rem;
 		box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+		z-index: 100;
 	}
 
 	.dropdown-item {
