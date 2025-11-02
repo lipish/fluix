@@ -988,6 +988,520 @@ let custom_theme = Theme::custom(custom_colors);`} language="rust" />
 				</div>
 			</section>
 			
+			<!-- API Reference -->
+			{#if selectedComponent === 'textinput'}
+			<section class="section">
+				<h2>API Reference</h2>
+				<h3>Methods</h3>
+				<div class="standards-table">
+					<table>
+						<thead>
+							<tr>
+								<th>Method</th>
+								<th>Parameters</th>
+								<th>Description</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td><code>.placeholder()</code></td>
+								<td><code>impl Into&lt;String&gt;</code></td>
+								<td>Set placeholder text displayed when input is empty</td>
+							</tr>
+							<tr>
+								<td><code>.value()</code></td>
+								<td><code>impl Into&lt;String&gt;</code></td>
+								<td>Set initial value for the input</td>
+							</tr>
+							<tr>
+								<td><code>.disabled()</code></td>
+								<td><code>bool</code></td>
+								<td>Enable/disable the input. Disabled inputs cannot be focused or edited</td>
+							</tr>
+							<tr>
+								<td><code>.password()</code></td>
+								<td><code>bool</code></td>
+								<td>Enable password mode (mask characters). Requires <code>.password_mask_mode()</code> for customization</td>
+							</tr>
+							<tr>
+								<td><code>.password_mask_mode()</code></td>
+								<td><code>PasswordMaskMode</code></td>
+								<td>Set password masking mode. See <strong>Password Mask Modes</strong> below for details</td>
+							</tr>
+							<tr>
+								<td><code>.show_password()</code></td>
+								<td><code>bool</code></td>
+								<td>Set initial password visibility state (<code>true</code> = visible, <code>false</code> = masked)</td>
+							</tr>
+							<tr>
+								<td><code>.max_length()</code></td>
+								<td><code>usize</code></td>
+								<td>Set maximum allowed length. Attempts to exceed this limit will be rejected</td>
+							</tr>
+							<tr>
+								<td><code>.validator()</code></td>
+								<td><code>Fn(&amp;str) -&gt; bool</code></td>
+								<td>Set custom validation function. Returns <code>true</code> for valid values, <code>false</code> to reject</td>
+							</tr>
+							<tr>
+								<td><code>.no_border()</code></td>
+								<td>-</td>
+								<td>Remove border (useful for embedded use cases like combobox)</td>
+							</tr>
+							<tr>
+								<td><code>.bg_color()</code></td>
+								<td><code>Rgba</code></td>
+								<td>Set custom background color</td>
+							</tr>
+							<tr>
+								<td><code>.border_color()</code></td>
+								<td><code>Rgba</code></td>
+								<td>Set custom border color</td>
+							</tr>
+							<tr>
+								<td><code>.transparent()</code></td>
+								<td>-</td>
+								<td>Make background transparent (convenience method)</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				
+				<h3>Password Mask Modes</h3>
+				<p>TextInput supports flexible password masking with two modes:</p>
+				
+				<h4>1. Full Mask Mode (Default)</h4>
+				<p>All characters are masked with bullets (•). This provides maximum security by hiding all password characters.</p>
+				<div class="code-container">
+					<div class="code-header">
+						<span class="code-label">Rust</span>
+					</div>
+					<CodeBlock code={`use fluix::components::form::text_input::PasswordMaskMode;
+
+let password_input = cx.new(|cx| {
+    TextInput::new(cx)
+        .password(true)
+        .password_mask_mode(PasswordMaskMode::All)
+        .placeholder("Enter password");
+});
+// Password "secret123" displays as "•••••••••"`} language="rust" />
+				</div>
+				
+				<h4>2. Partial Mask Mode</h4>
+				<p>Show first and last few characters, mask the middle part. This provides a balance between security and usability, allowing users to verify they're typing the correct password while still hiding most of it.</p>
+				<div class="code-container">
+					<div class="code-header">
+						<span class="code-label">Rust</span>
+					</div>
+					<CodeBlock code={`use fluix::components::form::text_input::PasswordMaskMode;
+
+let password_input = cx.new(|cx| {
+    TextInput::new(cx)
+        .password(true)
+        .password_mask_mode(PasswordMaskMode::Partial {
+            prefix_len: 2,  // Show first 2 characters
+            suffix_len: 2,  // Show last 2 characters
+        })
+        .placeholder("Enter password");
+});
+// Password "password123" displays as "pa••••••••23"
+// Password "f26612345678944u9" displays as "f2••••••••••••••44u9"
+
+// Note: If password is too short (length <= prefix_len + suffix_len),
+// all characters will be masked regardless of the mode`} language="rust" />
+				</div>
+				
+				<h4>Password Visibility Toggle</h4>
+				<p>You can toggle password visibility programmatically:</p>
+				<div class="code-container">
+					<div class="code-header">
+						<span class="code-label">Rust</span>
+					</div>
+					<CodeBlock code={`let password_input = cx.new(|cx| {
+    TextInput::new(cx)
+        .password(true)
+        .password_mask_mode(PasswordMaskMode::Partial {
+            prefix_len: 2,
+            suffix_len: 2,
+        })
+        .show_password(false)  // Start hidden
+});
+
+// Toggle visibility when user clicks a button
+password_input.update(cx, |input, cx| {
+    input.toggle_password_visibility(cx);
+});`} language="rust" />
+				</div>
+				
+				<h3>Events</h3>
+				<div class="standards-table">
+					<table>
+						<thead>
+							<tr>
+								<th>Event</th>
+								<th>Payload</th>
+								<th>Description</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td><code>TextInputEvent::Change</code></td>
+								<td><code>String</code></td>
+								<td>Emitted when input value changes (typing, deleting, or programmatic change)</td>
+							</tr>
+							<tr>
+								<td><code>TextInputEvent::Submit</code></td>
+								<td><code>String</code></td>
+								<td>Emitted when Enter key is pressed</td>
+							</tr>
+							<tr>
+								<td><code>TextInputEvent::Focus</code></td>
+								<td>-</td>
+								<td>Emitted when input gains focus</td>
+							</tr>
+							<tr>
+								<td><code>TextInputEvent::Blur</code></td>
+								<td>-</td>
+								<td>Emitted when input loses focus</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</section>
+			{:else if selectedComponent === 'checkbox'}
+			<section class="section">
+				<h2>API Reference</h2>
+				<h3>Methods</h3>
+				<div class="standards-table">
+					<table>
+						<thead>
+							<tr>
+								<th>Method</th>
+								<th>Parameters</th>
+								<th>Description</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td><code>.label()</code></td>
+								<td><code>impl Into&lt;String&gt;</code></td>
+								<td>Set label text displayed next to the checkbox</td>
+							</tr>
+							<tr>
+								<td><code>.checked()</code></td>
+								<td><code>bool</code></td>
+								<td>Set initial checked state (<code>true</code> = checked, <code>false</code> = unchecked)</td>
+							</tr>
+							<tr>
+								<td><code>.disabled()</code></td>
+								<td><code>bool</code></td>
+								<td>Enable/disable the checkbox. Disabled checkboxes cannot be clicked</td>
+							</tr>
+							<tr>
+								<td><code>.size()</code></td>
+								<td><code>ComponentSize</code></td>
+								<td>Set checkbox size (XSmall, Small, Medium, Large, XLarge). Affects box size and text size</td>
+							</tr>
+							<tr>
+								<td><code>.text_color()</code></td>
+								<td><code>Rgba</code></td>
+								<td>Set custom text color for the label</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				
+				<h3>Events</h3>
+				<div class="standards-table">
+					<table>
+						<thead>
+							<tr>
+								<th>Event</th>
+								<th>Payload</th>
+								<th>Description</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td><code>CheckboxEvent::Changed</code></td>
+								<td><code>bool</code></td>
+								<td>Emitted when checkbox state changes (checked/unchecked)</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				
+				<h3>Size Reference</h3>
+				<div class="standards-table">
+					<table>
+						<thead>
+							<tr>
+								<th>Size</th>
+								<th>Box Size</th>
+								<th>Font Size</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>XSmall</td>
+								<td>14px</td>
+								<td>11px</td>
+							</tr>
+							<tr>
+								<td>Small</td>
+								<td>16px</td>
+								<td>13px</td>
+							</tr>
+							<tr>
+								<td>Medium</td>
+								<td>18px</td>
+								<td>14px (default)</td>
+							</tr>
+							<tr>
+								<td>Large</td>
+								<td>20px</td>
+								<td>16px</td>
+							</tr>
+							<tr>
+								<td>XLarge</td>
+								<td>22px</td>
+								<td>18px</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</section>
+			{:else if selectedComponent === 'select'}
+			<section class="section">
+				<h2>API Reference</h2>
+				<h3>Methods</h3>
+				<div class="standards-table">
+					<table>
+						<thead>
+							<tr>
+								<th>Method</th>
+								<th>Parameters</th>
+								<th>Description</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td><code>.options()</code></td>
+								<td><code>Vec&lt;SelectOption&gt;</code></td>
+								<td>Set available options (flat list)</td>
+							</tr>
+							<tr>
+								<td><code>.option_groups()</code></td>
+								<td><code>Vec&lt;SelectOptionGroup&gt;</code></td>
+								<td>Set grouped options (hierarchical structure)</td>
+							</tr>
+							<tr>
+								<td><code>.placeholder()</code></td>
+								<td><code>impl Into&lt;String&gt;</code></td>
+								<td>Set placeholder text displayed when no option is selected</td>
+							</tr>
+							<tr>
+								<td><code>.value()</code></td>
+								<td><code>impl Into&lt;String&gt;</code></td>
+								<td>Set selected value (single select)</td>
+							</tr>
+							<tr>
+								<td><code>.values()</code></td>
+								<td><code>Vec&lt;String&gt;</code></td>
+								<td>Set selected values (multi select)</td>
+							</tr>
+							<tr>
+								<td><code>.disabled()</code></td>
+								<td><code>bool</code></td>
+								<td>Enable/disable the select. Disabled selects cannot be opened</td>
+							</tr>
+							<tr>
+								<td><code>.size()</code></td>
+								<td><code>ComponentSize</code></td>
+								<td>Set component size (XSmall to XLarge)</td>
+							</tr>
+							<tr>
+								<td><code>.variant()</code></td>
+								<td><code>SelectVariant</code></td>
+								<td>Set visual variant (Default, Ghost, Outline)</td>
+							</tr>
+							<tr>
+								<td><code>.dropdown_direction()</code></td>
+								<td><code>DropdownDirection</code></td>
+								<td>Set dropdown expansion direction (Down, Up, Auto)</td>
+							</tr>
+							<tr>
+								<td><code>.dropdown_alignment()</code></td>
+								<td><code>DropdownAlignment</code></td>
+								<td>Set dropdown alignment (Left, Right, Center)</td>
+							</tr>
+							<tr>
+								<td><code>.dropdown_width()</code></td>
+								<td><code>DropdownWidth</code></td>
+								<td>Set dropdown width (MatchTrigger, Fixed, MinWidth, MaxWidth)</td>
+							</tr>
+							<tr>
+								<td><code>.multiple()</code></td>
+								<td><code>bool</code></td>
+								<td>Enable multiple selection mode</td>
+							</tr>
+							<tr>
+								<td><code>.no_border()</code></td>
+								<td>-</td>
+								<td>Remove border (convenience method)</td>
+							</tr>
+							<tr>
+								<td><code>.no_shadow()</code></td>
+								<td>-</td>
+								<td>Remove shadow (convenience method)</td>
+							</tr>
+							<tr>
+								<td><code>.transparent()</code></td>
+								<td>-</td>
+								<td>Make background transparent (convenience method)</td>
+							</tr>
+							<tr>
+								<td><code>.compact()</code></td>
+								<td>-</td>
+								<td>Use compact spacing for dropdown items (convenience method)</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				
+				<h3>Events</h3>
+				<div class="standards-table">
+					<table>
+						<thead>
+							<tr>
+								<th>Event</th>
+								<th>Payload</th>
+								<th>Description</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td><code>SelectEvent::Changed</code></td>
+								<td><code>String</code></td>
+								<td>Emitted when single selection changes</td>
+							</tr>
+							<tr>
+								<td><code>SelectEvent::MultiChanged</code></td>
+								<td><code>Vec&lt;String&gt;</code></td>
+								<td>Emitted when multiple selection changes</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</section>
+			{:else if selectedComponent === 'combobox'}
+			<section class="section">
+				<h2>API Reference</h2>
+				<h3>Methods</h3>
+				<div class="standards-table">
+					<table>
+						<thead>
+							<tr>
+								<th>Method</th>
+								<th>Parameters</th>
+								<th>Description</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td><code>.options()</code></td>
+								<td><code>Vec&lt;SelectOption&gt;</code></td>
+								<td>Set available options for dropdown selection</td>
+							</tr>
+							<tr>
+								<td><code>.placeholder()</code></td>
+								<td><code>impl Into&lt;String&gt;</code></td>
+								<td>Set placeholder text displayed when input is empty</td>
+							</tr>
+							<tr>
+								<td><code>.value()</code></td>
+								<td><code>impl Into&lt;String&gt;</code></td>
+								<td>Set selected value (matches with option and updates input_value)</td>
+							</tr>
+							<tr>
+								<td><code>.input_value()</code></td>
+								<td><code>impl Into&lt;String&gt;</code></td>
+								<td>Set current input text value (for free text input)</td>
+							</tr>
+							<tr>
+								<td><code>.disabled()</code></td>
+								<td><code>bool</code></td>
+								<td>Enable/disable the combobox. Disabled comboboxes cannot be interacted with</td>
+							</tr>
+							<tr>
+								<td><code>.size()</code></td>
+								<td><code>ComponentSize</code></td>
+								<td>Set component size (XSmall to XLarge)</td>
+							</tr>
+							<tr>
+								<td><code>.dropdown_direction()</code></td>
+								<td><code>DropdownDirection</code></td>
+								<td>Set dropdown expansion direction (Down, Up, Auto)</td>
+							</tr>
+							<tr>
+								<td><code>.dropdown_alignment()</code></td>
+								<td><code>DropdownAlignment</code></td>
+								<td>Set dropdown alignment (Left, Right, Center)</td>
+							</tr>
+							<tr>
+								<td><code>.dropdown_width()</code></td>
+								<td><code>DropdownWidth</code></td>
+								<td>Set dropdown width (MatchTrigger, Fixed, MinWidth, MaxWidth)</td>
+							</tr>
+							<tr>
+								<td><code>.no_border()</code></td>
+								<td>-</td>
+								<td>Remove border (convenience method)</td>
+							</tr>
+							<tr>
+								<td><code>.no_shadow()</code></td>
+								<td>-</td>
+								<td>Remove shadow (convenience method)</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				
+				<h3>Events</h3>
+				<div class="standards-table">
+					<table>
+						<thead>
+							<tr>
+								<th>Event</th>
+								<th>Payload</th>
+								<th>Description</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td><code>ComboboxEvent::Changed</code></td>
+								<td><code>String</code></td>
+								<td>Emitted when an option is selected from dropdown</td>
+							</tr>
+							<tr>
+								<td><code>ComboboxEvent::InputChanged</code></td>
+								<td><code>String</code></td>
+								<td>Emitted when input value changes (user typing or programmatic change)</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				
+				<h3>Features</h3>
+				<ul>
+					<li><strong>Dual Mode:</strong> Combobox supports both preset option selection and free text input</li>
+					<li><strong>Filtering:</strong> Options are automatically filtered as user types (only when actively typing)</li>
+					<li><strong>Search:</strong> User can search by typing to filter options or enter custom values</li>
+					<li><strong>Preselection:</strong> Use <code>.value()</code> to set a preselected option that matches with available options</li>
+				</ul>
+			</section>
+			{/if}
+			
 			{#if selectedComponent === 'button'}
 			<!-- Design System Reference -->
 			<section class="section">
