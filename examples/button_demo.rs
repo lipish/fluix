@@ -36,6 +36,7 @@ struct ButtonDemo {
     danger_button: Entity<Button>,
     disabled_button: Entity<Button>,
     loading_button: Entity<Button>,
+    _subscriptions: Vec<Subscription>,
 }
 
 impl ButtonDemo {
@@ -92,6 +93,9 @@ impl ButtonDemo {
         let _sub4 = cx.subscribe_in(&text_button, window, Self::on_button_click);
         let _sub5 = cx.subscribe_in(&danger_button, window, Self::on_button_click);
 
+        // if subscriptions drop, the click callback function will not be called.
+        let _subscriptions = vec![_sub1, _sub2, _sub3, _sub4, _sub5];
+
         Self {
             click_count: 0,
             scroll_handle,
@@ -102,6 +106,7 @@ impl ButtonDemo {
             danger_button,
             disabled_button,
             loading_button,
+            _subscriptions
         }
     }
 
