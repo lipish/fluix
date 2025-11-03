@@ -1,6 +1,7 @@
 use gpui::*;
 use gpui::prelude::FluentBuilder;
 use std::sync::{Arc, Mutex};
+use arboard::Clipboard;
 
 // Element state for storing layout information
 #[derive(Clone)]
@@ -1843,7 +1844,7 @@ impl Render for TextInput {
         div()
             .id("text-input")
             .track_focus(&self.focus_handle)
-            .on_key_down(cx.listener(|this, event: &KeyDownEvent, _, cx| {
+            .on_key_down(cx.listener(|this, event: &KeyDownEvent, window, cx| {
                 if this.disabled {
                     return;
                 }
@@ -1860,6 +1861,64 @@ impl Render for TextInput {
                 // Check for Cmd/Ctrl + A (Select All)
                 if is_cmd_or_ctrl && event.keystroke.key.as_str().eq_ignore_ascii_case("a") {
                     this.select_all(cx);
+                    return;
+                }
+
+                // Check for Cmd/Ctrl + C (Copy)
+                // Only allow copy for non-password inputs
+                if is_cmd_or_ctrl && event.keystroke.key.as_str().eq_ignore_ascii_case("c") {
+                    if !this.is_password && !this.disabled {
+                        if this.has_selection() {
+                            // Copy selected text
+                            let range = this.selected_range();
+                            let text_to_copy = this.value[range].to_string();
+                            if let Ok(mut clipboard) = Clipboard::new() {
+                                let _ = clipboard.set_text(&text_to_copy);
+                            }
+                        } else {
+                            // No selection - copy all text
+                            if !this.value.is_empty() {
+                                if let Ok(mut clipboard) = Clipboard::new() {
+                                    let _ = clipboard.set_text(&this.value);
+                                }
+                            }
+                        }
+                    }
+                    return;
+                }
+
+                // Check for Cmd/Ctrl + V (Paste)
+                // Allow paste for all inputs (including password)
+                if is_cmd_or_ctrl && event.keystroke.key.as_str().eq_ignore_ascii_case("v") {
+                    if !this.disabled {
+                        if let Ok(mut clipboard) = Clipboard::new() {
+                            if let Ok(clipboard_text) = clipboard.get_text() {
+                                // Use replace_text_in_range to insert the text
+                                // This will handle validation and max_length checks
+                                let range = this.selected_range();
+                                let range_utf16 = Some(this.range_to_utf16(&range));
+                                this.replace_text_in_range(range_utf16, &clipboard_text, window, cx);
+                            }
+                        }
+                    }
+                    return;
+                }
+
+                // Check for Cmd/Ctrl + X (Cut)
+                // Only allow cut for non-password inputs
+                if is_cmd_or_ctrl && event.keystroke.key.as_str().eq_ignore_ascii_case("x") {
+                    if !this.is_password && !this.disabled && this.has_selection() {
+                        let range = this.selected_range();
+                        let text_to_copy = this.value[range].to_string();
+                        if let Ok(mut clipboard) = Clipboard::new() {
+                            let _ = clipboard.set_text(&text_to_copy);
+                        }
+                        // Delete the selected text
+                        this.cursor_position = this.delete_selection();
+                        this.pause_blinking(cx);
+                        cx.emit(TextInputEvent::Change(this.value.clone()));
+                        cx.notify();
+                    }
                     return;
                 }
 
@@ -2251,6 +2310,9 @@ impl EntityInputHandler for TextInput {
         _window: &mut Window,
         cx: &mut Context<Self>,
     ) {
+        if self.disabled {
+            return;
+        }
         let mut range = range_utf16
             .as_ref()
             .map(|range_utf16| self.range_from_utf16(range_utf16))
@@ -2277,6 +2339,21 @@ impl EntityInputHandler for TextInput {
         new_value.push_str(new_text);
         new_value.push_str(&self.value[range.end..]);
 
+        // Validate new value
+        if let Some(ref validator) = self.validator {
+            if !validator(&new_value) {
+                return;
+            }
+        }
+
+        // Check max length
+        if let Some(max_len) = self.max_length {
+            if new_value.len() > max_len {
+                return;
+            }
+        }
+
+        // Apply the change
         self.value = new_value;
         self.cursor_position = range.start + new_text.len();
         self.clear_selection();
@@ -2320,6 +2397,20 @@ impl EntityInputHandler for TextInput {
         new_value.push_str(&self.value[..range.start]);
         new_value.push_str(new_text);
         new_value.push_str(&self.value[range.end..]);
+
+        // Validate new value
+        if let Some(ref validator) = self.validator {
+            if !validator(&new_value) {
+                return;
+            }
+        }
+
+        // Check max length
+        if let Some(max_len) = self.max_length {
+            if new_value.len() > max_len {
+                return;
+            }
+        }
 
         self.value = new_value;
 
