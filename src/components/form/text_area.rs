@@ -9,6 +9,75 @@ struct TextAreaLineLayout {
     shaped_line: ShapedLine,
 }
 
+// Custom element wrapper to register input handler
+struct TextAreaElement {
+    entity: Entity<TextArea>,
+}
+
+impl IntoElement for TextAreaElement {
+    type Element = Self;
+
+    fn into_element(self) -> Self::Element {
+        self
+    }
+}
+
+impl Element for TextAreaElement {
+    type RequestLayoutState = ();
+    type PrepaintState = ();
+
+    fn id(&self) -> Option<ElementId> {
+        None
+    }
+
+    fn source_location(&self) -> Option<&'static core::panic::Location<'static>> {
+        None
+    }
+
+    fn request_layout(
+        &mut self,
+        _id: Option<&GlobalElementId>,
+        _inspector_id: Option<&InspectorElementId>,
+        window: &mut Window,
+        cx: &mut App,
+    ) -> (LayoutId, Self::RequestLayoutState) {
+        let mut style = Style::default();
+        style.size.width = px(0.0).into();
+        style.size.height = px(0.0).into();
+        (window.request_layout(style, [], cx), ())
+    }
+
+    fn prepaint(
+        &mut self,
+        _id: Option<&GlobalElementId>,
+        _inspector_id: Option<&InspectorElementId>,
+        _bounds: Bounds<Pixels>,
+        _request_layout: &mut Self::RequestLayoutState,
+        _window: &mut Window,
+        _cx: &mut App,
+    ) -> Self::PrepaintState {
+    }
+
+    fn paint(
+        &mut self,
+        _id: Option<&GlobalElementId>,
+        _inspector_id: Option<&InspectorElementId>,
+        bounds: Bounds<Pixels>,
+        _request_layout: &mut Self::RequestLayoutState,
+        _prepaint: &mut Self::PrepaintState,
+        window: &mut Window,
+        cx: &mut App,
+    ) {
+        // Register input handler for IME support
+        let focus_handle = self.entity.read(cx).focus_handle.clone();
+        window.handle_input(
+            &focus_handle,
+            ElementInputHandler::new(bounds, self.entity.clone()),
+            cx,
+        );
+    }
+}
+
 // ============================================================================
 // Events
 // ============================================================================
@@ -24,6 +93,8 @@ pub enum TextAreaEvent {
     Focus,
     /// Blur event
     Blur,
+    /// IME input detected (for Chinese/Japanese/Korean input)
+    Ime(String),
 }
 
 // ============================================================================
@@ -70,6 +141,8 @@ pub struct TextArea {
     is_dragging: bool,
     /// Last layout info for mouse position calculation (per line)
     last_layout: Vec<TextAreaLineLayout>,
+    /// Marked text range for IME (Input Method Editor) composition
+    marked_range: Option<std::ops::Range<usize>>,
 }
 
 impl TextArea {
@@ -95,7 +168,93 @@ impl TextArea {
             _blink_task: None,
             is_dragging: false,
             last_layout: Vec::new(),
+            marked_range: None,
         }
+    }
+
+    /// Check if text contains Chinese/Japanese/Korean characters
+    fn contains_cjk(text: &str) -> bool {
+        text.chars().any(|c| {
+            let cp = c as u32;
+            (0x4E00..=0x9FFF).contains(&cp) || // CJK统一汉字
+            (0x3400..=0x4DBF).contains(&cp) || // CJK扩展A
+            (0x20000..=0x2A6DF).contains(&cp) || // CJK扩展B
+            (0x2A700..=0x2B73F).contains(&cp) || // CJK扩展C
+            (0x2B740..=0x2B81F).contains(&cp) || // CJK扩展D
+            (0x2B820..=0x2CEAF).contains(&cp) || // CJK扩展E
+            (0x2CEB0..=0x2EBEF).contains(&cp) || // CJK扩展F
+            (0x3000..=0x303F).contains(&cp) || // CJK符号和标点
+            (0xFF00..=0xFFEF).contains(&cp)    // 全角ASCII、全角标点
+        })
+    }
+
+    /// Ensure cursor position is within valid bounds
+    fn validate_cursor_position(&mut self) {
+        let char_count = self.value.chars().count();
+        if self.cursor_pos > char_count {
+            self.cursor_pos = char_count;
+        }
+    }
+
+    /// Safely remove character at the given position
+    fn remove_char_at(&mut self, pos: usize) -> bool {
+        let chars: Vec<char> = self.value.chars().collect();
+        if pos < chars.len() {
+            let mut new_chars = Vec::new();
+            new_chars.extend_from_slice(&chars[..pos]);
+            new_chars.extend_from_slice(&chars[pos + 1..]);
+            self.value = new_chars.into_iter().collect();
+            true
+        } else {
+            false
+        }
+    }
+
+    /// Convert character range to byte range
+    fn char_range_to_byte_range(&self, char_range: &std::ops::Range<usize>) -> std::ops::Range<usize> {
+        // Handle empty string case
+        if self.value.is_empty() {
+            return 0..0;
+        }
+
+        // Handle cursor position (empty range)
+        if char_range.start == char_range.end {
+            // Find the byte position for the character index
+            for (char_count, (byte_idx, _)) in self.value.char_indices().enumerate() {
+                if char_count == char_range.start {
+                    return byte_idx..byte_idx;
+                }
+            }
+            // If we reach here, the cursor is at the end
+            return self.value.len()..self.value.len();
+        }
+
+        let mut byte_start = 0;
+        let mut byte_end = self.value.len();
+        let mut found_start = false;
+
+        for (char_count, (byte_idx, _)) in self.value.char_indices().enumerate() {
+            if char_count == char_range.start && !found_start {
+                byte_start = byte_idx;
+                found_start = true;
+            }
+            if char_count == char_range.end {
+                byte_end = byte_idx;
+                break;
+            }
+        }
+
+        // Handle case where range.start is at the very beginning
+        if char_range.start == 0 {
+            byte_start = 0;
+        }
+
+        // Handle case where range.end is at the very end
+        if char_range.end >= self.value.chars().count() {
+            byte_end = self.value.len();
+        }
+
+        byte_start..byte_end
     }
 
     /// Set the placeholder text
@@ -229,11 +388,82 @@ impl TextArea {
         }
     }
 
+    /// Get the current selection range
+    fn selected_range(&self) -> std::ops::Range<usize> {
+        if let (Some(start), Some(end)) = (self.selection_start, self.selection_end) {
+            if start <= end {
+                start..end
+            } else {
+                end..start
+            }
+        } else {
+            self.cursor_pos..self.cursor_pos
+        }
+    }
+
+    /// Convert UTF-16 range to UTF-8 range
+    fn range_from_utf16(&self, range_utf16: &std::ops::Range<usize>) -> std::ops::Range<usize> {
+        let mut utf16_count = 0;
+        let mut start = None;
+        let mut end = None;
+
+        for (byte_idx, ch) in self.value.char_indices() {
+            if start.is_none() && utf16_count >= range_utf16.start {
+                start = Some(byte_idx);
+            }
+            
+            utf16_count += ch.len_utf16();
+            
+            if end.is_none() && utf16_count >= range_utf16.end {
+                end = Some(byte_idx + ch.len_utf8());
+                break;
+            }
+        }
+
+        let start = start.unwrap_or(self.value.len());
+        let end = end.unwrap_or(self.value.len());
+        
+        start..end
+    }
+
+    /// Convert character range to UTF-16 range
+    fn char_range_to_utf16(&self, char_range: &std::ops::Range<usize>) -> std::ops::Range<usize> {
+        let mut utf16_start = 0;
+        let mut utf16_end = 0;
+
+        for (char_count, ch) in self.value.chars().enumerate() {
+            if char_count == char_range.start {
+                utf16_start = utf16_end;
+            }
+            utf16_end += ch.len_utf16();
+            if char_count == char_range.end {
+                break;
+            }
+        }
+
+        // Handle case where range.end is at the very end
+        if char_range.end >= self.value.chars().count() {
+            utf16_end = self.value.encode_utf16().count();
+        }
+
+        utf16_start..utf16_end
+    }
+
+    /// Convert byte range to UTF-16 range
+    fn byte_range_to_utf16(&self, range: &std::ops::Range<usize>) -> std::ops::Range<usize> {
+        let start_idx = range.start.min(self.value.len());
+        let end_idx = range.end.min(self.value.len());
+
+        let start = self.value[..start_idx].encode_utf16().count();
+        let end = self.value[..end_idx].encode_utf16().count();
+        start..end
+    }
+
     fn handle_input(&mut self, text: &str, cx: &mut Context<Self>) {
         if self.disabled {
             return;
         }
-        
+
         // If there's a selection, delete it first
         if self.has_selection() {
             self.cursor_pos = self.delete_selection();
@@ -254,6 +484,12 @@ impl TextArea {
         self.value = new_value.clone();
         self.cursor_pos += text.chars().count();
         self.pause_blinking(cx);
+        
+        // Check for CJK characters and emit IME event if detected
+        if Self::contains_cjk(text) {
+            cx.emit(TextAreaEvent::Ime(self.value.clone()));
+        }
+        
         cx.emit(TextAreaEvent::Change(new_value));
         cx.notify();
     }
@@ -262,7 +498,14 @@ impl TextArea {
         if self.disabled {
             return;
         }
-        
+
+        // If there's marked text (IME composition), clear it
+        if self.marked_range.is_some() {
+            self.marked_range = None;
+            cx.notify();
+            return;
+        }
+
         // If there's a selection, delete it
         if self.has_selection() {
             self.cursor_pos = self.delete_selection();
@@ -271,18 +514,24 @@ impl TextArea {
             cx.notify();
             return;
         }
-        
+
         if self.cursor_pos == 0 {
             return;
         }
 
-        // Remove character before cursor
-        let before = self.value.chars().take(self.cursor_pos - 1).collect::<String>();
-        let after = self.value.chars().skip(self.cursor_pos).collect::<String>();
-        self.value = format!("{}{}", before, after);
-        self.cursor_pos -= 1;
+        // Ensure cursor position is valid
+        self.validate_cursor_position();
+
+        if self.cursor_pos == 0 {
+            return;
+        }
+
+        // Safely remove character before cursor
+        if self.remove_char_at(self.cursor_pos - 1) {
+            self.cursor_pos -= 1;
+        }
+
         self.pause_blinking(cx);
-        
         cx.emit(TextAreaEvent::Change(self.value.clone()));
         cx.notify();
     }
@@ -405,7 +654,14 @@ impl TextArea {
         if self.disabled {
             return;
         }
-        
+
+        // If there's marked text (IME composition), clear it
+        if self.marked_range.is_some() {
+            self.marked_range = None;
+            cx.notify();
+            return;
+        }
+
         // If there's a selection, delete it
         if self.has_selection() {
             self.cursor_pos = self.delete_selection();
@@ -413,17 +669,18 @@ impl TextArea {
             cx.notify();
             return;
         }
-        
+
+        // Ensure cursor position is valid
+        self.validate_cursor_position();
+
         let char_count = self.value.chars().count();
         if self.cursor_pos >= char_count {
             return;
         }
 
-        // Remove character at cursor
-        let before = self.value.chars().take(self.cursor_pos).collect::<String>();
-        let after = self.value.chars().skip(self.cursor_pos + 1).collect::<String>();
-        self.value = format!("{}{}", before, after);
-        
+        // Safely remove character at cursor
+        self.remove_char_at(self.cursor_pos);
+
         cx.emit(TextAreaEvent::Change(self.value.clone()));
         cx.notify();
     }
@@ -598,9 +855,12 @@ impl Render for TextArea {
             self.custom_border_color.unwrap_or(rgb(0xE0E0E0))
         };
 
-        div()
+        let content = div()
             .id("text-area")
             .track_focus(&self.focus_handle)
+            .child(TextAreaElement {
+                entity: cx.entity().clone(),
+            })
             .on_key_down(cx.listener(|this, event: &KeyDownEvent, _, cx| {
                 if this.disabled {
                     return;
@@ -649,10 +909,8 @@ impl Render for TextArea {
                         this.handle_enter(shift_pressed, cx);
                     }
                     _ => {
-                        // Handle regular character input
-                        if let Some(ch) = &event.keystroke.key_char {
-                            this.handle_input(ch, cx);
-                        }
+                        // Don't handle regular character input here
+                        // EntityInputHandler will handle all text input (including IME)
                     }
                 }
             }))
@@ -871,11 +1129,15 @@ impl Render for TextArea {
                                                     };
                                                     
                                                     let mut runs = Vec::new();
-                                                    
+
+                                                    // Convert character indices to byte indices for TextRun
+                                                    let line_chars: Vec<char> = line_str.chars().collect();
+
                                                     // Text before selection
                                                     if sel_start_in_line > 0 {
+                                                        let before_text: String = line_chars[..sel_start_in_line].iter().collect();
                                                         runs.push(TextRun {
-                                                            len: sel_start_in_line,
+                                                            len: before_text.len(),
                                                             font: font_clone.clone(),
                                                             color: rgb(0x333333).into(),
                                                             background_color: None,
@@ -883,11 +1145,12 @@ impl Render for TextArea {
                                                             strikethrough: None,
                                                         });
                                                     }
-                                                    
+
                                                     // Selected text
                                                     if sel_end_in_line > sel_start_in_line {
+                                                        let selected_text: String = line_chars[sel_start_in_line..sel_end_in_line].iter().collect();
                                                         runs.push(TextRun {
-                                                            len: sel_end_in_line - sel_start_in_line,
+                                                            len: selected_text.len(),
                                                             font: font_clone.clone(),
                                                             color: rgb(0xFFFFFF).into(),
                                                             background_color: Some(rgb(0x4A90E2).into()),
@@ -895,11 +1158,12 @@ impl Render for TextArea {
                                                             strikethrough: None,
                                                         });
                                                     }
-                                                    
+
                                                     // Text after selection
-                                                    if sel_end_in_line < line_str.chars().count() {
+                                                    if sel_end_in_line < line_chars.len() {
+                                                        let after_text: String = line_chars[sel_end_in_line..].iter().collect();
                                                         runs.push(TextRun {
-                                                            len: line_str.chars().count() - sel_end_in_line,
+                                                            len: after_text.len(),
                                                             font: font_clone.clone(),
                                                             color: rgb(0x333333).into(),
                                                             background_color: None,
@@ -1028,6 +1292,227 @@ impl Render for TextArea {
                                 )
                         )
                     })
-            ])
+            ]);
+
+        content
     }
 }
+
+// Implement EntityInputHandler for IME (Input Method Editor) support
+impl EntityInputHandler for TextArea {
+    fn text_for_range(
+        &mut self,
+        range_utf16: std::ops::Range<usize>,
+        actual_range: &mut Option<std::ops::Range<usize>>,
+        _window: &mut Window,
+        _cx: &mut Context<Self>,
+    ) -> Option<String> {
+        let range = self.range_from_utf16(&range_utf16);
+        actual_range.replace(self.byte_range_to_utf16(&range));
+        Some(self.value[range].to_string())
+    }
+
+    fn selected_text_range(
+        &mut self,
+        _ignore_disabled_input: bool,
+        _window: &mut Window,
+        _cx: &mut Context<Self>,
+    ) -> Option<UTF16Selection> {
+        let range = self.selected_range();
+        Some(UTF16Selection {
+            range: self.char_range_to_utf16(&range),
+            reversed: false,
+        })
+    }
+
+    fn marked_text_range(
+        &self,
+        _window: &mut Window,
+        _cx: &mut Context<Self>,
+    ) -> Option<std::ops::Range<usize>> {
+        self.marked_range
+            .as_ref()
+            .map(|range| self.byte_range_to_utf16(range))
+    }
+
+    fn unmark_text(&mut self, _window: &mut Window, _cx: &mut Context<Self>) {
+        self.marked_range = None;
+    }
+
+    fn replace_text_in_range(
+        &mut self,
+        range_utf16: Option<std::ops::Range<usize>>,
+        new_text: &str,
+        _window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        if self.disabled {
+            return;
+        }
+
+        let mut range = range_utf16
+            .as_ref()
+            .map(|range_utf16| self.range_from_utf16(range_utf16))
+            .or(self.marked_range.clone())
+            .unwrap_or_else(|| {
+                // Convert character selection to byte range
+                let char_range = self.selected_range();
+                self.char_range_to_byte_range(&char_range)
+            });
+
+        // Ensure range is within bounds and on character boundaries
+        range.start = range.start.min(self.value.len());
+        range.end = range.end.min(self.value.len());
+
+        while range.start > 0 && !self.value.is_char_boundary(range.start) {
+            range.start -= 1;
+        }
+        while range.end > 0 && range.end < self.value.len() && !self.value.is_char_boundary(range.end) {
+            range.end += 1;
+        }
+        if range.end > self.value.len() {
+            range.end = self.value.len();
+        }
+
+        // Replace text in range
+        let mut new_value = String::new();
+        new_value.push_str(&self.value[..range.start]);
+        new_value.push_str(new_text);
+        new_value.push_str(&self.value[range.end..]);
+
+        // Check max length
+        if let Some(max_len) = self.max_length {
+            if new_value.chars().count() > max_len {
+                return;
+            }
+        }
+
+        // Convert byte position to character position for cursor
+        let char_pos_before = self.value[..range.start].chars().count();
+
+        // Apply the change
+        self.value = new_value;
+        self.cursor_pos = char_pos_before + new_text.chars().count();
+        self.selection_start = None;
+        self.selection_end = None;
+        self.marked_range = None;
+
+
+
+        self.pause_blinking(cx);
+
+        // Check for CJK characters and emit IME event if detected
+        if Self::contains_cjk(new_text) {
+            cx.emit(TextAreaEvent::Ime(self.value.clone()));
+        }
+
+        cx.emit(TextAreaEvent::Change(self.value.clone()));
+        cx.notify();
+    }
+
+    fn replace_and_mark_text_in_range(
+        &mut self,
+        range_utf16: Option<std::ops::Range<usize>>,
+        new_text: &str,
+        _new_selected_range_utf16: Option<std::ops::Range<usize>>,
+        _window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        if self.disabled {
+            return;
+        }
+        
+        // Get the range to replace
+        let byte_range = if let Some(range_utf16) = range_utf16 {
+            // Convert UTF-16 range to byte range
+            self.range_from_utf16(&range_utf16)
+        } else if let Some(marked_range) = &self.marked_range {
+            // Use marked range (already in bytes)
+            marked_range.clone()
+        } else {
+            // Use current selection/cursor position
+            let selected_range = self.selected_range(); // This is in character indices
+            // Convert character range to byte range
+            self.char_range_to_byte_range(&selected_range)
+        };
+
+        // Ensure range is within bounds and on character boundaries
+        let mut range = byte_range;
+        range.start = range.start.min(self.value.len());
+        range.end = range.end.min(self.value.len());
+
+        while range.start > 0 && !self.value.is_char_boundary(range.start) {
+            range.start -= 1;
+        }
+        while range.end > 0 && range.end < self.value.len() && !self.value.is_char_boundary(range.end) {
+            range.end += 1;
+        }
+        if range.end > self.value.len() {
+            range.end = self.value.len();
+        }
+
+        // Replace text in range
+        let mut new_value = String::new();
+        new_value.push_str(&self.value[..range.start]);
+        new_value.push_str(new_text);
+        new_value.push_str(&self.value[range.end..]);
+
+        // Check max length
+        if let Some(max_len) = self.max_length {
+            if new_value.chars().count() > max_len {
+                return;
+            }
+        }
+
+        // Convert byte position back to character position for cursor
+        let char_pos_before = self.value[..range.start].chars().count();
+
+        // Apply the change
+        self.value = new_value;
+        self.cursor_pos = char_pos_before + new_text.chars().count();
+        self.selection_start = None;
+        self.selection_end = None;
+
+        // Set marked range for IME composition (in bytes)
+        if !new_text.is_empty() {
+            self.marked_range = Some(range.start..(range.start + new_text.len()));
+        } else {
+            self.marked_range = None;
+        }
+        
+        self.pause_blinking(cx);
+        
+        // Check for CJK characters and emit IME event if detected
+        if Self::contains_cjk(new_text) {
+            cx.emit(TextAreaEvent::Ime(self.value.clone()));
+        }
+        
+        cx.emit(TextAreaEvent::Change(self.value.clone()));
+        cx.notify();
+    }
+
+    fn bounds_for_range(
+        &mut self,
+        _range_utf16: std::ops::Range<usize>,
+        bounds: Bounds<Pixels>,
+        _window: &mut Window,
+        _cx: &mut Context<Self>,
+    ) -> Option<Bounds<Pixels>> {
+        // Return the input bounds for IME candidate window positioning
+        Some(bounds)
+    }
+
+    fn character_index_for_point(
+        &mut self,
+        point: Point<Pixels>,
+        _window: &mut Window,
+        _cx: &mut Context<Self>,
+    ) -> Option<usize> {
+        // Convert pixel position to character index
+        let byte_index = self.index_for_mouse_position(point);
+        // Convert byte index to UTF-16 code units
+        Some(self.value[..byte_index].encode_utf16().count())
+    }
+}
+
+

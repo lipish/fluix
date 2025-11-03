@@ -15,6 +15,7 @@ readme = "README.md"
 gpui = "0.2"
 anyhow = "1.0"
 rust-embed = "8"
+arboard = "3"
 
 [[example]]
 name = "button_variants_demo"
