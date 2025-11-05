@@ -448,6 +448,48 @@ impl Select {
             cx.notify();
         }
     }
+
+    /// Clear the current selection
+    pub fn clear_selection(&mut self, cx: &mut Context<Self>) {
+        if self.multiple {
+            if !self.selected_values.is_empty() {
+                self.selected_values.clear();
+                cx.emit(SelectEvent::MultiChanged(vec![]));
+                cx.notify();
+            }
+        } else {
+            if self.selected_value.is_some() {
+                self.selected_value = None;
+                cx.emit(SelectEvent::Changed("".to_string()));
+                cx.notify();
+            }
+        }
+    }
+
+    /// Set the selected value programmatically
+    pub fn set_value(&mut self, value: Option<String>, cx: &mut Context<Self>) {
+        if self.multiple {
+            // For multi-select, treat None as clear, Some as single selection
+            match value {
+                None => self.clear_selection(cx),
+                Some(val) => {
+                    self.selected_values = vec![val.clone()];
+                    cx.emit(SelectEvent::MultiChanged(self.selected_values.clone()));
+                    cx.notify();
+                }
+            }
+        } else {
+            // For single select
+            match value {
+                None => self.clear_selection(cx),
+                Some(val) => {
+                    self.selected_value = Some(val.clone());
+                    cx.emit(SelectEvent::Changed(val));
+                    cx.notify();
+                }
+            }
+        }
+    }
     
     /// Render the dropdown overlay (positioning layer)
     /// This layer handles the absolute positioning of the dropdown menu
@@ -615,6 +657,7 @@ impl Select {
             .w_full()
             .px(padding_x)
             .py(padding_y)
+            .min_h(px(32.)) // 设置最小高度
             .cursor(CursorStyle::PointingHand)
             .text_size(self.custom_font_size.unwrap_or(size.font_size()))
             .rounded(px(BorderRadius::SM))
@@ -633,13 +676,18 @@ impl Select {
             .child(
                 div()
                     .flex()
-                    .items_center()
+                    .items_start() // 改为 start 以支持多行文本
                     .gap_2()
+                    .w_full()
                     // Checkbox for multi-select
                     .when(multiple, |this| {
                         this.child(self.render_checkbox(is_selected, theme))
                     })
-                    .child(label)
+                    .child(
+                        div()
+                            .flex_1()
+                            .child(label)
+                    )
             )
             // Show checkmark for single select
             .when(is_selected && !multiple, |this| {
@@ -818,6 +866,10 @@ impl Render for Select {
                                         // Show single value or placeholder
                                         this.child(
                                             div()
+                                                .flex_1()
+                                                .overflow_hidden()
+                                                .text_ellipsis()
+                                                .whitespace_nowrap()
                                                 .when(is_placeholder, |this| {
                                                     this.text_color(self.custom_text_color.unwrap_or(theme.colors.text_secondary))
                                                 })
