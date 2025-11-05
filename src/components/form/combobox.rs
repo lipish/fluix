@@ -2,7 +2,7 @@ use gpui::prelude::FluentBuilder;
 use gpui::*;
 use crate::theme::*;
 use crate::components::basic::icon::{Icon, IconName};
-use crate::components::form::select::{SelectOption, DropdownDirection, DropdownAlignment, DropdownWidth};
+use crate::components::form::select::{SelectOption, SelectOptionGroup, DropdownDirection, DropdownAlignment, DropdownWidth};
 use crate::components::form::text_input::{TextInput, TextInputEvent};
 
 // ============================================================================
@@ -52,8 +52,10 @@ impl EventEmitter<ComboboxEvent> for Combobox {}
 /// });
 /// ```
 pub struct Combobox {
-    /// Available options
+    /// Available options (flat list)
     options: Vec<SelectOption>,
+    /// Grouped options
+    option_groups: Vec<SelectOptionGroup>,
     /// Currently selected value
     selected_value: Option<String>,
     /// Current input text
@@ -80,8 +82,12 @@ pub struct Combobox {
     clicking_menu: bool,
     /// Internal text input component
     text_input: Option<Entity<TextInput>>,
-    /// Flag to track if user is actively typing (for filtering)
+    /// Flag to track if user is actively typing ( for filtering)
     is_user_typing: bool,
+    /// Whether to use compact spacing for dropdown items
+    compact: bool,
+    /// Event subscriptions
+    _subscriptions: Vec<Subscription>,
 }
 
 impl Combobox {
@@ -97,6 +103,7 @@ impl Combobox {
 
         Self {
             options: Vec::new(),
+            option_groups: Vec::new(),
             selected_value: None,
             input_value: String::new(),
             placeholder: "Search or select...".to_string(),
@@ -111,12 +118,28 @@ impl Combobox {
             clicking_menu: false,
             text_input: Some(text_input),
             is_user_typing: false,
+            compact: false,
+            _subscriptions: Vec::new(),
         }
     }
 
     /// Set the options
     pub fn options(mut self, options: Vec<SelectOption>) -> Self {
         self.options = options;
+        self.option_groups.clear(); // Clear groups when setting flat options
+        self
+    }
+
+    /// Set the option groups
+    pub fn option_groups(mut self, groups: Vec<SelectOptionGroup>) -> Self {
+        self.option_groups = groups;
+        self.options.clear(); // Clear flat options when setting groups
+        self
+    }
+
+    /// Use compact spacing for dropdown items (less padding)
+    pub fn compact(mut self) -> Self {
+        self.compact = true;
         self
     }
 
@@ -131,16 +154,33 @@ impl Combobox {
         let value_str = value.into();
         self.selected_value = Some(value_str.clone());
         // Find matching option and set input value
-        if let Some(option) = self.options.iter().find(|opt| opt.value == value_str) {
+        let all_options = self.all_options();
+        if let Some(option) = all_options.iter().find(|opt| opt.value == value_str) {
             self.input_value = option.label.clone();
         }
         self
+    }
+
+    /// Set the selected value (mutable reference version for use in update closures)
+    pub fn set_value(&mut self, value: impl Into<String>) {
+        let value_str = value.into();
+        self.selected_value = Some(value_str.clone());
+        // Find matching option and set input value
+        let all_options = self.all_options();
+        if let Some(option) = all_options.iter().find(|opt| opt.value == value_str) {
+            self.input_value = option.label.clone();
+        }
     }
 
     /// Set the input value
     pub fn input_value(mut self, value: impl Into<String>) -> Self {
         self.input_value = value.into();
         self
+    }
+
+    /// Set the input value (mutable reference version for use in update closures)
+    pub fn set_input_value(&mut self, value: impl Into<String>) {
+        self.input_value = value.into();
     }
 
     /// Set the disabled state
@@ -188,31 +228,89 @@ impl Combobox {
     /// Filter options based on input value
     /// Only filters when user is actively typing, not when dropdown is opened after selection
     fn filtered_options(&self) -> Vec<SelectOption> {
-        // If user is not actively typing, show all options
-        if !self.is_user_typing {
-            return self.options.clone();
+        let all_options = if !self.option_groups.is_empty() {
+            // Flatten option groups
+            self.option_groups
+                .iter()
+                .flat_map(|group| group.options.iter())
+                .cloned()
+                .collect()
+        } else {
+            self.options.clone()
+        };
+
+        // Only filter if user is actively typing (not just when input has value from selection)
+        if self.is_user_typing && !self.input_value.is_empty() {
+            let input_lower = self.input_value.to_lowercase();
+            let filtered: Vec<SelectOption> = all_options
+                .iter()
+                .filter(|opt| {
+                    opt.label.to_lowercase().contains(&input_lower) ||
+                    opt.value.to_lowercase().contains(&input_lower)
+                })
+                .cloned()
+                .collect();
+
+            // Return filtered results (even if empty - user can see no matches)
+            return filtered;
         }
 
-        if self.input_value.is_empty() {
-            return self.options.clone();
+        // No filtering - show all options
+        all_options
+    }
+
+    /// Filter option groups based on input value
+    fn filtered_option_groups(&self) -> Vec<SelectOptionGroup> {
+        // Only filter if user is actively typing (not just when input has value from selection)
+        if self.is_user_typing && !self.input_value.is_empty() {
+            let input_lower = self.input_value.to_lowercase();
+            let filtered: Vec<SelectOptionGroup> = self.option_groups
+                .iter()
+                .map(|group| {
+                    let filtered_options: Vec<SelectOption> = group.options
+                        .iter()
+                        .filter(|opt| {
+                            opt.label.to_lowercase().contains(&input_lower) ||
+                            opt.value.to_lowercase().contains(&input_lower)
+                        })
+                        .cloned()
+                        .collect();
+
+                    SelectOptionGroup {
+                        label: group.label.clone(),
+                        options: filtered_options,
+                    }
+                })
+                .filter(|group| !group.options.is_empty()) // Only include groups with matching options
+                .collect();
+
+            // Return filtered results (even if empty - user can see no matches)
+            return filtered;
         }
 
-        let input_lower = self.input_value.to_lowercase();
-        self.options
-            .iter()
-            .filter(|opt| {
-                opt.label.to_lowercase().contains(&input_lower) ||
-                opt.value.to_lowercase().contains(&input_lower)
-            })
-            .cloned()
-            .collect()
+        // No filtering - show all option groups
+        self.option_groups.clone()
+    }
+
+    /// Get all options (flattened from groups if needed) for selection
+    fn all_options(&self) -> Vec<SelectOption> {
+        if !self.option_groups.is_empty() {
+            self.option_groups
+                .iter()
+                .flat_map(|group| group.options.iter())
+                .cloned()
+                .collect()
+        } else {
+            self.options.clone()
+        }
     }
 
     /// Toggle dropdown open/closed
     fn toggle_dropdown(&mut self) {
         if !self.disabled {
             self.is_open = !self.is_open;
-            // When opening dropdown via arrow click, reset typing flag to show all options
+            // When opening dropdown via arrow click, always reset typing flag
+            // to show all options. User needs to actively type to trigger filtering.
             if self.is_open {
                 self.is_user_typing = false;
             }
@@ -233,20 +331,22 @@ impl Combobox {
 
     /// Select an option
     fn select_option(&mut self, value: String, cx: &mut Context<Self>) {
-        if let Some(option) = self.options.iter().find(|opt| opt.value == value) {
+        let all_options = self.all_options();
+        if let Some(option) = all_options.iter().find(|opt| opt.value == value) {
             self.selected_value = Some(value.clone());
             self.input_value = option.label.clone();
+            // Reset typing flag after selection - this ensures when dropdown reopens, all options are shown
+            self.is_user_typing = false;
+            // Close dropdown after selection - user can reopen to select another option
             self.is_open = false;
-            self.is_user_typing = false; // Reset typing flag after selection
-            
+
             // Update TextInput value when option is selected
-            // This allows user to continue editing after selection
             if let Some(text_input) = &self.text_input {
                 text_input.update(cx, |input, cx| {
                     input.set_value(option.label.clone(), cx);
                 });
             }
-            
+
             cx.emit(ComboboxEvent::Changed(value));
             cx.notify();
         }
@@ -255,7 +355,100 @@ impl Combobox {
     /// Render the dropdown overlay
     fn render_dropdown_overlay(&self, cx: &Context<Self>) -> impl IntoElement {
         let theme = Theme::default();
-        let filtered_options = self.filtered_options();
+        let has_groups = !self.option_groups.is_empty();
+
+        let mut menu = div()
+            .occlude()  // Ensure popup content is above other content
+            .id("combobox-popup")
+            .map(|this| match self.dropdown_width {
+                DropdownWidth::MatchTrigger => this,
+                DropdownWidth::Fixed(width) => this.w(width),
+                DropdownWidth::MinWidth(width) => this.min_w(width),
+                DropdownWidth::MaxWidth(width) => this.max_w(width),
+            })
+            .when(matches!(self.dropdown_width, DropdownWidth::MatchTrigger), |this| {
+                this.min_w(px(180.))
+            })
+            .max_h(px(300.))
+            .overflow_y_scroll()
+            // Only round bottom corners when connected to input
+            .rounded_bl(px(BorderRadius::LG))
+            .rounded_br(px(BorderRadius::LG))
+            .border_1()
+            .border_color(theme.colors.border)
+            // Remove top border to connect seamlessly with input
+            .border_t_0()
+            .bg(theme.colors.background)
+            .when(self.show_shadow, |this| {
+                this.shadow(vec![
+                    BoxShadow {
+                        color: rgba(0x00000010).into(),
+                        offset: point(px(0.), px(4.)),
+                        blur_radius: px(16.),
+                        spread_radius: px(-2.),
+                    },
+                    BoxShadow {
+                        color: rgba(0x00000008).into(),
+                        offset: point(px(0.), px(2.)),
+                        blur_radius: px(8.),
+                        spread_radius: px(0.),
+                    },
+                ])
+            })
+            .p(px(6.));
+
+        // Render grouped or flat options
+        if has_groups {
+            let filtered_groups = self.filtered_option_groups();
+            let mut item_counter: usize = 0;
+            menu = menu.children(filtered_groups.iter().enumerate().map(|(group_idx, group)| {
+                div()
+                    .flex()
+                    .flex_col()
+                    .map(|this| {
+                        // Add top margin for groups after the first one
+                        if group_idx > 0 {
+                            this.mt(if self.compact { px(2.) } else { px(4.) })
+                        } else {
+                            this
+                        }
+                    })
+                    .child({
+                        // Group label with clear, bold styling
+                        let label_py = if self.compact { px(4.) } else { px(8.) };
+                        let label_px = if self.compact { px(8.) } else { px(12.) };
+
+                        div()
+                            .px(label_px)
+                            .py(label_py)
+                            .text_sm()
+                            .font_weight(FontWeight::BOLD)
+                            .text_color(theme.colors.text)
+                            .child(group.label.clone())
+                    })
+                    .children(group.options.iter().map(|option| {
+                        let id = ("combobox-group-item", item_counter);
+                        item_counter += 1;
+                        // Wrap option with indentation for grouped items
+                        div()
+                            .pl(px(8.))
+                            .child(self.render_option(option, id, &theme, cx))
+                    }))
+                    .child(
+                        // Separator line below the last option in this group
+                        div()
+                            .h(px(1.))
+                            .bg(theme.colors.border)
+                            .mx(px(12.))
+                            .mt(if self.compact { px(1.) } else { px(2.) })
+                    )
+            }));
+        } else {
+            let filtered_options = self.filtered_options();
+            menu = menu.children(filtered_options.iter().enumerate().map(|(idx, option)| {
+                self.render_option(option, ("combobox-item", idx), &theme, cx)
+            }));
+        }
 
         div()
             .absolute()
@@ -276,50 +469,7 @@ impl Combobox {
             .on_mouse_down(MouseButton::Left, cx.listener(|this, _event: &MouseDownEvent, _window, _cx| {
                 this.clicking_menu = true;
             }))
-            .child(
-                div()
-                    .occlude()  // Ensure popup content is above other content
-                    .id("combobox-popup")
-                    .map(|this| match self.dropdown_width {
-                        DropdownWidth::MatchTrigger => this,
-                        DropdownWidth::Fixed(width) => this.w(width),
-                        DropdownWidth::MinWidth(width) => this.min_w(width),
-                        DropdownWidth::MaxWidth(width) => this.max_w(width),
-                    })
-                    .when(matches!(self.dropdown_width, DropdownWidth::MatchTrigger), |this| {
-                        this.min_w(px(180.))
-                    })
-                    .max_h(px(300.))
-                    .overflow_y_scroll()
-                    // Only round bottom corners when connected to input
-                    .rounded_bl(px(BorderRadius::LG))
-                    .rounded_br(px(BorderRadius::LG))
-                    .border_1()
-                    .border_color(theme.colors.border)
-                    // Remove top border to connect seamlessly with input
-                    .border_t_0()
-                    .bg(theme.colors.background)
-                    .when(self.show_shadow, |this| {
-                        this.shadow(vec![
-                            BoxShadow {
-                                color: rgba(0x00000010).into(),
-                                offset: point(px(0.), px(4.)),
-                                blur_radius: px(16.),
-                                spread_radius: px(-2.),
-                            },
-                            BoxShadow {
-                                color: rgba(0x00000008).into(),
-                                offset: point(px(0.), px(2.)),
-                                blur_radius: px(8.),
-                                spread_radius: px(0.),
-                            },
-                        ])
-                    })
-                    .p(px(6.))
-                    .children(filtered_options.iter().enumerate().map(|(idx, option)| {
-                        self.render_option(option, ("combobox-item", idx), &theme, cx)
-                    }))
-            )
+            .child(menu)
     }
 
     /// Render a single option item
@@ -338,6 +488,10 @@ impl Combobox {
             false
         };
 
+        // Use compact spacing if enabled
+        let padding_y = if self.compact { px(3.) } else { px(8.) };
+        let padding_x = if self.compact { px(8.) } else { px(12.) };
+
         div()
             .id(id)
             .relative()
@@ -345,8 +499,8 @@ impl Combobox {
             .items_center()
             .justify_between()
             .w_full()
-            .px(px(12.))
-            .py(px(8.))
+            .px(padding_x)
+            .py(padding_y)
             .cursor(CursorStyle::PointingHand)
             .text_size(size.font_size())
             .rounded(px(BorderRadius::SM))
@@ -384,47 +538,101 @@ impl Render for Combobox {
         let is_open = self.is_open;
         let text_input = self.text_input.clone();
 
-        // Subscribe to TextInput events - don't sync on every render to avoid overwriting user input
+        // Subscribe to TextInput events if not already subscribed
         if let Some(text_input_entity) = &text_input {
-            // Only subscribe once, don't sync on every render
-            // The TextInput will emit events when user types, and we'll update our state
-            let _ = cx.subscribe_in(text_input_entity, window, |this: &mut Self, _input, event: &TextInputEvent, _window, cx| {
-                match event {
-                    TextInputEvent::Change(value) => {
-                        // Update our internal state from user input
-                        this.input_value = value.clone();
-                        // Always clear selected value when user modifies the text (including deleting)
-                        // This ensures that selecting an option and then editing/deleting the text
-                        // will clear the selection
-                        this.selected_value = None;
-                        this.is_user_typing = true; // Mark that user is actively typing
-                        // Auto-open dropdown when user starts typing
-                        if !this.is_open && !value.is_empty() {
-                            this.is_open = true;
-                        }
-                        // Close dropdown if text is completely deleted
-                        if value.is_empty() && this.is_open {
-                            this.is_open = false;
-                        }
-                        cx.emit(ComboboxEvent::InputChanged(value.clone()));
-                        cx.notify();
-                    }
-                    TextInputEvent::Focus => {
-                        // Auto-open dropdown when focused
-                        if !this.is_open && !this.disabled {
-                            this.is_open = true;
-                            // When focusing, don't set typing flag - show all options initially
-                            this.is_user_typing = false;
+            if self._subscriptions.is_empty() {
+                let sub = cx.subscribe_in(text_input_entity, window, |this, _input, event: &TextInputEvent, _window, cx| {
+                    match event {
+                        TextInputEvent::Change(value) => {
+                            // Check if this is a programmatic change by comparing with selected option
+                            let is_programmatic = this.selected_value.is_some() &&
+                                this.all_options().iter().any(|opt|
+                                    Some(&opt.value) == this.selected_value.as_ref() && &opt.label == value
+                                );
+
+                            // Skip processing if this is a programmatic change (from select_option)
+                            if is_programmatic {
+                                return;
+                            }
+
+                            // Update our internal state from user input
+                            this.input_value = value.clone();
+                            // Always clear selected value when user modifies the text (including deleting)
+                            // This ensures that selecting an option and then editing/deleting the text
+                            // will clear the selection
+                            this.selected_value = None;
+                            // If user is typing (non-empty value), enable filtering
+                            // If user clears the input, show all options
+                            this.is_user_typing = !value.is_empty();
+
+                            // Always keep dropdown open when user is typing (for filtering)
+                            if !this.is_open {
+                                this.is_open = true;
+                            }
+                            cx.emit(ComboboxEvent::InputChanged(value.clone()));
                             cx.notify();
                         }
+                        TextInputEvent::Focus => {
+                            // Auto-open dropdown when focused
+                            if !this.disabled {
+                                // Only reset typing flag if input is empty or matches a selected value
+                                // This allows filtering to work when user clicks back into input with typed text
+                                let should_reset = this.input_value.is_empty() ||
+                                   (this.selected_value.is_some() &&
+                                    this.all_options().iter().any(|opt| opt.label == this.input_value));
+
+                                if should_reset {
+                                    this.is_user_typing = false;
+                                }
+
+                                if !this.is_open {
+                                    this.is_open = true;
+                                }
+                                cx.notify();
+                            }
+                        }
+                        TextInputEvent::Submit(value) => {
+                            // When user presses Enter, check if input matches any option
+                            if !value.is_empty() {
+                                let all_options = this.all_options();
+
+                                // First, try exact match (case-insensitive)
+                                let exact_match = all_options.iter().find(|opt|
+                                    opt.label.eq_ignore_ascii_case(value) || opt.value.eq_ignore_ascii_case(value)
+                                );
+
+                                if let Some(matched_option) = exact_match {
+                                    // Found exact match, select it
+                                    this.select_option(matched_option.value.clone(), cx);
+
+                                    // Remove focus from the window to blur the input
+                                    _window.blur();
+                                } else {
+                                    // No exact match, check if there's only one filtered option
+                                    let filtered = all_options.iter().filter(|opt|
+                                        opt.label.to_lowercase().contains(&value.to_lowercase()) ||
+                                        opt.value.to_lowercase().contains(&value.to_lowercase())
+                                    ).collect::<Vec<_>>();
+
+                                    if filtered.len() == 1 {
+                                        // Only one match, select it
+                                        this.select_option(filtered[0].value.clone(), cx);
+
+                                        // Remove focus from the window to blur the input
+                                        _window.blur();
+                                    }
+                                    // If multiple matches or no matches, do nothing (keep dropdown open)
+                                }
+                            }
+                        }
+                        TextInputEvent::Blur => {
+                            // Close dropdown when losing focus (but allow clicking dropdown)
+                            // This is handled by clicking_menu flag
+                        }
                     }
-                    TextInputEvent::Blur => {
-                        // Close dropdown when losing focus (but allow clicking dropdown)
-                        // This is handled by clicking_menu flag
-                    }
-                    _ => {}
-                }
-            });
+                });
+                self._subscriptions.push(sub);
+            }
         }
 
         div()
@@ -440,6 +648,8 @@ impl Render for Combobox {
                     .id("combobox-container")
                     .relative()
                     .w_full()
+                    .min_w(px(200.)) // 设置最小宽度，避免输入时宽度变化
+                    .max_w(px(400.)) // 设置最大宽度
                     .child(
                         div()
                             .id("combobox-trigger")
