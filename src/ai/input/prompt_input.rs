@@ -148,7 +148,7 @@ impl PromptInput {
             Some(cx.new(|cx| {
                 ModelSelector::new_with_models_and_direction(cx, config.available_models.clone(), DropdownDirection::Up)
                     .size(config.size)
-                    .compact()
+                    // compact 模式已在 new_with_models_and_direction 中默认启用
             }))
         } else {
             None
@@ -441,7 +441,7 @@ impl Render for PromptInput {
             let selector = cx.new(|cx| {
                 ModelSelector::new_with_models_and_direction(cx, self.config.available_models.clone(), DropdownDirection::Up)
                     .size(self.config.size)
-                    .compact()
+                    // compact 模式已在 new_with_models_and_direction 中默认启用
             });
             
             // Subscribe to events

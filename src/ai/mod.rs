@@ -201,7 +201,7 @@ pub struct ModelInfo {
 
 impl ModelInfo {
     /// Get default models from llm-link crate
-    /// This function loads all available models from llm-link providers
+    /// This function loads all available models from llm-link providers dynamically
     pub fn default_models_from_llm_link() -> Vec<Self> {
         use llm_link::models::ModelsConfig;
         
@@ -210,21 +210,15 @@ impl ModelInfo {
         // Load models configuration from llm-link
         let models_config = ModelsConfig::load_with_fallback();
         
-        // All providers supported by llm-link
-        let providers = [
-            ("openai", "OpenAI"),
-            ("anthropic", "Anthropic"),
-            ("zhipu", "Zhipu"),
-            ("aliyun", "Aliyun"),
-            ("volcengine", "Volcengine"),
-            ("tencent", "Tencent"),
-            ("longcat", "Longcat"),
-            ("moonshot", "Moonshot"),
-        ];
+        // Get all providers dynamically from llm-link
+        let provider_ids = models_config.get_all_providers();
         
-        for (provider_id, provider_name) in providers.iter() {
+        for provider_id in provider_ids {
             // Get models for each provider from ModelsConfig
-            let provider_models = models_config.get_models_for_provider(provider_id);
+            let provider_models = models_config.get_models_for_provider(&provider_id);
+            
+            // Format provider name for display (capitalize first letter)
+            let provider_name = Self::format_provider_name(&provider_id);
             
             for model_info in provider_models {
                 // Convert llm-link ModelInfo to our ModelInfo
@@ -233,9 +227,9 @@ impl ModelInfo {
                     id: model_info.id.clone(),
                     name: model_info.name.clone(),
                     description: Some(model_info.description.clone()), // Wrap String in Some for Option<String>
-                    provider: provider_name.to_string(),
+                    provider: provider_name.clone(),
                     context_length: None, // llm-link doesn't provide context_length in ModelInfo
-                    capabilities: Self::infer_capabilities_from_provider(provider_id),
+                    capabilities: Self::infer_capabilities_from_provider(&provider_id),
                     pricing: None, // llm-link doesn't provide pricing info
                 };
                 
@@ -244,6 +238,31 @@ impl ModelInfo {
         }
         
         models
+    }
+    
+    /// Format provider ID to display name
+    /// Converts lowercase provider IDs (e.g., "openai") to formatted names (e.g., "OpenAI")
+    fn format_provider_name(provider_id: &str) -> String {
+        // Handle special cases for known providers
+        match provider_id {
+            "openai" => "OpenAI".to_string(),
+            "anthropic" => "Anthropic".to_string(),
+            "zhipu" => "Zhipu".to_string(),
+            "aliyun" => "Aliyun".to_string(),
+            "volcengine" => "Volcengine".to_string(),
+            "tencent" => "Tencent".to_string(),
+            "longcat" => "Longcat".to_string(),
+            "moonshot" => "Moonshot".to_string(),
+            "ollama" => "Ollama".to_string(),
+            _ => {
+                // Default: capitalize first letter
+                let mut chars = provider_id.chars();
+                match chars.next() {
+                    None => String::new(),
+                    Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
+                }
+            }
+        }
     }
     
     /// Infer capabilities from provider name
@@ -309,6 +328,59 @@ pub struct ProviderInfo {
     pub endpoint: Option<String>,
     /// Whether authentication is required
     pub requires_auth: bool,
+}
+
+impl ProviderInfo {
+    /// Get all providers from llm-link crate with their models
+    /// This function loads all available providers and models dynamically
+    pub fn all_from_llm_link() -> Vec<Self> {
+        use llm_link::models::ModelsConfig;
+        
+        let mut providers = Vec::new();
+        
+        // Load models configuration from llm-link
+        let models_config = ModelsConfig::load_with_fallback();
+        
+        // Get all providers dynamically from llm-link
+        let provider_ids = models_config.get_all_providers();
+        
+        for provider_id in provider_ids {
+            // Get models for this provider
+            let provider_models = models_config.get_models_for_provider(&provider_id);
+            
+            // Convert llm-link models to our ModelInfo
+            let models: Vec<ModelInfo> = provider_models
+                .into_iter()
+                .map(|model_info| {
+                    let provider_name = ModelInfo::format_provider_name(&provider_id);
+                    ModelInfo {
+                        id: model_info.id.clone(),
+                        name: model_info.name.clone(),
+                        description: Some(model_info.description.clone()),
+                        provider: provider_name.clone(),
+                        context_length: None,
+                        capabilities: ModelInfo::infer_capabilities_from_provider(&provider_id),
+                        pricing: None,
+                    }
+                })
+                .collect();
+            
+            // Format provider name for display
+            let provider_name = ModelInfo::format_provider_name(&provider_id);
+            
+            let provider_info = ProviderInfo {
+                id: provider_id.clone(),
+                name: provider_name,
+                models,
+                endpoint: None, // llm-link doesn't provide endpoint info in ModelsConfig
+                requires_auth: true, // Most providers require auth
+            };
+            
+            providers.push(provider_info);
+        }
+        
+        providers
+    }
 }
 
 /// Attachment information

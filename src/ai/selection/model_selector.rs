@@ -1,7 +1,7 @@
 use gpui::*;
 use gpui::prelude::FluentBuilder;
 
-use crate::{Select, SelectOption, SelectOptionGroup, SelectEvent, Icon, IconName, IconSize, ComponentSize, DropdownDirection, DropdownWidth};
+use crate::{Combobox, ComboboxEvent, SelectOption, SelectOptionGroup, Icon, IconName, IconSize, ComponentSize, DropdownDirection, DropdownWidth, DropdownAlignment};
 use super::super::{ModelInfo, ModelCapability, ProviderInfo};
 
 /// Events emitted by ModelSelector
@@ -44,6 +44,8 @@ pub struct ModelSelectorConfig {
     pub dropdown_direction: DropdownDirection,
     /// Dropdown width control
     pub dropdown_width: DropdownWidth,
+    /// Dropdown alignment
+    pub dropdown_alignment: DropdownAlignment,
 }
 
 impl Default for ModelSelectorConfig {
@@ -51,7 +53,7 @@ impl Default for ModelSelectorConfig {
         Self {
             group_by_provider: true,
             show_pricing: false,
-            show_descriptions: true,
+            show_descriptions: false, // 默认不显示描述，只显示模型名称
             show_capabilities: true,
             filter_capability: None,
             filter_provider: None,
@@ -60,6 +62,7 @@ impl Default for ModelSelectorConfig {
             max_width: None,
             dropdown_direction: DropdownDirection::Auto,
             dropdown_width: DropdownWidth::MaxWidth(px(400.0)), // 设置合理的最大宽度
+            dropdown_alignment: DropdownAlignment::Right, // 默认右对齐
         }
     }
 }
@@ -81,8 +84,8 @@ pub struct ModelSelector {
     selected_model: Option<String>,
     /// Configuration
     config: ModelSelectorConfig,
-    /// Internal select component
-    select: Entity<Select>,
+    /// Internal combobox component
+    combobox: Entity<Combobox>,
     /// Event subscriptions
     _subscriptions: Vec<Subscription>,
 }
@@ -104,6 +107,7 @@ impl ModelSelector {
     pub fn new_with_models_and_direction(cx: &mut Context<Self>, models: Vec<ModelInfo>, direction: DropdownDirection) -> Self {
         let mut config = ModelSelectorConfig::default();
         config.dropdown_direction = direction;
+        config.compact = true; // 默认启用紧凑模式，因为模型较多
         Self::new_with_models_and_config(cx, models, config)
     }
 
@@ -139,28 +143,34 @@ impl ModelSelector {
             }
         }
 
-        // Create select with proper grouping
-        let select = cx.new(|cx| {
-            let select_builder = Select::new(cx)
+        // Create combobox with proper grouping
+        let combobox = cx.new(|cx| {
+            let mut combobox_builder = Combobox::new(cx)
                 .size(ComponentSize::Medium)
                 .placeholder("Select a model...")
                 .dropdown_direction(config.dropdown_direction)
-                .dropdown_width(config.dropdown_width);
+                .dropdown_width(config.dropdown_width)
+                .dropdown_alignment(config.dropdown_alignment);
+            
+            // Enable compact mode for tighter spacing when there are many models
+            if config.compact {
+                combobox_builder = combobox_builder.compact();
+            }
 
             if config.group_by_provider && model_groups.len() > 1 {
                 // Use option groups for proper grouping
                 let groups = Self::create_option_groups(&model_groups, &config);
-                select_builder.option_groups(groups)
+                combobox_builder.option_groups(groups)
             } else {
                 // Use flat options
                 let options = Self::create_flat_options(&model_groups, &config);
-                select_builder.options(options)
+                combobox_builder.options(options)
             }
         });
 
         let _subscriptions = vec![
-            cx.subscribe(&select, |this, _select, event: &SelectEvent, cx| {
-                this.handle_select_event(event, cx);
+            cx.subscribe(&combobox, |this, _combobox, event: &ComboboxEvent, cx| {
+                this.handle_combobox_event(event, cx);
             }),
         ];
 
@@ -169,7 +179,7 @@ impl ModelSelector {
             model_groups,
             selected_model: None,
             config,
-            select,
+            combobox,
             _subscriptions,
         }
     }
@@ -247,6 +257,8 @@ impl ModelSelector {
         self.config.size = ComponentSize::Small;
         self.config.show_descriptions = false;
         self.config.show_capabilities = false;
+        // Note: compact mode will be applied to the Select component
+        // when it's created, allowing tighter spacing in the dropdown
         self
     }
 
@@ -288,6 +300,24 @@ impl ModelSelector {
         self
     }
 
+    /// Set dropdown alignment
+    pub fn dropdown_alignment(mut self, alignment: DropdownAlignment) -> Self {
+        self.config.dropdown_alignment = alignment;
+        self
+    }
+
+    /// Align dropdown to right (convenience method)
+    pub fn dropdown_right(mut self) -> Self {
+        self.config.dropdown_alignment = DropdownAlignment::Right;
+        self
+    }
+
+    /// Align dropdown to left (convenience method)
+    pub fn dropdown_left(mut self) -> Self {
+        self.config.dropdown_alignment = DropdownAlignment::Left;
+        self
+    }
+
     /// Set maximum dropdown width (convenience method)
     pub fn dropdown_max_width(mut self, width: f32) -> Self {
         self.config.dropdown_width = DropdownWidth::MaxWidth(px(width));
@@ -318,10 +348,9 @@ impl ModelSelector {
         let model_id = model_id.into();
         self.selected_model = Some(model_id.clone());
         
-        // Update internal select component
-        self.select.update(cx, |_select, _cx| {
-            // Note: This would need to be implemented when Select component supports set_value
-            // select.set_value(&model_id, cx);
+        // Update internal combobox component
+        self.combobox.update(cx, |combobox, _cx| {
+            combobox.set_value(model_id.clone());
         });
         
         cx.emit(ModelSelectorEvent::ModelChanged(model_id));
@@ -439,44 +468,9 @@ impl ModelSelector {
             .collect()
     }
 
-    fn format_model_label_static(model: &ModelInfo, config: &ModelSelectorConfig) -> String {
-        if config.compact {
-            model.name.clone()
-        } else {
-            let mut parts = vec![model.name.clone()];
-
-            // 添加描述（限制长度以适应宽度）
-            if config.show_descriptions {
-                if let Some(description) = &model.description {
-                    // 根据下拉宽度设置限制长度
-                    let max_desc_len = match config.dropdown_width {
-                        DropdownWidth::Fixed(_) => 50,  // 固定宽度时使用较短的描述
-                        DropdownWidth::MaxWidth(_) => 60, // 最大宽度时使用中等长度
-                        DropdownWidth::MinWidth(_) => 80, // 最小宽度时使用较长的描述
-                        DropdownWidth::MatchTrigger => 70, // 默认情况
-                    };
-
-                    let wrapped_desc = if description.len() > max_desc_len {
-                        format!("{}...", &description[..max_desc_len.min(description.len())])
-                    } else {
-                        description.clone()
-                    };
-                    parts.push(wrapped_desc);
-                }
-            }
-
-            // 添加价格信息
-            if config.show_pricing {
-                if let Some(pricing) = &model.pricing {
-                    parts.push(format!(
-                        "${:.3}/1K tokens",
-                        pricing.input_price
-                    ));
-                }
-            }
-
-            parts.join("\n")
-        }
+    fn format_model_label_static(model: &ModelInfo, _config: &ModelSelectorConfig) -> String {
+        // 只显示模型名称，不显示描述
+        model.name.clone()
     }
 
     #[allow(dead_code)]
@@ -515,9 +509,9 @@ impl ModelSelector {
         }
     }
 
-    fn handle_select_event(&mut self, event: &SelectEvent, cx: &mut Context<Self>) {
+    fn handle_combobox_event(&mut self, event: &ComboboxEvent, cx: &mut Context<Self>) {
         match event {
-            SelectEvent::Changed(value) => {
+            ComboboxEvent::Changed(value) => {
                 if value.is_empty() {
                     // 空值表示清除选择
                     self.selected_model = None;
@@ -528,7 +522,10 @@ impl ModelSelector {
                     cx.emit(ModelSelectorEvent::ModelChanged(value.clone()));
                 }
             }
-            _ => {}
+            ComboboxEvent::InputChanged(_value) => {
+                // 用户输入变化时，搜索功能会自动过滤选项
+                // 这里可以添加额外的处理逻辑如果需要
+            }
         }
     }
 }
@@ -592,8 +589,9 @@ impl ModelSelector {
             .child(
                 div()
                     .flex_1()
-                    .min_w(px(0.)) // 允许收缩
-                    .child(self.select.clone())
+                    .min_w(px(200.)) // 设置最小宽度，避免输入时宽度变化
+                    .max_w(px(400.)) // 设置最大宽度
+                    .child(self.combobox.clone())
             )
             .when(!self.config.compact, |this| {
                 this.child(self.render_refresh_button())
@@ -756,9 +754,11 @@ impl ModelSelector {
     pub fn clear_selection(&mut self, cx: &mut Context<Self>) {
         self.selected_model = None;
 
-        // Also clear the underlying Select component
-        self.select.update(cx, |select, cx| {
-            select.clear_selection(cx);
+        // Also clear the underlying Combobox component
+        self.combobox.update(cx, |combobox, _cx| {
+            // Clear by setting empty values
+            combobox.set_value("");
+            combobox.set_input_value("");
         });
 
         cx.emit(ModelSelectorEvent::ModelChanged("".to_string()));

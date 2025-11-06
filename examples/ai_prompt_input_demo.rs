@@ -9,50 +9,57 @@ struct PromptInputDemo {
 
 impl PromptInputDemo {
     fn new(_window: &mut Window, cx: &mut Context<Self>) -> Self {
-        // Create sample models
-        let models = vec![
-            ModelInfo {
-                id: "gpt-4".to_string(),
-                name: "GPT-4".to_string(),
-                description: Some("Most capable GPT model".to_string()),
-                provider: "OpenAI".to_string(),
-                context_length: Some(8192),
-                capabilities: vec![
-                    ModelCapability::TextGeneration,
-                    ModelCapability::CodeGeneration,
-                    ModelCapability::FunctionCalling,
-                ],
-                pricing: Some(PricingInfo {
-                    input_price: 0.03,
-                    output_price: 0.06,
-                    currency: "USD".to_string(),
-                }),
-            },
-            ModelInfo {
-                id: "claude-3".to_string(),
-                name: "Claude 3 Sonnet".to_string(),
-                description: Some("Anthropic's latest model".to_string()),
-                provider: "Anthropic".to_string(),
-                context_length: Some(200000),
-                capabilities: vec![
-                    ModelCapability::TextGeneration,
-                    ModelCapability::CodeGeneration,
-                    ModelCapability::ImageAnalysis,
-                ],
-                pricing: Some(PricingInfo {
-                    input_price: 0.015,
-                    output_price: 0.075,
-                    currency: "USD".to_string(),
-                }),
-            },
-        ];
+        // Get models dynamically from llm-link
+        let models = ModelInfo::default_models_from_llm_link();
+        
+        // If no models are available, fallback to sample models
+        let models = if models.is_empty() {
+            vec![
+                ModelInfo {
+                    id: "gpt-4".to_string(),
+                    name: "GPT-4".to_string(),
+                    description: Some("Most capable GPT model".to_string()),
+                    provider: "OpenAI".to_string(),
+                    context_length: Some(8192),
+                    capabilities: vec![
+                        ModelCapability::TextGeneration,
+                        ModelCapability::CodeGeneration,
+                        ModelCapability::FunctionCalling,
+                    ],
+                    pricing: Some(PricingInfo {
+                        input_price: 0.03,
+                        output_price: 0.06,
+                        currency: "USD".to_string(),
+                    }),
+                },
+                ModelInfo {
+                    id: "claude-3".to_string(),
+                    name: "Claude 3 Sonnet".to_string(),
+                    description: Some("Anthropic's latest model".to_string()),
+                    provider: "Anthropic".to_string(),
+                    context_length: Some(200000),
+                    capabilities: vec![
+                        ModelCapability::TextGeneration,
+                        ModelCapability::CodeGeneration,
+                        ModelCapability::ImageAnalysis,
+                    ],
+                    pricing: Some(PricingInfo {
+                        input_price: 0.015,
+                        output_price: 0.075,
+                        currency: "USD".to_string(),
+                    }),
+                },
+            ]
+        } else {
+            models
+        };
 
         // Create prompt input with models
         let prompt_input = cx.new(|cx| {
             PromptInput::new(cx)
                 .placeholder("Ask me anything...")
-                .with_models(models)
-                .default_model("gpt-4")
+                .with_models(models.clone())
+                .default_model(models.first().map(|m| m.id.clone()).unwrap_or_default())
                 .enable_attachments(true)
                 .variant(fluix::ai::input::PromptInputVariant::Embedded)
                 .height(80.0, 300.0)
