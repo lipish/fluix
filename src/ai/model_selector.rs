@@ -1,8 +1,12 @@
+//! # Selection Components
+//!
+//! Components for selecting AI models, providers, and configuration options.
+
 use gpui::*;
 use gpui::prelude::FluentBuilder;
 
 use crate::{Combobox, ComboboxEvent, SelectOption, SelectOptionGroup, Icon, IconName, IconSize, ComponentSize, DropdownDirection, DropdownWidth, DropdownAlignment};
-use super::super::{ModelInfo, ModelCapability, ProviderInfo};
+use super::{ModelInfo, ModelCapability, ProviderInfo};
 
 /// Events emitted by ModelSelector
 #[derive(Clone, Debug)]
@@ -46,6 +50,12 @@ pub struct ModelSelectorConfig {
     pub dropdown_width: DropdownWidth,
     /// Dropdown alignment
     pub dropdown_alignment: DropdownAlignment,
+    /// Show only popular models (limit to 5)
+    pub show_only_popular: bool,
+    /// Recently used models (shown at top)
+    pub recently_used: Vec<String>,
+    /// Remove borders and shadows for clean look
+    pub clean_style: bool,
 }
 
 impl Default for ModelSelectorConfig {
@@ -63,6 +73,9 @@ impl Default for ModelSelectorConfig {
             dropdown_direction: DropdownDirection::Auto,
             dropdown_width: DropdownWidth::MaxWidth(px(400.0)), // 设置合理的最大宽度
             dropdown_alignment: DropdownAlignment::Right, // 默认右对齐
+            show_only_popular: false, // 默认显示所有模型（changed from true）
+            recently_used: Vec::new(),
+            clean_style: true, // 默认使用清洁样式（无边框无阴影）
         }
     }
 }
@@ -73,6 +86,15 @@ pub struct ModelGroup {
     pub provider: String,
     pub models: Vec<ModelInfo>,
 }
+
+/// Popular AI models (top 5 most commonly used)
+const POPULAR_MODELS: &[&str] = &[
+    "gpt-4o",
+    "gpt-4o-mini",
+    "claude-3-5-sonnet-20241022",
+    "gemini-1.5-pro",
+    "llama-3.1-405b-instruct",
+];
 
 /// Enhanced model selector component for AI applications
 pub struct ModelSelector {
@@ -111,6 +133,11 @@ impl ModelSelector {
         Self::new_with_models_and_config(cx, models, config)
     }
 
+    /// Create a new ModelSelector with custom config
+    pub fn new_with_config(cx: &mut Context<Self>, models: Vec<ModelInfo>, config: ModelSelectorConfig) -> Self {
+        Self::new_with_models_and_config(cx, models, config)
+    }
+
     /// Create a new ModelSelector with models and config
     fn new_with_models_and_config(cx: &mut Context<Self>, models: Vec<ModelInfo>, config: ModelSelectorConfig) -> Self {
 
@@ -119,8 +146,16 @@ impl ModelSelector {
         if config.group_by_provider {
             let mut groups: std::collections::HashMap<String, Vec<ModelInfo>> =
                 std::collections::HashMap::new();
+            // Track seen model IDs to prevent duplicates
+            let mut seen_model_ids = std::collections::HashSet::new();
 
             for model in &models {
+                // Skip if we've already seen this model ID
+                if seen_model_ids.contains(&model.id) {
+                    continue;
+                }
+                seen_model_ids.insert(model.id.clone());
+                
                 groups
                     .entry(model.provider.clone())
                     .or_insert_with(Vec::new)
@@ -136,10 +171,27 @@ impl ModelSelector {
             model_groups.sort_by(|a, b| a.provider.cmp(&b.provider));
         } else {
             if !models.is_empty() {
-                model_groups = vec![ModelGroup {
-                    provider: "All Models".to_string(),
-                    models: models.clone(),
-                }];
+                // Deduplicate models by ID before creating single group
+                let mut seen_model_ids = std::collections::HashSet::new();
+                let unique_models: Vec<ModelInfo> = models
+                    .iter()
+                    .filter(|model| {
+                        if seen_model_ids.contains(&model.id) {
+                            false
+                        } else {
+                            seen_model_ids.insert(model.id.clone());
+                            true
+                        }
+                    })
+                    .cloned()
+                    .collect();
+
+                if !unique_models.is_empty() {
+                    model_groups = vec![ModelGroup {
+                        provider: "All Models".to_string(),
+                        models: unique_models,
+                    }];
+                }
             }
         }
 
@@ -151,10 +203,15 @@ impl ModelSelector {
                 .dropdown_direction(config.dropdown_direction)
                 .dropdown_width(config.dropdown_width)
                 .dropdown_alignment(config.dropdown_alignment);
-            
+
             // Enable compact mode for tighter spacing when there are many models
             if config.compact {
                 combobox_builder = combobox_builder.compact();
+            }
+
+            // Apply clean styling (no borders, no shadows, transparent background)
+            if config.clean_style {
+                combobox_builder = combobox_builder.no_border().no_shadow().transparent_background();
             }
 
             if config.group_by_provider && model_groups.len() > 1 {
@@ -262,6 +319,38 @@ impl ModelSelector {
         self
     }
 
+    /// Show only popular models (default: true)
+    pub fn show_only_popular(mut self, show: bool) -> Self {
+        self.config.show_only_popular = show;
+        self.update_model_groups();
+        self
+    }
+
+    /// Show all available models (disable popular filter)
+    pub fn show_all_models(mut self) -> Self {
+        self.config.show_only_popular = false;
+        self.update_model_groups();
+        self
+    }
+
+    /// Set recently used models
+    pub fn with_recently_used(mut self, recently_used: Vec<String>) -> Self {
+        self.config.recently_used = recently_used;
+        self
+    }
+
+    /// Enable clean style (no borders, no shadows)
+    pub fn clean_style(mut self, clean: bool) -> Self {
+        self.config.clean_style = clean;
+        self
+    }
+
+    /// Use default style (with borders and shadows)
+    pub fn default_style(mut self) -> Self {
+        self.config.clean_style = false;
+        self
+    }
+
     /// Set maximum width
     pub fn max_width(mut self, width: f32) -> Self {
         self.config.max_width = Some(width);
@@ -347,14 +436,39 @@ impl ModelSelector {
     pub fn set_selected_model(&mut self, model_id: impl Into<String>, cx: &mut Context<Self>) {
         let model_id = model_id.into();
         self.selected_model = Some(model_id.clone());
-        
+
+        // Add to recently used models
+        self.add_to_recently_used(model_id.clone());
+
         // Update internal combobox component
         self.combobox.update(cx, |combobox, _cx| {
             combobox.set_value(model_id.clone());
         });
-        
+
         cx.emit(ModelSelectorEvent::ModelChanged(model_id));
         cx.notify();
+    }
+
+    /// Add model to recently used list
+    fn add_to_recently_used(&mut self, model_id: String) {
+        // Remove if already exists
+        self.config.recently_used.retain(|id| id != &model_id);
+
+        // Add to front
+        self.config.recently_used.insert(0, model_id);
+
+        // Keep only last 3 recently used
+        self.config.recently_used.truncate(3);
+    }
+
+    /// Set recently used models
+    pub fn set_recently_used(&mut self, recently_used: Vec<String>) {
+        self.config.recently_used = recently_used;
+    }
+
+    /// Get recently used models
+    pub fn get_recently_used(&self) -> &[String] {
+        &self.config.recently_used
     }
 
     /// Get available models
@@ -381,9 +495,17 @@ impl ModelSelector {
         if self.config.group_by_provider {
             let mut groups: std::collections::HashMap<String, Vec<ModelInfo>> = 
                 std::collections::HashMap::new();
+            // Track seen model IDs to prevent duplicates
+            let mut seen_model_ids = std::collections::HashSet::new();
 
             for model in &self.models {
                 if self.matches_filters(model) {
+                    // Skip if we've already seen this model ID
+                    if seen_model_ids.contains(&model.id) {
+                        continue;
+                    }
+                    seen_model_ids.insert(model.id.clone());
+                    
                     groups
                         .entry(model.provider.clone())
                         .or_insert_with(Vec::new)
@@ -400,9 +522,20 @@ impl ModelSelector {
             self.model_groups.sort_by(|a, b| a.provider.cmp(&b.provider));
         } else {
             // Single group with all models
+            // Deduplicate models by ID
+            let mut seen_model_ids = std::collections::HashSet::new();
             let filtered_models: Vec<ModelInfo> = self.models
                 .iter()
-                .filter(|model| self.matches_filters(model))
+                .filter(|model| {
+                    if !self.matches_filters(model) {
+                        return false;
+                    }
+                    if seen_model_ids.contains(&model.id) {
+                        return false;
+                    }
+                    seen_model_ids.insert(model.id.clone());
+                    true
+                })
                 .cloned()
                 .collect();
 
@@ -439,10 +572,30 @@ impl ModelSelector {
     }
 
     fn create_option_groups(model_groups: &[ModelGroup], config: &ModelSelectorConfig) -> Vec<SelectOptionGroup> {
-        let groups: Vec<SelectOptionGroup> = model_groups
+        let filtered_groups = if config.show_only_popular {
+            Self::filter_popular_models(model_groups, config)
+        } else {
+            model_groups.to_vec()
+        };
+
+        let groups: Vec<SelectOptionGroup> = filtered_groups
             .iter()
             .map(|group| {
-                let options = group.models
+                // Deduplicate models within each group by model ID
+                let mut seen_ids = std::collections::HashSet::new();
+                let unique_models: Vec<&ModelInfo> = group.models
+                    .iter()
+                    .filter(|model| {
+                        if seen_ids.contains(&model.id) {
+                            false // Skip duplicate
+                        } else {
+                            seen_ids.insert(model.id.clone());
+                            true // Keep first occurrence
+                        }
+                    })
+                    .collect();
+
+                let options = unique_models
                     .iter()
                     .map(|model| {
                         let label = Self::format_model_label_static(model, config);
@@ -458,9 +611,59 @@ impl ModelSelector {
     }
 
     fn create_flat_options(model_groups: &[ModelGroup], config: &ModelSelectorConfig) -> Vec<SelectOption> {
-        model_groups
+        let filtered_groups = if config.show_only_popular {
+            Self::filter_popular_models(model_groups, config)
+        } else {
+            model_groups.to_vec()
+        };
+
+        // Collect all models and deduplicate by model ID
+        let mut all_models: Vec<&ModelInfo> = filtered_groups
             .iter()
             .flat_map(|group| &group.models)
+            .collect();
+
+        // Remove duplicates by model ID (keep first occurrence)
+        let mut seen_ids = std::collections::HashSet::new();
+        all_models.retain(|model| {
+            if seen_ids.contains(&model.id) {
+                false // Skip duplicate
+            } else {
+                seen_ids.insert(model.id.clone());
+                true // Keep first occurrence
+            }
+        });
+
+        // Sort models: recently used first, then popular, then alphabetical
+        all_models.sort_by(|a, b| {
+            let a_recently_used = config.recently_used.contains(&a.id);
+            let b_recently_used = config.recently_used.contains(&b.id);
+
+            match (a_recently_used, b_recently_used) {
+                (true, false) => std::cmp::Ordering::Less,
+                (false, true) => std::cmp::Ordering::Greater,
+                (true, true) => {
+                    // Both recently used, sort by position in recently_used list
+                    let a_pos = config.recently_used.iter().position(|id| id == &a.id).unwrap_or(usize::MAX);
+                    let b_pos = config.recently_used.iter().position(|id| id == &b.id).unwrap_or(usize::MAX);
+                    a_pos.cmp(&b_pos)
+                }
+                (false, false) => {
+                    // Neither recently used, sort by popularity then name
+                    let a_popular = POPULAR_MODELS.contains(&a.id.as_str());
+                    let b_popular = POPULAR_MODELS.contains(&b.id.as_str());
+
+                    match (a_popular, b_popular) {
+                        (true, false) => std::cmp::Ordering::Less,
+                        (false, true) => std::cmp::Ordering::Greater,
+                        _ => a.name.cmp(&b.name),
+                    }
+                }
+            }
+        });
+
+        all_models
+            .iter()
             .map(|model| {
                 let label = Self::format_model_label_static(model, config);
                 SelectOption::new(&model.id, &label)
@@ -473,14 +676,59 @@ impl ModelSelector {
         model.name.clone()
     }
 
+    /// Filter models to show only popular ones and recently used
+    fn filter_popular_models(model_groups: &[ModelGroup], config: &ModelSelectorConfig) -> Vec<ModelGroup> {
+        let mut filtered_groups = Vec::new();
+
+        for group in model_groups {
+            let mut filtered_models = Vec::new();
+
+            // Add recently used models first
+            for recent_id in &config.recently_used {
+                if let Some(model) = group.models.iter().find(|m| &m.id == recent_id) {
+                    filtered_models.push(model.clone());
+                }
+            }
+
+            // Add popular models that aren't already in recently used
+            for model in &group.models {
+                if POPULAR_MODELS.contains(&model.id.as_str()) &&
+                   !config.recently_used.contains(&model.id) &&
+                   !filtered_models.iter().any(|m| m.id == model.id) {
+                    filtered_models.push(model.clone());
+                }
+            }
+
+            // Limit to 5 total models per group
+            filtered_models.truncate(5);
+
+            if !filtered_models.is_empty() {
+                filtered_groups.push(ModelGroup {
+                    provider: group.provider.clone(),
+                    models: filtered_models,
+                });
+            }
+        }
+
+        filtered_groups
+    }
+
     #[allow(dead_code)]
     fn create_select_options(&self) -> Vec<SelectOption> {
         Self::create_flat_options(&self.model_groups, &self.config)
     }
 
     fn update_select_options(&mut self) {
-        // This method is kept for compatibility but doesn't do anything
-        // since we can't update the select component at runtime
+        // Note: Since Combobox doesn't have public methods to update options after creation,
+        // we would need to recreate the combobox. However, this is complex because we need
+        // a Context to create new entities. For now, this is a limitation.
+        //
+        // The proper solution would be to add public methods to Combobox like:
+        // - set_options(&mut self, options: Vec<SelectOption>)
+        // - set_option_groups(&mut self, groups: Vec<SelectOptionGroup>)
+        //
+        // For now, the options are set correctly during initial creation when using
+        // the builder pattern methods.
     }
 
     #[allow(dead_code)]
@@ -548,9 +796,6 @@ impl Render for ModelSelector {
                 this.child(self.render_header())
             })
             .child(self.render_selector(cx))
-            .when(self.config.show_capabilities && !self.config.compact, |this| {
-                this.child(self.render_capability_filter())
-            })
             .when(self.selected_model.is_some() && !self.config.compact, |this| {
                 this.child(self.render_model_details())
             })
@@ -593,9 +838,6 @@ impl ModelSelector {
                     .max_w(px(400.)) // 设置最大宽度
                     .child(self.combobox.clone())
             )
-            .when(!self.config.compact, |this| {
-                this.child(self.render_refresh_button())
-            })
     }
 
     fn render_refresh_button(&self) -> impl IntoElement {
@@ -663,15 +905,24 @@ impl ModelSelector {
     fn render_model_details(&self) -> impl IntoElement {
         if let Some(model_id) = &self.selected_model {
             if let Some(model) = self.get_model(model_id) {
-                return div()
+                let mut details = div()
                     .flex()
                     .flex_col()
                     .gap_2()
-                    .p_3()
-                    .bg(rgb(0xF9FAFB))
-                    .rounded_lg()
-                    .border_1()
-                    .border_color(rgb(0xE5E7EB))
+                    .p_3();
+
+                // Apply styling based on clean_style setting
+                if self.config.clean_style {
+                    details = details.bg(rgba(0x00000000)); // Transparent background
+                } else {
+                    details = details
+                        .bg(rgb(0xF9FAFB))
+                        .rounded_lg()
+                        .border_1()
+                        .border_color(rgb(0xE5E7EB));
+                }
+
+                return details
                     .child(
                         div()
                             .flex()

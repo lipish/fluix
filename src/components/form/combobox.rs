@@ -78,6 +78,8 @@ pub struct Combobox {
     show_border: bool,
     /// Whether to show shadow
     show_shadow: bool,
+    /// Whether to use transparent background
+    transparent_background: bool,
     /// Flag to prevent closing when clicking inside menu
     clicking_menu: bool,
     /// Internal text input component
@@ -86,6 +88,8 @@ pub struct Combobox {
     is_user_typing: bool,
     /// Whether to use compact spacing for dropdown items
     compact: bool,
+    /// Calculated width based on input text (for dynamic sizing)
+    calculated_width: Option<f32>,
     /// Event subscriptions
     _subscriptions: Vec<Subscription>,
 }
@@ -99,6 +103,7 @@ impl Combobox {
                 .placeholder(placeholder.clone())
                 .no_border()
                 .transparent()
+                .right_padding(2.0) // Further reduced right padding for tighter spacing with icon
         });
 
         Self {
@@ -115,10 +120,12 @@ impl Combobox {
             dropdown_width: DropdownWidth::MatchTrigger,
             show_border: true,
             show_shadow: true,
+            transparent_background: false,
             clicking_menu: false,
             text_input: Some(text_input),
             is_user_typing: false,
             compact: false,
+            calculated_width: None,
             _subscriptions: Vec::new(),
         }
     }
@@ -225,6 +232,12 @@ impl Combobox {
         self
     }
 
+    /// Use transparent background (convenience method)
+    pub fn transparent_background(mut self) -> Self {
+        self.transparent_background = true;
+        self
+    }
+
     /// Filter options based on input value
     /// Only filters when user is actively typing, not when dropdown is opened after selection
     fn filtered_options(&self) -> Vec<SelectOption> {
@@ -309,11 +322,12 @@ impl Combobox {
     fn toggle_dropdown(&mut self) {
         if !self.disabled {
             self.is_open = !self.is_open;
-            // When opening dropdown via arrow click, always reset typing flag
-            // to show all options. User needs to actively type to trigger filtering.
-            if self.is_open {
+            // When opening dropdown via arrow click, only reset typing flag if input is empty
+            // If input has value, preserve typing state to maintain filtering
+            if self.is_open && self.input_value.is_empty() {
                 self.is_user_typing = false;
             }
+            // If input has value, keep is_user_typing as is to preserve filtering state
         }
     }
 
@@ -335,7 +349,9 @@ impl Combobox {
         if let Some(option) = all_options.iter().find(|opt| opt.value == value) {
             self.selected_value = Some(value.clone());
             self.input_value = option.label.clone();
-            // Reset typing flag after selection - this ensures when dropdown reopens, all options are shown
+            // Reset typing flag after selection - when user selects an option, clear typing state
+            // This ensures when dropdown reopens, all options are shown (not filtered)
+            // But if user then modifies the text, is_user_typing will be set to true again
             self.is_user_typing = false;
             // Close dropdown after selection - user can reopen to select another option
             self.is_open = false;
@@ -344,6 +360,14 @@ impl Combobox {
             if let Some(text_input) = &self.text_input {
                 text_input.update(cx, |input, cx| {
                     input.set_value(option.label.clone(), cx);
+                });
+            }
+
+            // Recalculate width after selection to match selected option label
+            // This ensures width is correct after selection
+            if let Some(text_input) = &self.text_input {
+                text_input.update(cx, |_input, _cx| {
+                    // Width will be recalculated in next render
                 });
             }
 
@@ -360,6 +384,8 @@ impl Combobox {
         let mut menu = div()
             .occlude()  // Ensure popup content is above other content
             .id("combobox-popup")
+            .flex()
+            .flex_col()
             .map(|this| match self.dropdown_width {
                 DropdownWidth::MatchTrigger => this,
                 DropdownWidth::Fixed(width) => this.w(width),
@@ -371,13 +397,12 @@ impl Combobox {
             })
             .max_h(px(300.))
             .overflow_y_scroll()
+            .overflow_x_hidden()
             // Only round bottom corners when connected to input
             .rounded_bl(px(BorderRadius::LG))
             .rounded_br(px(BorderRadius::LG))
             .border_1()
             .border_color(theme.colors.border)
-            // Remove top border to connect seamlessly with input
-            .border_t_0()
             .bg(theme.colors.background)
             .when(self.show_shadow, |this| {
                 this.shadow(vec![
@@ -461,9 +486,52 @@ impl Combobox {
                 }
             })
             .map(|this| match self.dropdown_alignment {
-                DropdownAlignment::Left => this.left_0(),
-                DropdownAlignment::Right => this.right_0(),
-                DropdownAlignment::Center => this.left_0().right_0(),
+                DropdownAlignment::Left => {
+                    // Align to input text left edge (input container starts at left_0)
+                    this.left_0()
+                }
+                DropdownAlignment::Right => {
+                    // Align dropdown right edge to input text right edge
+                    // Use calculated width (should always be set after render calculates it)
+                    // If somehow None, use a reasonable default based on placeholder length
+                    let input_width = self.calculated_width.unwrap_or_else(|| {
+                        // Fallback: estimate width based on placeholder length
+                        // Average character width is approximately 8px for 14px font
+                        let estimated_text_width = self.placeholder.len() as f32 * 8.0;
+                        (estimated_text_width + 24.0 + 22.0).max(60.0)
+                    });
+                    match self.dropdown_width {
+                        DropdownWidth::MatchTrigger => {
+                            // Match input width and align right edge
+                            this.left_0().w(px(input_width))
+                        }
+                        DropdownWidth::Fixed(width) => {
+                            // Position dropdown so its right edge aligns with input right edge
+                            // Calculate left offset: left = input_width - width
+                            // But if width > input_width, we can't align right edge, so we'll align left edge instead
+                            let input_width_px = px(input_width);
+                            if width <= input_width_px {
+                                let left_offset = input_width_px - width;
+                                this.left(left_offset).w(width)
+                            } else {
+                                // If dropdown is wider than input, align left edge to input left edge
+                                this.left_0()
+                            }
+                        }
+                        _ => {
+                            // For MinWidth/MaxWidth, align left edge to input left edge
+                            // Right edge alignment for dynamic widths is complex
+                            this.left_0()
+                        }
+                    }
+                }
+                DropdownAlignment::Center => {
+                    // Center align relative to input text
+                    let input_width = self.calculated_width.unwrap_or(120.0);
+                    // For center alignment, we'll align left edge for now
+                    // Full center alignment would require knowing dropdown width
+                    this.left_0()
+                }
             })
             .occlude()  // Ensure dropdown is above other content
             .on_mouse_down(MouseButton::Left, cx.listener(|this, _event: &MouseDownEvent, _window, _cx| {
@@ -538,6 +606,44 @@ impl Render for Combobox {
         let is_open = self.is_open;
         let text_input = self.text_input.clone();
 
+        // Always recalculate width to ensure it's accurate
+        // This handles cases where input_value changes but calculated_width hasn't been updated
+        let text_to_measure = if self.input_value.is_empty() {
+            &self.placeholder
+        } else {
+            &self.input_value
+        };
+        
+        // Measure text width using TextRun API
+        let font = gpui::Font {
+            family: ".SystemUIFont".into(),
+            features: Default::default(),
+            weight: Default::default(),
+            style: Default::default(),
+            fallbacks: None,
+        };
+        let font_size = px(14.);
+        let text_runs = vec![gpui::TextRun {
+            len: text_to_measure.len(),
+            font: font.clone(),
+            color: rgb(0x333333).into(),
+            background_color: None,
+            underline: None,
+            strikethrough: None,
+        }];
+        
+        let shaped_line = window.text_system().shape_line(
+            text_to_measure.into(),
+            font_size,
+            &text_runs,
+            None,
+        );
+        // Add padding (left: 12px, right: 2px reduced) + icon width (~20px) + gap (1px for icon padding - 4px negative margin)
+        let min_width = px(60.);
+        let calculated_width = shaped_line.width + px(14.) + px(17.); // Left padding 12px + right padding 2px = 14px, icon + 1px padding - 4px margin = 17px
+        // Always update calculated_width to ensure it matches current input
+        self.calculated_width = Some(calculated_width.max(min_width).into());
+
         // Subscribe to TextInput events if not already subscribed
         if let Some(text_input_entity) = &text_input {
             if self._subscriptions.is_empty() {
@@ -561,9 +667,46 @@ impl Render for Combobox {
                             // This ensures that selecting an option and then editing/deleting the text
                             // will clear the selection
                             this.selected_value = None;
-                            // If user is typing (non-empty value), enable filtering
-                            // If user clears the input, show all options
-                            this.is_user_typing = !value.is_empty();
+                            // Always set typing flag to true when user is typing (even if value is empty after deletion)
+                            // This ensures filtering works correctly when user continues typing after selection
+                            // Only set to false when input is completely cleared and user hasn't typed anything
+                            this.is_user_typing = true; // Always true when user is actively modifying input
+
+                            // Calculate text width for dynamic sizing
+                            let text_to_measure = if value.is_empty() {
+                                &this.placeholder
+                            } else {
+                                &value
+                            };
+                            
+                            // Measure text width using TextRun API
+                            let font = gpui::Font {
+                                family: ".SystemUIFont".into(),
+                                features: Default::default(),
+                                weight: Default::default(),
+                                style: Default::default(),
+                                fallbacks: None,
+                            };
+                            let font_size = px(14.);
+                            let text_runs = vec![gpui::TextRun {
+                                len: text_to_measure.len(),
+                                font: font.clone(),
+                                color: rgb(0x333333).into(),
+                                background_color: None,
+                                underline: None,
+                                strikethrough: None,
+                            }];
+                            
+                            let shaped_line = _window.text_system().shape_line(
+                                text_to_measure.into(),
+                                font_size,
+                                &text_runs,
+                                None,
+                            );
+                            // Add padding (left: 12px, right: 2px reduced) + icon width (~20px) + gap (1px for icon padding - 4px negative margin)
+                            let min_width = px(60.);
+                            let calculated_width = shaped_line.width + px(14.) + px(17.); // Left padding 12px + right padding 2px = 14px, icon + 1px padding - 4px margin = 17px
+                            this.calculated_width = Some(calculated_width.max(min_width).into());
 
                             // Always keep dropdown open when user is typing (for filtering)
                             if !this.is_open {
@@ -575,15 +718,14 @@ impl Render for Combobox {
                         TextInputEvent::Focus => {
                             // Auto-open dropdown when focused
                             if !this.disabled {
-                                // Only reset typing flag if input is empty or matches a selected value
-                                // This allows filtering to work when user clicks back into input with typed text
-                                let should_reset = this.input_value.is_empty() ||
-                                   (this.selected_value.is_some() &&
-                                    this.all_options().iter().any(|opt| opt.label == this.input_value));
-
-                                if should_reset {
+                                // Don't reset typing flag on focus - preserve user's typing state
+                                // This ensures filtering continues to work when user clicks back into input
+                                // Only reset if input is completely empty (no text at all)
+                                if this.input_value.is_empty() {
                                     this.is_user_typing = false;
                                 }
+                                // If input has value, keep is_user_typing as is (don't reset)
+                                // This allows filtering to work immediately when user clicks back into input
 
                                 if !this.is_open {
                                     this.is_open = true;
@@ -655,7 +797,7 @@ impl Render for Combobox {
                             .id("combobox-trigger")
                             .relative()
                             .flex()
-                            .w_full()
+                            .flex_none() // Allow trigger to shrink/grow based on content
                             .items_center()
                             .gap_0()
                             .when(is_open, |this| {
@@ -676,7 +818,9 @@ impl Render for Combobox {
                                         this.border_b_0()
                                     })
                             })
-                            .bg(theme.colors.background)
+                            .when(!self.transparent_background, |this| {
+                                this.bg(theme.colors.background)
+                            })
                             .min_h(px(36.))  // Ensure minimum height matches TextInput
                             .when(self.show_shadow, |this| {
                                 this.shadow(vec![BoxShadow {
@@ -690,37 +834,55 @@ impl Render for Combobox {
                                 this.opacity(0.64)
                             })
                             .child(
-                                div()
-                                    .flex_1()
-                                    .overflow_hidden()
-                                    .when_some(text_input.clone(), |this, input| {
-                                        // TextInput container - TextInput has no border and transparent background
-                                        // The outer combobox-trigger provides the unified border
-                                        this.child(
-                                            div()
-                                                .w_full()
-                                                .h_full()
-                                                .bg(theme.colors.background)
-                                                .child(input.clone())
-                                        )
-                                    })
-                            )
-                            .child(
+                                // Compact layout for combobox: text input with icon close by
                                 div()
                                     .flex()
                                     .items_center()
-                                    .justify_center()
-                                    .px(px(8.))
-                                    .flex_none()
-                                    .cursor(CursorStyle::PointingHand)
-                                    .on_mouse_down(MouseButton::Left, cx.listener(|this, _event: &MouseDownEvent, _window, cx| {
-                                        this.toggle_dropdown();
-                                        cx.notify();
-                                    }))
+                                    .gap_0() // No gap - icon should be right next to text
                                     .child(
-                                        Icon::new(IconName::ChevronUpDown)
-                                            .small()
-                                            .color(rgb(0x666666))
+                                        div()
+                                            .flex_none() // Allow container to shrink/grow based on content
+                                            .overflow_hidden()
+                                            .min_w(px(60.)) // Minimum width to ensure usability
+                                            .when_some(self.calculated_width, |this, width| {
+                                                this.w(px(width))
+                                            })
+                                            .when_some(text_input.clone(), |this, input| {
+                                                // TextInput container - TextInput has no border and transparent background
+                                                // The outer combobox-trigger provides the unified border
+                                                // Container width adapts to content
+                                                // Important: TextInput uses .w_full() internally, but it will be constrained
+                                                // by this container's width set above
+                                                // TextInput now uses custom right_padding(4.0) for tighter spacing
+                                                this.child(
+                                                    div()
+                                                        .w_full() // Match parent container width
+                                                        .h_full()
+                                                        .when(!self.transparent_background, |this| {
+                                                            this.bg(theme.colors.background)
+                                                        })
+                                                        .child(input.clone())
+                                                )
+                                            })
+                                    )
+                                    .child(
+                                        div()
+                                            .flex()
+                                            .items_center()
+                                            .justify_center()
+                                            .ml(px(-4.)) // Negative left margin to pull icon closer to text
+                                            .px(px(1.)) // Reduced padding from 2px to 1px for tighter spacing
+                                            .flex_none()
+                                            .cursor(CursorStyle::PointingHand)
+                                            .on_mouse_down(MouseButton::Left, cx.listener(|this, _event: &MouseDownEvent, _window, cx| {
+                                                this.toggle_dropdown();
+                                                cx.notify();
+                                            }))
+                                            .child(
+                                                Icon::new(IconName::ChevronUpDown)
+                                                    .small()
+                                                    .color(rgb(0x666666))
+                                            )
                                     )
                             )
                     )

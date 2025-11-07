@@ -809,8 +809,7 @@ impl Render for Select {
                             .flex()
                             .w_full()
                             .items_center()
-                            .justify_between()
-                            .gap_2()
+                            .gap_2() // Remove justify_between to keep content and icon close together
                             .py(padding_y)
                             .px(padding_x)
                             .rounded(px(BorderRadius::LG))
@@ -851,13 +850,11 @@ impl Render for Select {
                                 cx.notify();
                             }))
                             .child(
-                                // Content area
+                                // Compact layout: text and icon close together
                                 div()
                                     .flex()
-                                    .flex_1()
                                     .items_center()
-                                    .gap_1()
-                                    .overflow_hidden()
+                                    .gap_2() // Small gap between text and icon
                                     .when(multiple && !self.selected_values.is_empty(), |this| {
                                         // Show tags for multi-select
                                         this.children(self.render_selected_tags(&theme, cx))
@@ -866,10 +863,10 @@ impl Render for Select {
                                         // Show single value or placeholder
                                         this.child(
                                             div()
-                                                .flex_1()
                                                 .overflow_hidden()
                                                 .text_ellipsis()
                                                 .whitespace_nowrap()
+                                                .max_w(px(200.)) // Limit text width to prevent excessive expansion
                                                 .when(is_placeholder, |this| {
                                                     this.text_color(self.custom_text_color.unwrap_or(theme.colors.text_secondary))
                                                 })
@@ -879,12 +876,12 @@ impl Render for Select {
                                                 .child(self.display_text())
                                         )
                                     })
-                            )
-                            .child(
-                                // Chevron up/down icon
-                                Icon::new(IconName::ChevronUpDown)
-                                    .small()
-                                    .color(rgb(0x666666))
+                                    .child(
+                                        // Chevron up/down icon - directly after text with small gap
+                                        Icon::new(IconName::ChevronUpDown)
+                                            .small()
+                                            .color(rgb(0x666666))
+                                    )
                             )
                     )
                     // Use deferred() to render dropdown overlay at the end, ensuring it's on top

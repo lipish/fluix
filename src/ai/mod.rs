@@ -3,12 +3,10 @@
 //! A comprehensive collection of AI-focused UI components for building modern AI applications.
 //! 
 //! ## Modules
-//! 
-//! - [`input`] - Input components for AI interactions (PromptInput, ChatInput, etc.)
-//! - [`display`] - Display components for AI content (MessageBubble, CodeBlock, etc.)
-//! - [`selection`] - Selection components for AI configuration (ModelSelector, AgentSelector, etc.)
-//! - [`layout`] - Layout components for AI interfaces (ChatContainer, ConversationView, etc.)
-//! - [`feedback`] - Feedback components for AI states (LoadingSpinner, TypingIndicator, etc.)
+//!
+//! - [`prompt`] - AI prompt input component (PromptInput)
+//! - [`message`] - Message component for displaying AI conversation messages (MessageBubble)
+//! - [`model_selector`] - AI model selection component (ModelSelector)
 //! 
 //! ## Quick Start
 //! 
@@ -24,19 +22,14 @@
 //!     )
 //! ```
 
-pub mod input;
-pub mod display;
-pub mod selection;
-pub mod layout;
-pub mod feedback;
+pub mod prompt;
+pub mod message;
+pub mod model_selector;
 
 // Re-export commonly used types
-pub use input::*;
-pub use display::*;
-pub use selection::*;
-// Note: layout and feedback modules are not yet implemented
-// pub use layout::*;
-// pub use feedback::*;
+pub use prompt::*;
+pub use message::*;
+pub use model_selector::*;
 
 // Common types and traits used across AI components
 use chrono::{DateTime, Utc};

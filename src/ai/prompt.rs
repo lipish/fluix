@@ -148,6 +148,8 @@ impl PromptInput {
             Some(cx.new(|cx| {
                 ModelSelector::new_with_models_and_direction(cx, config.available_models.clone(), DropdownDirection::Up)
                     .size(config.size)
+                    .show_all_models()  // Show all models, not just popular ones
+                    .clean_style(true) // Remove borders and shadows for clean look
                     // compact 模式已在 new_with_models_and_direction 中默认启用
             }))
         } else {
@@ -441,6 +443,8 @@ impl Render for PromptInput {
             let selector = cx.new(|cx| {
                 ModelSelector::new_with_models_and_direction(cx, self.config.available_models.clone(), DropdownDirection::Up)
                     .size(self.config.size)
+                    .show_all_models()  // Show all models, not just popular ones
+                    .clean_style(true) // Remove borders and shadows for clean look
                     // compact 模式已在 new_with_models_and_direction 中默认启用
             });
             
@@ -533,6 +537,7 @@ impl PromptInput {
             .border_color(border_color)
             .rounded_lg()
             .p_2()
+            // Don't set overflow_hidden to allow dropdown to overflow
     }
     
     fn render_minimal_container(&self) -> Div {
@@ -561,6 +566,7 @@ impl PromptInput {
             .items_center()
             .justify_between()
             .pt_2()
+            // Don't set overflow_hidden to allow dropdown to overflow
             .child(self.render_left_actions(cx))
             .child(self.render_right_actions(cx))
     }
@@ -588,10 +594,16 @@ impl PromptInput {
             .flex_row()
             .gap_2()
             .items_center()
+            // Don't set overflow_hidden to allow dropdown to overflow
             .when(self.config.show_model_selector && !self.config.available_models.is_empty(), |this| {
                 // Show model selector if available (should exist after lazy creation in render)
                 if let Some(selector) = &self.model_selector {
-                    this.child(selector.clone())
+                    this.child(
+                        div()
+                            .relative() // Ensure proper positioning context for dropdown
+                            // Don't set overflow_hidden to allow dropdown to overflow
+                            .child(selector.clone())
+                    )
                 } else {
                     this
                 }

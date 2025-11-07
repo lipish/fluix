@@ -435,6 +435,8 @@ pub struct TextInput {
     custom_bg_color: Option<Rgba>,
     /// Custom border color (None uses default)
     custom_border_color: Option<Rgba>,
+    /// Custom right padding (None uses default px_3 right padding)
+    custom_right_padding: Option<f32>,
 }
 
 impl TextInput {
@@ -499,6 +501,7 @@ impl TextInput {
             show_border: true,
             custom_bg_color: None,
             custom_border_color: None,
+            custom_right_padding: None,
         }
     }
 
@@ -923,6 +926,32 @@ impl TextInput {
     /// ```
     pub fn transparent(mut self) -> Self {
         self.custom_bg_color = Some(rgba(0x00000000));
+        self
+    }
+
+    /// Set a custom right padding for the input.
+    ///
+    /// This is useful for embedded use cases like combobox where you want tighter spacing
+    /// between the text and right-side icons.
+    ///
+    /// # Arguments
+    ///
+    /// * `padding` - The right padding in pixels (default is 12px from px_3)
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// use fluix::TextInput;
+    /// use gpui::*;
+    ///
+    /// # fn example(cx: &mut Context<TextInput>) {
+    /// let tight_input = TextInput::new(cx)
+    ///     .placeholder("Tighter spacing")
+    ///     .right_padding(8.0);  // 8px right padding instead of 12px
+    /// # }
+    /// ```
+    pub fn right_padding(mut self, padding: f32) -> Self {
+        self.custom_right_padding = Some(padding);
         self
     }
 
@@ -2016,7 +2045,13 @@ impl Render for TextInput {
             .items_center()
             .w_full()
             .h(px(36.))
-            .px_3()
+            .pl(px(12.)) // Left padding: 12px
+            .when_some(self.custom_right_padding, |this, padding| {
+                this.pr(px(padding))
+            })
+            .when(self.custom_right_padding.is_none(), |this| {
+                this.pr(px(12.)) // Default right padding: 12px
+            })
             .bg(self.custom_bg_color.unwrap_or(if disabled {
                 rgb(0xF5F5F5)
             } else {

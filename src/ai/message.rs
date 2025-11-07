@@ -1,8 +1,12 @@
+//! # Message Components
+//!
+//! Components for displaying AI messages and conversation content.
+
 use gpui::*;
 use gpui::prelude::FluentBuilder;
 
 use crate::{Icon, IconName, IconSize};
-use super::super::{Message, MessageRole, MessageContent, MessageId};
+use super::{Message, MessageRole, MessageContent, MessageId};
 
 /// Events emitted by MessageBubble
 #[derive(Clone, Debug)]
@@ -403,3 +407,4 @@ impl MessageBubble {
             .child(time_str)
     }
 }
+

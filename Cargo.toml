@@ -24,72 +24,8 @@ uuid = { version = "1.0", features = ["v4", "serde"] }
 llm-link = "0.3.4"
 
 [[example]]
-name = "button_variants_demo"
-path = "examples/button_variants_demo.rs"
-
-[[example]]
-name = "text_input_demo"
-path = "examples/text_input_demo.rs"
-
-[[example]]
-name = "button_demo"
-path = "examples/button_demo.rs"
-
-[[example]]
-name = "icon_demo"
-path = "examples/icon_demo.rs"
-
-[[example]]
-name = "tabs_demo"
-path = "examples/tabs_demo.rs"
-
-[[example]]
-name = "checkbox_demo"
-path = "examples/checkbox_demo.rs"
-
-[[example]]
-name = "checkbox_group_demo"
-path = "examples/checkbox_group_demo.rs"
-
-[[example]]
-name = "combobox_demo"
-path = "examples/combobox_demo.rs"
-
-[[example]]
-name = "breadcrumb_demo"
-path = "examples/breadcrumb_demo.rs"
-
-[[example]]
-name = "radio_group_demo"
-path = "examples/radio_group_demo.rs"
-
-[[example]]
-name = "ai_prompt_input_demo"
-path = "examples/ai_prompt_input_demo.rs"
-
-[[example]]
-name = "ai_message_bubble_demo"
-path = "examples/ai_message_bubble_demo.rs"
-
-[[example]]
-name = "ai_model_selector_demo"
-path = "examples/ai_model_selector_demo.rs"
-
-[[example]]
-name = "select_dropdown_direction_demo"
-path = "examples/select_dropdown_direction_demo.rs"
-
-[[example]]
-name = "model_selector_width_demo"
-path = "examples/model_selector_width_demo.rs"
-
-[[example]]
-name = "model_selector_clear_demo"
-path = "examples/model_selector_clear_demo.rs"
-
-[[example]]
-name = "model_selector_clear_flat_demo"
-path = "examples/model_selector_clear_flat_demo.rs"
+name = "model_selector_demo"
+path = "examples/model_selector_demo.rs"
 
 [dev-dependencies]
 env_logger = "0.11"

@@ -81,15 +81,9 @@ ModelSelector::new(cx)
 ```
 src/ai/
 ├── mod.rs              # 主模块，定义通用类型
-├── input/              # 输入组件
-│   ├── mod.rs
-│   └── prompt_input.rs # PromptInput 实现
-├── display/            # 显示组件
-│   ├── mod.rs
-│   └── message_bubble.rs # MessageBubble 实现
-├── selection/          # 选择组件（待实现）
-├── layout/             # 布局组件（待实现）
-└── feedback/           # 反馈组件（待实现）
+├── prompt.rs           # PromptInput 实现
+├── message.rs          # MessageBubble 实现
+└── model_selector.rs   # ModelSelector 实现
 ```
 
 ### **核心类型定义**
@@ -202,22 +196,7 @@ pub enum ModelCapability {
 
 ## 🚀 **下一步计划**
 
-### **Phase 2: 布局组件**
-- [ ] **ChatContainer** - 聊天容器
-- [ ] **ConversationView** - 对话视图
-- [ ] **SplitView** - 分屏视图
-
-### **Phase 3: 选择组件**
-- [x] **ModelSelector** - 模型选择器 ✅
-- [ ] **AgentSelector** - 代理选择器
-- [ ] **ProviderSelector** - 提供商选择器
-
-### **Phase 4: 反馈组件**
-- [ ] **LoadingSpinner** - 加载指示器
-- [ ] **TypingIndicator** - 打字指示器
-- [ ] **StreamingText** - 流式文本显示
-
-### **Phase 5: 高级功能**
+### **Phase 2: 高级功能**
 - [ ] **语法高亮**：代码块语法高亮
 - [ ] **文件上传**：拖拽文件上传
 - [ ] **图片预览**：图片内容预览
