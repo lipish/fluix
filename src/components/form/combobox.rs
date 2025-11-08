@@ -90,6 +90,14 @@ pub struct Combobox {
     compact: bool,
     /// Calculated width based on input text (for dynamic sizing)
     calculated_width: Option<f32>,
+    /// Flag to blur the input after selection
+    should_blur: bool,
+    /// Focus handle for the combobox
+    focus_handle: FocusHandle,
+    /// Whether to use fixed width (text and button don't move with content)
+    /// When true: width is fixed, text and button stay in place (good with borders)
+    /// When false: width adjusts with content, text and button move (good without borders)
+    fixed_width: bool,
     /// Event subscriptions
     _subscriptions: Vec<Subscription>,
 }
@@ -126,6 +134,9 @@ impl Combobox {
             is_user_typing: false,
             compact: false,
             calculated_width: None,
+            should_blur: false,
+            focus_handle: cx.focus_handle(),
+            fixed_width: false, // Default to dynamic width
             _subscriptions: Vec::new(),
         }
     }
@@ -220,6 +231,30 @@ impl Combobox {
         self
     }
 
+    /// Set fixed dropdown width (convenience method)
+    pub fn dropdown_fixed_width(mut self, width: Pixels) -> Self {
+        self.dropdown_width = DropdownWidth::Fixed(width);
+        self
+    }
+
+    /// Set minimum dropdown width (convenience method)
+    pub fn dropdown_min_width(mut self, width: Pixels) -> Self {
+        self.dropdown_width = DropdownWidth::MinWidth(width);
+        self
+    }
+
+    /// Set maximum dropdown width (convenience method)
+    pub fn dropdown_max_width(mut self, width: Pixels) -> Self {
+        self.dropdown_width = DropdownWidth::MaxWidth(width);
+        self
+    }
+
+    /// Match dropdown width to trigger width (convenience method)
+    pub fn dropdown_match_trigger(mut self) -> Self {
+        self.dropdown_width = DropdownWidth::MatchTrigger;
+        self
+    }
+
     /// Remove border (convenience method)
     pub fn no_border(mut self) -> Self {
         self.show_border = false;
@@ -235,6 +270,33 @@ impl Combobox {
     /// Use transparent background (convenience method)
     pub fn transparent_background(mut self) -> Self {
         self.transparent_background = true;
+        self
+    }
+
+    /// Use fixed width mode (convenience method)
+    ///
+    /// When enabled, the combobox maintains a fixed width regardless of content.
+    /// The text and expand button stay in place, and the border remains fixed.
+    /// This is ideal when using borders, as it prevents the button from moving.
+    ///
+    /// When disabled (default), the width adjusts with content, and the text/button
+    /// move accordingly. This is ideal for borderless comboboxes.
+    ///
+    /// # Examples
+    ///
+    /// ```rust,ignore
+    /// // With border - use fixed width
+    /// Combobox::new(cx)
+    ///     .fixed_width(true)
+    ///     .show_border(true)
+    ///
+    /// // Without border - use dynamic width (default)
+    /// Combobox::new(cx)
+    ///     .no_border()
+    ///     // fixed_width is false by default
+    /// ```
+    pub fn fixed_width(mut self, fixed: bool) -> Self {
+        self.fixed_width = fixed;
         self
     }
 
@@ -344,7 +406,7 @@ impl Combobox {
     }
 
     /// Select an option
-    fn select_option(&mut self, value: String, cx: &mut Context<Self>) {
+    fn select_option(&mut self, value: String, _window: &mut Window, cx: &mut Context<Self>) {
         let all_options = self.all_options();
         if let Some(option) = all_options.iter().find(|opt| opt.value == value) {
             self.selected_value = Some(value.clone());
@@ -362,6 +424,9 @@ impl Combobox {
                     input.set_value(option.label.clone(), cx);
                 });
             }
+
+            // Set flag to blur the input after selection
+            self.should_blur = true;
 
             // Recalculate width after selection to match selected option label
             // This ensures width is correct after selection
@@ -390,10 +455,11 @@ impl Combobox {
                 DropdownWidth::MatchTrigger => this,
                 DropdownWidth::Fixed(width) => this.w(width),
                 DropdownWidth::MinWidth(width) => this.min_w(width),
-                DropdownWidth::MaxWidth(width) => this.max_w(width),
+                DropdownWidth::MaxWidth(width) => this.max_w(width).min_w(px(200.)),
             })
             .when(matches!(self.dropdown_width, DropdownWidth::MatchTrigger), |this| {
-                this.min_w(px(180.))
+                // Set a reasonable minimum width to ensure content fits
+                this.min_w(px(200.))
             })
             .max_h(px(300.))
             .overflow_y_scroll()
@@ -420,7 +486,7 @@ impl Combobox {
                     },
                 ])
             })
-            .p(px(6.));
+            .pb(px(6.));
 
         // Render grouped or flat options
         if has_groups {
@@ -435,7 +501,7 @@ impl Combobox {
                         if group_idx > 0 {
                             this.mt(if self.compact { px(2.) } else { px(4.) })
                         } else {
-                            this
+                            this.mt(px(6.))
                         }
                     })
                     .child({
@@ -452,12 +518,47 @@ impl Combobox {
                             .child(group.label.clone())
                     })
                     .children(group.options.iter().map(|option| {
-                        let id = ("combobox-group-item", item_counter);
+                        let _id = ("combobox-group-item", item_counter);
                         item_counter += 1;
-                        // Wrap option with indentation for grouped items
+                        // For grouped items, create a container with full-width background
+                        // and overlay content with indentation
+                        let value = option.value.clone();
+                        let label = option.label.clone();
+                        let size = self.size;
+                        
+                        // Check if this option is selected
+                        let is_selected = if let Some(ref selected_value) = self.selected_value {
+                            selected_value == &value && self.input_value == label
+                        } else {
+                            false
+                        };
+                        
+                        // Single item div with background and content
                         div()
-                            .pl(px(8.))
-                            .child(self.render_option(option, id, &theme, cx))
+                            .w_full()
+                            .min_h(px(32.)) // Ensure minimum height for items
+                            .mx(px(6.)) // Horizontal margin instead of padding to allow background to span full width
+                            .px(if self.compact { px(8.) } else { px(12.) })
+                            .py(if self.compact { px(3.) } else { px(8.) })
+                            .flex()
+                            .items_center()
+                            .justify_between()
+                            .cursor(CursorStyle::PointingHand)
+                            .text_size(size.font_size())
+                            .rounded(px(BorderRadius::SM))
+                            .map(|this| {
+                                if is_selected {
+                                    this.bg(theme.colors.primary)
+                                        .text_color(rgb(0xFFFFFF))
+                                } else {
+                                    this.hover(|style| style.bg(theme.colors.background_hover))
+                                        .text_color(theme.colors.text)
+                                }
+                            })
+                            .on_mouse_down(MouseButton::Left, cx.listener(move |this, _event: &MouseDownEvent, window, cx| {
+                                this.select_option(value.clone(), window, cx);
+                            }))
+                            .child(label)
                     }))
                     .child(
                         // Separator line below the last option in this group
@@ -471,9 +572,20 @@ impl Combobox {
         } else {
             let filtered_options = self.filtered_options();
             menu = menu.children(filtered_options.iter().enumerate().map(|(idx, option)| {
-                self.render_option(option, ("combobox-item", idx), &theme, cx)
+                div()
+                    .when(idx == 0, |this| {
+                        this.mt(px(6.))
+                    })
+                    .child(self.render_option(option, ("combobox-item", idx), &theme, cx))
             }));
         }
+
+        let input_width = self.calculated_width.unwrap_or_else(|| {
+            // Fallback: estimate width based on placeholder length
+            // Average character width is approximately 8px for 14px font
+            let estimated_text_width = self.placeholder.len() as f32 * 8.0;
+            (estimated_text_width + 24.0 + 22.0).max(60.0)
+        });
 
         div()
             .absolute()
@@ -488,18 +600,16 @@ impl Combobox {
             .map(|this| match self.dropdown_alignment {
                 DropdownAlignment::Left => {
                     // Align to input text left edge (input container starts at left_0)
-                    this.left_0()
+                    // For MatchTrigger mode, also set width to match trigger
+                    let positioned = this.left_0();
+                    if matches!(self.dropdown_width, DropdownWidth::MatchTrigger) {
+                        positioned.w(px(input_width))
+                    } else {
+                        positioned
+                    }
                 }
                 DropdownAlignment::Right => {
                     // Align dropdown right edge to input text right edge
-                    // Use calculated width (should always be set after render calculates it)
-                    // If somehow None, use a reasonable default based on placeholder length
-                    let input_width = self.calculated_width.unwrap_or_else(|| {
-                        // Fallback: estimate width based on placeholder length
-                        // Average character width is approximately 8px for 14px font
-                        let estimated_text_width = self.placeholder.len() as f32 * 8.0;
-                        (estimated_text_width + 24.0 + 22.0).max(60.0)
-                    });
                     match self.dropdown_width {
                         DropdownWidth::MatchTrigger => {
                             // Match input width and align right edge
@@ -527,7 +637,6 @@ impl Combobox {
                 }
                 DropdownAlignment::Center => {
                     // Center align relative to input text
-                    let input_width = self.calculated_width.unwrap_or(120.0);
                     // For center alignment, we'll align left edge for now
                     // Full center alignment would require knowing dropdown width
                     this.left_0()
@@ -540,7 +649,7 @@ impl Combobox {
             .child(menu)
     }
 
-    /// Render a single option item
+    /// Render a single option item with full background styling
     fn render_option(&self, option: &SelectOption, id: impl Into<ElementId>, theme: &Theme, cx: &Context<Self>) -> impl IntoElement {
         let value = option.value.clone();
         let label = option.label.clone();
@@ -560,15 +669,17 @@ impl Combobox {
         let padding_y = if self.compact { px(3.) } else { px(8.) };
         let padding_x = if self.compact { px(8.) } else { px(12.) };
 
+        // Single item div with background and content
         div()
             .id(id)
-            .relative()
+            .w_full()
+            .min_h(px(32.)) // Ensure minimum height for items
+            .mx(px(6.)) // Horizontal margin instead of padding to allow background to span full width
+            .px(padding_x)
+            .py(padding_y)
             .flex()
             .items_center()
             .justify_between()
-            .w_full()
-            .px(padding_x)
-            .py(padding_y)
             .cursor(CursorStyle::PointingHand)
             .text_size(size.font_size())
             .rounded(px(BorderRadius::SM))
@@ -577,21 +688,20 @@ impl Combobox {
                     this.bg(theme.colors.primary)
                         .text_color(rgb(0xFFFFFF))
                 } else {
-                    this.text_color(theme.colors.text)
-                        .hover(|style| style.bg(theme.colors.background_hover))
+                    this.hover(|style| style.bg(theme.colors.background_hover))
+                        .text_color(theme.colors.text)
                 }
             })
-            .on_mouse_down(MouseButton::Left, cx.listener(move |this, _event: &MouseDownEvent, _window, cx| {
-                this.select_option(value.clone(), cx);
+            .on_mouse_down(MouseButton::Left, cx.listener(move |this, _event: &MouseDownEvent, window, cx| {
+                this.select_option(value.clone(), window, cx);
             }))
             .child(label)
-            .when(is_selected, |this| {
-                this.child(
-                    div()
-                        .text_xs()
-                        .child("✓")
-                )
-            })
+    }
+}
+
+impl Focusable for Combobox {
+    fn focus_handle(&self, _cx: &App) -> FocusHandle {
+        self.focus_handle.clone()
     }
 }
 
@@ -601,6 +711,13 @@ impl Combobox {
 
 impl Render for Combobox {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+        // Handle blur after selection
+        if self.should_blur {
+            self.should_blur = false;
+            // Focus the combobox itself to remove focus from the text input
+            cx.focus_self(window);
+        }
+
         let theme = Theme::default();
         let disabled = self.disabled;
         let is_open = self.is_open;
@@ -638,16 +755,22 @@ impl Render for Combobox {
             &text_runs,
             None,
         );
-        // Add padding (left: 12px, right: 2px reduced) + icon width (~20px) + gap (1px for icon padding - 4px negative margin)
+        // Add padding (left: 12px, right: 2px reduced) + icon width (~20px) + gap
         let min_width = px(60.);
-        let calculated_width = shaped_line.width + px(14.) + px(17.); // Left padding 12px + right padding 2px = 14px, icon + 1px padding - 4px margin = 17px
+        // In dynamic width mode, reduce the right padding to bring icon closer to text
+        let right_space = if self.fixed_width {
+            px(17.) // Fixed width: icon + 1px padding - 4px margin = 17px
+        } else {
+            px(4.) // Dynamic width: minimal space for icon (just padding)
+        };
+        let calculated_width = shaped_line.width + px(14.) + right_space; // Left padding 12px + right padding 2px = 14px
         // Always update calculated_width to ensure it matches current input
         self.calculated_width = Some(calculated_width.max(min_width).into());
 
         // Subscribe to TextInput events if not already subscribed
         if let Some(text_input_entity) = &text_input {
             if self._subscriptions.is_empty() {
-                let sub = cx.subscribe_in(text_input_entity, window, |this, _input, event: &TextInputEvent, _window, cx| {
+                let sub = cx.subscribe_in(text_input_entity, window, |this, _input, event: &TextInputEvent, window, cx| {
                     match event {
                         TextInputEvent::Change(value) => {
                             // Check if this is a programmatic change by comparing with selected option
@@ -697,15 +820,21 @@ impl Render for Combobox {
                                 strikethrough: None,
                             }];
                             
-                            let shaped_line = _window.text_system().shape_line(
+                            let shaped_line = window.text_system().shape_line(
                                 text_to_measure.into(),
                                 font_size,
                                 &text_runs,
                                 None,
                             );
-                            // Add padding (left: 12px, right: 2px reduced) + icon width (~20px) + gap (1px for icon padding - 4px negative margin)
+                            // Add padding (left: 12px, right: 2px reduced) + icon width (~20px) + gap
                             let min_width = px(60.);
-                            let calculated_width = shaped_line.width + px(14.) + px(17.); // Left padding 12px + right padding 2px = 14px, icon + 1px padding - 4px margin = 17px
+                            // In dynamic width mode, reduce the right padding to bring icon closer to text
+                            let right_space = if this.fixed_width {
+                                px(17.) // Fixed width: icon + 1px padding - 4px margin = 17px
+                            } else {
+                                px(4.) // Dynamic width: minimal space for icon (just padding)
+                            };
+                            let calculated_width = shaped_line.width + px(14.) + right_space; // Left padding 12px + right padding 2px = 14px
                             this.calculated_width = Some(calculated_width.max(min_width).into());
 
                             // Always keep dropdown open when user is typing (for filtering)
@@ -745,10 +874,7 @@ impl Render for Combobox {
 
                                 if let Some(matched_option) = exact_match {
                                     // Found exact match, select it
-                                    this.select_option(matched_option.value.clone(), cx);
-
-                                    // Remove focus from the window to blur the input
-                                    _window.blur();
+                                    this.select_option(matched_option.value.clone(), window, cx);
                                 } else {
                                     // No exact match, check if there's only one filtered option
                                     let filtered = all_options.iter().filter(|opt|
@@ -758,10 +884,7 @@ impl Render for Combobox {
 
                                     if filtered.len() == 1 {
                                         // Only one match, select it
-                                        this.select_option(filtered[0].value.clone(), cx);
-
-                                        // Remove focus from the window to blur the input
-                                        _window.blur();
+                                        this.select_option(filtered[0].value.clone(), window, cx);
                                     }
                                     // If multiple matches or no matches, do nothing (keep dropdown open)
                                 }
@@ -791,13 +914,25 @@ impl Render for Combobox {
                     .relative()
                     .w_full()
                     .min_w(px(200.)) // 设置最小宽度，避免输入时宽度变化
-                    .max_w(px(400.)) // 设置最大宽度
+                    .map(|this| match self.dropdown_width {
+                        DropdownWidth::MatchTrigger => this.max_w(px(400.)),
+                        DropdownWidth::Fixed(width) => this.max_w(width),
+                        DropdownWidth::MinWidth(_width) => this.max_w(px(400.)),
+                        DropdownWidth::MaxWidth(width) => this.max_w(width),
+                    })
                     .child(
                         div()
                             .id("combobox-trigger")
                             .relative()
                             .flex()
-                            .flex_none() // Allow trigger to shrink/grow based on content
+                            .when(self.fixed_width, |this| {
+                                // Fixed width mode: trigger takes full width
+                                this.w_full()
+                            })
+                            .when(!self.fixed_width, |this| {
+                                // Dynamic width mode: trigger shrinks/grows based on content
+                                this.flex_none()
+                            })
                             .items_center()
                             .gap_0()
                             .when(is_open, |this| {
@@ -838,14 +973,33 @@ impl Render for Combobox {
                                 div()
                                     .flex()
                                     .items_center()
-                                    .gap_0() // No gap - icon should be right next to text
+                                    .w_full() // Always take full width of parent
+                                    .when(self.fixed_width, |this| {
+                                        // Fixed width mode: use space-between to push icon to right
+                                        this.justify_between()
+                                    })
+                                    .when(!self.fixed_width, |this| {
+                                        // Dynamic width mode: no gap between text and icon
+                                        this.gap_0()
+                                    })
                                     .child(
                                         div()
-                                            .flex_none() // Allow container to shrink/grow based on content
-                                            .overflow_hidden()
-                                            .min_w(px(60.)) // Minimum width to ensure usability
-                                            .when_some(self.calculated_width, |this, width| {
-                                                this.w(px(width))
+                                            .when(self.fixed_width, |this| {
+                                                // Fixed width mode: text container doesn't grow, stays at content size
+                                                this.flex_none().overflow_hidden().min_w(px(60.))
+                                            })
+                                            .when(!self.fixed_width, |this| {
+                                                // Dynamic width mode: text container only takes needed space
+                                                // Add negative right margin to pull icon closer
+                                                this.flex_none().overflow_hidden().min_w(px(60.)).mr(px(-6.))
+                                            })
+                                            .when(!self.fixed_width, |this| {
+                                                // Apply calculated width only in dynamic mode
+                                                if let Some(width) = self.calculated_width {
+                                                    this.w(px(width))
+                                                } else {
+                                                    this
+                                                }
                                             })
                                             .when_some(text_input.clone(), |this, input| {
                                                 // TextInput container - TextInput has no border and transparent background
@@ -870,8 +1024,14 @@ impl Render for Combobox {
                                             .flex()
                                             .items_center()
                                             .justify_center()
-                                            .ml(px(-4.)) // Negative left margin to pull icon closer to text
-                                            .px(px(1.)) // Reduced padding from 2px to 1px for tighter spacing
+                                            .when(self.fixed_width, |this| {
+                                                // Fixed width mode: icon at right with padding
+                                                this.px(px(8.))
+                                            })
+                                            .when(!self.fixed_width, |this| {
+                                                // Dynamic width mode: icon close to text (text container has negative margin)
+                                                this.px(px(2.))
+                                            })
                                             .flex_none()
                                             .cursor(CursorStyle::PointingHand)
                                             .on_mouse_down(MouseButton::Left, cx.listener(|this, _event: &MouseDownEvent, _window, cx| {

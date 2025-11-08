@@ -1,11 +1,14 @@
 use fluix::prelude::*;
 use fluix::ai::{ModelSelector, ModelSelectorEvent, ModelInfo, ModelCapability, PricingInfo, ModelSelectorConfig};
-use fluix::components::form::select::{DropdownDirection, DropdownAlignment};
+use fluix::components::form::select::{DropdownDirection, DropdownAlignment, SelectOption, SelectOptionGroup};
+use fluix::components::form::combobox::{Combobox, ComboboxEvent};
 
 struct ModelSelectorDemo {
     model_selector: Entity<ModelSelector>,
     compact_model_selector: Entity<ModelSelector>,
     searchable_model_selector: Entity<ModelSelector>,
+    grouped_combobox: Entity<Combobox>,
+    fixed_width_combobox: Entity<Combobox>,
     selected_model: String,
     scroll_handle: ScrollHandle,
     alignment: DropdownAlignment,
@@ -61,13 +64,16 @@ impl ModelSelectorDemo {
             models
         };
 
-        // Create model selector
+        // Create model selector with same style as other demos
+        let mut model_config = ModelSelectorConfig::default();
+        model_config.group_by_provider = false; // Same as other demos
+        model_config.compact = true; // Same as other demos
+        model_config.clean_style = true;
+        model_config.dropdown_direction = DropdownDirection::Down; // 下拉，不是上拉
+        model_config.dropdown_alignment = DropdownAlignment::Left; // 改为左对齐，确保宽度足够
+        
         let model_selector = cx.new(|cx| {
-            ModelSelector::new_with_models(cx, models.clone())
-                .show_all_models()
-                .clean_style(true)
-                .dropdown_direction(DropdownDirection::Up)
-                .dropdown_alignment(DropdownAlignment::Right)
+            ModelSelector::new_with_config(cx, models.clone(), model_config)
         });
 
         // Create compact model selector without groups
@@ -148,13 +154,81 @@ impl ModelSelectorDemo {
         searchable_config.clean_style = true;
         searchable_config.dropdown_direction = DropdownDirection::Up;
         searchable_config.dropdown_alignment = DropdownAlignment::Right;
+        // You can customize dropdown width here:
+        // searchable_config.dropdown_width = DropdownWidth::MaxWidth(px(350.0));
         
         let searchable_model_selector = cx.new(|cx| {
             ModelSelector::new_with_config(cx, searchable_models, searchable_config)
         });
 
+        // Create grouped combobox example
+        let grouped_combobox = cx.new(|cx| {
+            Combobox::new(cx)
+                .placeholder("Select a programming language...")
+                .option_groups(vec![
+                    SelectOptionGroup::new("Frontend", vec![
+                        SelectOption::new("javascript", "JavaScript"),
+                        SelectOption::new("typescript", "TypeScript"),
+                        SelectOption::new("react", "React"),
+                        SelectOption::new("vue", "Vue"),
+                    ]),
+                    SelectOptionGroup::new("Backend", vec![
+                        SelectOption::new("rust", "Rust"),
+                        SelectOption::new("go", "Go"),
+                        SelectOption::new("python", "Python"),
+                        SelectOption::new("nodejs", "Node.js"),
+                    ]),
+                    SelectOptionGroup::new("Mobile", vec![
+                        SelectOption::new("swift", "Swift"),
+                        SelectOption::new("kotlin", "Kotlin"),
+                        SelectOption::new("flutter", "Flutter"),
+                    ]),
+                ])
+                .dropdown_direction(DropdownDirection::Down)
+                .dropdown_alignment(DropdownAlignment::Left)
+                .dropdown_max_width(px(300.0))
+                .fixed_width(true) // Use fixed width with border - text and button stay in place
+        });
+
+        // Subscribe to grouped combobox events
+        let _grouped_subscription = cx.subscribe(&grouped_combobox, |_this, _combobox, event: &ComboboxEvent, _cx| {
+            match event {
+                ComboboxEvent::Changed(value) => {
+                    println!("Grouped combobox selected: {}", value);
+                }
+                ComboboxEvent::InputChanged(value) => {
+                    println!("Grouped combobox input: {}", value);
+                }
+            }
+        });
+
+        // Create fixed width combobox example
+        let fixed_width_combobox = cx.new(|cx| {
+            Combobox::new(cx)
+                .placeholder("Select...")
+                .options(vec![
+                    SelectOption::new("short", "Short"),
+                    SelectOption::new("medium", "Medium Option"),
+                    SelectOption::new("very_long", "Very Long Option Text Here"),
+                ])
+                .dropdown_max_width(px(350.0))
+                .fixed_width(true) // Icon stays at right edge with border
+        });
+
+        // Subscribe to fixed width combobox events
+        let _fixed_width_subscription = cx.subscribe(&fixed_width_combobox, |_this, _combobox, event: &ComboboxEvent, _cx| {
+            match event {
+                ComboboxEvent::Changed(value) => {
+                    println!("Fixed width combobox selected: {}", value);
+                }
+                ComboboxEvent::InputChanged(value) => {
+                    println!("Fixed width combobox input: {}", value);
+                }
+            }
+        });
+
         // Subscribe to model selector events
-        cx.subscribe(&model_selector, |this, _selector, event: &ModelSelectorEvent, cx| {
+        let _model_selector_subscription = cx.subscribe(&model_selector, |this, _selector, event: &ModelSelectorEvent, cx| {
             match event {
                 ModelSelectorEvent::ModelChanged(model_id) => {
                     this.selected_model = model_id.clone();
@@ -168,6 +242,8 @@ impl ModelSelectorDemo {
             model_selector,
             compact_model_selector,
             searchable_model_selector,
+            grouped_combobox,
+            fixed_width_combobox,
             selected_model: String::new(),
             scroll_handle: ScrollHandle::new(),
             alignment: DropdownAlignment::Right,
@@ -177,7 +253,7 @@ impl ModelSelectorDemo {
 }
 
 impl Render for ModelSelectorDemo {
-    fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+    fn render(&mut self, _window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
         div()
             .size_full()
             .overflow_hidden()
@@ -317,6 +393,74 @@ impl Render for ModelSelectorDemo {
                                     )
                                     .child(self.searchable_model_selector.clone())
                             )
+                            .child(
+                                // Grouped combobox example
+                                div()
+                                    .flex()
+                                    .flex_col()
+                                    .gap_2()
+                                    .p_6()
+                                    .bg(rgb(0xFFFFFF))
+                                    .rounded_lg()
+                                    .border_1()
+                                    .border_color(rgb(0xE0E0E0))
+                                    .min_h(px(400.)) // Add minimum height for screenshot space
+                                    .child(
+                                        div()
+                                            .flex()
+                                            .flex_col()
+                                            .gap_1()
+                                            .mb_4()
+                                            .child(
+                                                div()
+                                                    .text_lg()
+                                                    .font_weight(FontWeight::BOLD)
+                                                    .text_color(rgb(0x1F2937))
+                                                    .child("Grouped Combobox")
+                                            )
+                                            .child(
+                                                div()
+                                                    .text_sm()
+                                                    .text_color(rgb(0x6B7280))
+                                                    .child("Select from grouped programming languages (Frontend, Backend, Mobile)")
+                                            )
+                                    )
+                                    .child(self.grouped_combobox.clone())
+                            )
+                            .child(
+                                // Fixed width combobox example
+                                div()
+                                    .flex()
+                                    .flex_col()
+                                    .gap_2()
+                                    .p_6()
+                                    .bg(rgb(0xFFFFFF))
+                                    .rounded_lg()
+                                    .border_1()
+                                    .border_color(rgb(0xE0E0E0))
+                                    .min_h(px(400.)) // Add minimum height for screenshot space
+                                    .child(
+                                        div()
+                                            .flex()
+                                            .flex_col()
+                                            .gap_1()
+                                            .mb_4()
+                                            .child(
+                                                div()
+                                                    .text_lg()
+                                                    .font_weight(FontWeight::BOLD)
+                                                    .text_color(rgb(0x1F2937))
+                                                    .child("Fixed Width Combobox")
+                                            )
+                                            .child(
+                                                div()
+                                                    .text_sm()
+                                                    .text_color(rgb(0x6B7280))
+                                                    .child("Icon stays at right edge with border (fixed_width: true)")
+                                            )
+                                    )
+                                    .child(self.fixed_width_combobox.clone())
+                            )
                     )
             )
     }
@@ -328,7 +472,7 @@ fn main() {
         .run(|cx| {
             cx.activate(true);
 
-            let bounds = Bounds::centered(None, size(px(800.0), px(600.0)), cx);
+            let bounds = Bounds::centered(None, size(px(800.0), px(900.0)), cx);
             let _ = cx.open_window(
                 WindowOptions {
                     window_bounds: Some(WindowBounds::Windowed(bounds)),

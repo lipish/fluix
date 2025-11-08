@@ -26,7 +26,7 @@
 	}> = {
 		button: {
 			description: 'Interactive button component with multiple variants and sizes.',
-			installation: 'fluix = "0.1.22"',
+			installation: 'fluix = "0.1.24"',
 			usage: 'Import and use the Button component:',
 			usageCode: `use fluix::{Button, ButtonVariant, ComponentSize};
 use gpui::*;
@@ -139,7 +139,7 @@ div()
 		},
 		icon: {
 			description: '31 built-in icons with customizable sizes and colors.',
-			installation: 'fluix = "0.1.22"',
+			installation: 'fluix = "0.1.24"',
 			usage: 'Import and use the Icon component:',
 			usageCode: `use fluix::{Icon, IconName, IconSize};
 use gpui::*;
@@ -241,7 +241,7 @@ Icon::new(IconName::Task)`,
 		},
 		textinput: {
 			description: 'Text input field with validation and event handling.',
-			installation: 'fluix = "0.1.22"',
+			installation: 'fluix = "0.1.24"',
 			usage: 'Import and use the TextInput component:',
 			usageCode: `use fluix::TextInput;
 use gpui::*;
@@ -299,7 +299,7 @@ let input = cx.new(|cx| {
 		},
 		checkbox: {
 			description: 'Checkbox component for boolean selections.',
-			installation: 'fluix = "0.1.22"',
+			installation: 'fluix = "0.1.24"',
 			usage: 'Import and use the Checkbox component:',
 			usageCode: `use fluix::Checkbox;
 use gpui::*;
@@ -374,7 +374,7 @@ let xlarge = cx.new(|cx| {
 		},
 		select: {
 			description: 'Dropdown selection component with single and multiple selection modes.',
-			installation: 'fluix = "0.1.22"',
+			installation: 'fluix = "0.1.24"',
 			usage: 'Import and use the Select component:',
 			usageCode: `use fluix::{Select, SelectOption};
 use gpui::*;
@@ -451,7 +451,7 @@ let grouped_select = cx.new(|cx| {
 		},
 		combobox: {
 			description: 'Combobox component with search and selection capabilities.',
-			installation: 'fluix = "0.1.22"',
+			installation: 'fluix = "0.1.24"',
 			usage: 'Import and use the Combobox component:',
 			usageCode: `use fluix::{Combobox, SelectOption};
 use gpui::*;
@@ -504,6 +504,44 @@ let combobox = cx.new(|cx| {
         ])
 });`,
 					screenshot: 'combobox-disabled.png'
+				},
+				{
+					title: 'Grouped Options',
+					description: 'Organize options into logical groups for better organization',
+					code: `use fluix::SelectOptionGroup;
+
+let grouped_combobox = cx.new(|cx| {
+    Combobox::new(cx)
+        .placeholder("Select a language...")
+        .option_groups(vec![
+            SelectOptionGroup::new("Frontend", vec![
+                SelectOption::new("javascript", "JavaScript"),
+                SelectOption::new("typescript", "TypeScript"),
+                SelectOption::new("react", "React"),
+            ]),
+            SelectOptionGroup::new("Backend", vec![
+                SelectOption::new("rust", "Rust"),
+                SelectOption::new("python", "Python"),
+                SelectOption::new("go", "Go"),
+            ]),
+        ])
+});`,
+					screenshot: 'combobox-grouped.png'
+				},
+				{
+					title: 'Fixed Width',
+					description: 'Use fixed_width(true) to keep the expand icon at the right edge when using borders',
+					code: `let fixed_combobox = cx.new(|cx| {
+    Combobox::new(cx)
+        .placeholder("Select an option...")
+        .fixed_width(true)  // Icon stays at right edge
+        .options(vec![
+            SelectOption::new("option1", "Short"),
+            SelectOption::new("option2", "Very Long Option Text"),
+            SelectOption::new("option3", "Medium"),
+        ])
+});`,
+					screenshot: 'combobox-fixed-width.png'
 				}
 			]
 		}
@@ -1414,6 +1452,11 @@ password_input.update(cx, |input, cx| {
 								<td>Set available options for dropdown selection</td>
 							</tr>
 							<tr>
+								<td><code>.option_groups()</code></td>
+								<td><code>Vec&lt;SelectOptionGroup&gt;</code></td>
+								<td>Set grouped options (hierarchical structure)</td>
+							</tr>
+							<tr>
 								<td><code>.placeholder()</code></td>
 								<td><code>impl Into&lt;String&gt;</code></td>
 								<td>Set placeholder text displayed when input is empty</td>
@@ -1454,6 +1497,11 @@ password_input.update(cx, |input, cx| {
 								<td>Set dropdown width (MatchTrigger, Fixed, MinWidth, MaxWidth)</td>
 							</tr>
 							<tr>
+								<td><code>.fixed_width()</code></td>
+								<td><code>bool</code></td>
+								<td>Control width behavior: <code>true</code> = fixed width (icon stays at right edge), <code>false</code> = dynamic width (default, icon moves with text)</td>
+							</tr>
+							<tr>
 								<td><code>.no_border()</code></td>
 								<td>-</td>
 								<td>Remove border (convenience method)</td>
@@ -1462,6 +1510,16 @@ password_input.update(cx, |input, cx| {
 								<td><code>.no_shadow()</code></td>
 								<td>-</td>
 								<td>Remove shadow (convenience method)</td>
+							</tr>
+							<tr>
+								<td><code>.transparent_background()</code></td>
+								<td>-</td>
+								<td>Make background transparent (convenience method)</td>
+							</tr>
+							<tr>
+								<td><code>.compact()</code></td>
+								<td>-</td>
+								<td>Use compact spacing for dropdown items (convenience method)</td>
 							</tr>
 						</tbody>
 					</table>
@@ -1498,7 +1556,79 @@ password_input.update(cx, |input, cx| {
 					<li><strong>Filtering:</strong> Options are automatically filtered as user types (only when actively typing)</li>
 					<li><strong>Search:</strong> User can search by typing to filter options or enter custom values</li>
 					<li><strong>Preselection:</strong> Use <code>.value()</code> to set a preselected option that matches with available options</li>
+					<li><strong>Grouped Options:</strong> Organize options into groups using <code>.option_groups()</code></li>
+					<li><strong>Flexible Width Control:</strong> Use <code>.fixed_width()</code> to control how the component behaves with borders</li>
+					<li><strong>Auto Focus Blur:</strong> Automatically removes focus from input after selection for cleaner UI</li>
 				</ul>
+
+				<h3>Width Behavior</h3>
+				<p>Combobox provides flexible width control to adapt to different design needs:</p>
+
+				<h4>Dynamic Width Mode (Default: <code>fixed_width(false)</code>)</h4>
+				<p>Best for borderless designs. The component width adjusts based on content:</p>
+				<ul>
+					<li>Text container expands/shrinks with input content</li>
+					<li>Expand icon stays close to text (minimal spacing)</li>
+					<li>Ideal for inline or compact layouts</li>
+				</ul>
+
+				<h4>Fixed Width Mode (<code>fixed_width(true)</code>)</h4>
+				<p>Best for bordered designs. The component maintains a fixed width:</p>
+				<ul>
+					<li>Text container stays at content size</li>
+					<li>Expand icon is pushed to the right edge of the border</li>
+					<li>Border remains fixed regardless of content changes</li>
+					<li>Provides consistent visual alignment in forms</li>
+				</ul>
+
+				<div class="code-container">
+					<div class="code-header">
+						<span class="code-label">Rust</span>
+					</div>
+					<CodeBlock code={`// Dynamic width mode (borderless, default)
+let combobox = cx.new(|cx| {
+    Combobox::new(cx)
+        .placeholder("Search...")
+        .no_border()
+        .options(vec![...])
+        // fixed_width(false) is default
+});
+
+// Fixed width mode (with border)
+let combobox = cx.new(|cx| {
+    Combobox::new(cx)
+        .placeholder("Select...")
+        .fixed_width(true)  // Icon stays at right edge
+        .options(vec![...])
+});`} language="rust" />
+				</div>
+
+				<h3>Grouped Options Example</h3>
+				<div class="code-container">
+					<div class="code-header">
+						<span class="code-label">Rust</span>
+					</div>
+					<CodeBlock code={`use fluix::{Combobox, SelectOption, SelectOptionGroup, DropdownDirection};
+
+let combobox = cx.new(|cx| {
+    Combobox::new(cx)
+        .placeholder("Select a language...")
+        .option_groups(vec![
+            SelectOptionGroup::new("Frontend", vec![
+                SelectOption::new("javascript", "JavaScript"),
+                SelectOption::new("typescript", "TypeScript"),
+                SelectOption::new("react", "React"),
+            ]),
+            SelectOptionGroup::new("Backend", vec![
+                SelectOption::new("rust", "Rust"),
+                SelectOption::new("python", "Python"),
+                SelectOption::new("go", "Go"),
+            ]),
+        ])
+        .dropdown_direction(DropdownDirection::Up)
+        .fixed_width(true)
+});`} language="rust" />
+				</div>
 			</section>
 			{/if}
 			

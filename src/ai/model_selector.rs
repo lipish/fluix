@@ -71,7 +71,7 @@ impl Default for ModelSelectorConfig {
             compact: false,
             max_width: None,
             dropdown_direction: DropdownDirection::Auto,
-            dropdown_width: DropdownWidth::MaxWidth(px(400.0)), // 设置合理的最大宽度
+            dropdown_width: DropdownWidth::MaxWidth(px(200.0)), // 默认下拉框宽度200px
             dropdown_alignment: DropdownAlignment::Right, // 默认右对齐
             show_only_popular: false, // 默认显示所有模型（changed from true）
             recently_used: Vec::new(),
@@ -779,7 +779,7 @@ impl ModelSelector {
 }
 
 impl Render for ModelSelector {
-    fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let container = div()
             .flex()
             .flex_col()
@@ -795,7 +795,7 @@ impl Render for ModelSelector {
             .when(!self.config.compact, |this| {
                 this.child(self.render_header())
             })
-            .child(self.render_selector(cx))
+            .child(self.render_selector(window, cx))
             .when(self.selected_model.is_some() && !self.config.compact, |this| {
                 this.child(self.render_model_details())
             })
@@ -825,7 +825,7 @@ impl ModelSelector {
             })
     }
 
-    fn render_selector(&self, _cx: &mut Context<Self>) -> impl IntoElement {
+    fn render_selector(&self, _window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
         div()
             .flex()
             .flex_row()
@@ -840,6 +840,7 @@ impl ModelSelector {
             )
     }
 
+    #[allow(dead_code)]
     fn render_refresh_button(&self) -> impl IntoElement {
         div()
             .p_1()
@@ -853,6 +854,7 @@ impl ModelSelector {
             )
     }
 
+    #[allow(dead_code)]
     fn render_capability_filter(&self) -> impl IntoElement {
         div()
             .flex()
@@ -872,6 +874,7 @@ impl ModelSelector {
             )
     }
 
+    #[allow(dead_code)]
     fn render_capability_badge(&self, capability: &ModelCapability) -> impl IntoElement {
         let is_active = self.config.filter_capability.as_ref() == Some(capability);
         let label = match capability {

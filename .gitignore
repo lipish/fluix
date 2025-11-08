@@ -1,3 +1,5 @@
+/websites/node_modules/
+
 /.cursor
 /target/
 /Cargo.lock
