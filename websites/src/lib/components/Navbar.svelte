@@ -39,7 +39,6 @@
 		<!-- Navigation Links -->
 		<div class="nav-links">
 			<a href="{base}/" class="nav-link">Home</a>
-			<a href="{base}/docs/getting-started" class="nav-link">Getting Started</a>
 			<a href="{base}/docs/components" class="nav-link">Components</a>
 			<a href="{base}/docs/api-doc" class="nav-link">Documents</a>
 			<div class="nav-link resources-dropdown" onmouseenter={handleMouseEnter} onmouseleave={handleMouseLeave}>
