@@ -159,17 +159,11 @@ impl BorderRadius {
 
 /// Main theme configuration
 #[derive(Debug, Clone)]
+#[derive(Default)]
 pub struct Theme {
     pub colors: ColorPalette,
 }
 
-impl Default for Theme {
-    fn default() -> Self {
-        Self {
-            colors: ColorPalette::default(),
-        }
-    }
-}
 
 impl Theme {
     /// Create a new theme

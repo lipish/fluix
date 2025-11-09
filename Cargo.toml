@@ -27,5 +27,9 @@ llm-link = "0.3.4"
 name = "model_selector_demo"
 path = "examples/model_selector_demo.rs"
 
+[[example]]
+name = "prompt_demo"
+path = "examples/prompt_demo.rs"
+
 [dev-dependencies]
 env_logger = "0.11"

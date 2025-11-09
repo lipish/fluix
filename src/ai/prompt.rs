@@ -281,7 +281,13 @@ impl PromptInput {
         self.config.background_color = Some(color);
         self
     }
-    
+
+    /// Enable/disable auto-resize
+    pub fn auto_resize(mut self, enable: bool) -> Self {
+        self.config.enable_auto_resize = enable;
+        self
+    }
+
     // State methods
     
     /// Get current text content
@@ -390,12 +396,9 @@ impl PromptInput {
     }
 
     fn handle_model_selector_event(&mut self, event: &ModelSelectorEvent, cx: &mut Context<Self>) {
-        match event {
-            ModelSelectorEvent::ModelChanged(model_id) => {
-                self.current_model = Some(model_id.clone());
-                cx.emit(PromptInputEvent::ModelChanged(model_id.clone()));
-            }
-            _ => {}
+        if let ModelSelectorEvent::ModelChanged(model_id) = event {
+            self.current_model = Some(model_id.clone());
+            cx.emit(PromptInputEvent::ModelChanged(model_id.clone()));
         }
     }
     
@@ -551,11 +554,19 @@ impl PromptInput {
     }
     
     fn render_input_area(&self, _cx: &mut Context<Self>) -> impl IntoElement {
-        div()
+        let mut container = div()
             .flex()
             .flex_col()
-            .w_full()
-            .child(self.textarea.clone())
+            .w_full();
+
+        // If auto-resize is disabled and min_height equals max_height, use fixed height
+        if !self.config.enable_auto_resize &&
+           (self.config.min_height - self.config.max_height).abs() < 0.1 {
+            container = container.h(px(self.config.min_height));
+            container = container.overflow_hidden();
+        }
+
+        container.child(self.textarea.clone())
     }
     
     fn render_toolbar(&self, cx: &mut Context<Self>) -> impl IntoElement {
@@ -594,6 +605,7 @@ impl PromptInput {
             .flex_row()
             .gap_2()
             .items_center()
+            .justify_end() // Right align all items
             // Don't set overflow_hidden to allow dropdown to overflow
             .when(self.config.show_model_selector && !self.config.available_models.is_empty(), |this| {
                 // Show model selector if available (should exist after lazy creation in render)
@@ -601,6 +613,10 @@ impl PromptInput {
                     this.child(
                         div()
                             .relative() // Ensure proper positioning context for dropdown
+                            .w(px(140.)) // Fixed width for model selector
+                            .flex()
+                            .flex_row()
+                            .justify_end() // Right align content inside
                             // Don't set overflow_hidden to allow dropdown to overflow
                             .child(selector.clone())
                     )

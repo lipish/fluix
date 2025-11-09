@@ -56,6 +56,8 @@ pub struct ModelSelectorConfig {
     pub recently_used: Vec<String>,
     /// Remove borders and shadows for clean look
     pub clean_style: bool,
+    /// Right align text (keep expand button fixed on the right)
+    pub right_align_text: bool,
 }
 
 impl Default for ModelSelectorConfig {
@@ -76,6 +78,7 @@ impl Default for ModelSelectorConfig {
             show_only_popular: false, // 默认显示所有模型（changed from true）
             recently_used: Vec::new(),
             clean_style: true, // 默认使用清洁样式（无边框无阴影）
+            right_align_text: true, // 默认启用右对齐，保持展开按钮固定在右侧
         }
     }
 }
@@ -158,7 +161,7 @@ impl ModelSelector {
                 
                 groups
                     .entry(model.provider.clone())
-                    .or_insert_with(Vec::new)
+                    .or_default()
                     .push(model.clone());
             }
 
@@ -169,29 +172,27 @@ impl ModelSelector {
 
             // Sort groups by provider name
             model_groups.sort_by(|a, b| a.provider.cmp(&b.provider));
-        } else {
-            if !models.is_empty() {
-                // Deduplicate models by ID before creating single group
-                let mut seen_model_ids = std::collections::HashSet::new();
-                let unique_models: Vec<ModelInfo> = models
-                    .iter()
-                    .filter(|model| {
-                        if seen_model_ids.contains(&model.id) {
-                            false
-                        } else {
-                            seen_model_ids.insert(model.id.clone());
-                            true
-                        }
-                    })
-                    .cloned()
-                    .collect();
+        } else if !models.is_empty() {
+            // Deduplicate models by ID before creating single group
+            let mut seen_model_ids = std::collections::HashSet::new();
+            let unique_models: Vec<ModelInfo> = models
+                .iter()
+                .filter(|model| {
+                    if seen_model_ids.contains(&model.id) {
+                        false
+                    } else {
+                        seen_model_ids.insert(model.id.clone());
+                        true
+                    }
+                })
+                .cloned()
+                .collect();
 
-                if !unique_models.is_empty() {
-                    model_groups = vec![ModelGroup {
-                        provider: "All Models".to_string(),
-                        models: unique_models,
-                    }];
-                }
+            if !unique_models.is_empty() {
+                model_groups = vec![ModelGroup {
+                    provider: "All Models".to_string(),
+                    models: unique_models,
+                }];
             }
         }
 
@@ -202,7 +203,9 @@ impl ModelSelector {
                 .placeholder("Select a model...")
                 .dropdown_direction(config.dropdown_direction)
                 .dropdown_width(config.dropdown_width)
-                .dropdown_alignment(config.dropdown_alignment);
+                .dropdown_alignment(config.dropdown_alignment)
+                .fixed_width(config.right_align_text)
+                .text_alignment(if config.right_align_text { gpui::TextAlign::Right } else { gpui::TextAlign::Left }); // 根据配置设置文本对齐
 
             // Enable compact mode for tighter spacing when there are many models
             if config.compact {
@@ -348,6 +351,12 @@ impl ModelSelector {
     /// Use default style (with borders and shadows)
     pub fn default_style(mut self) -> Self {
         self.config.clean_style = false;
+        self
+    }
+
+    /// Set right align text (keep expand button fixed on the right)
+    pub fn right_align_text(mut self, right_align: bool) -> Self {
+        self.config.right_align_text = right_align;
         self
     }
 
@@ -508,7 +517,7 @@ impl ModelSelector {
                     
                     groups
                         .entry(model.provider.clone())
-                        .or_insert_with(Vec::new)
+                        .or_default()
                         .push(model.clone());
                 }
             }
@@ -578,7 +587,34 @@ impl ModelSelector {
             model_groups.to_vec()
         };
 
-        let groups: Vec<SelectOptionGroup> = filtered_groups
+        let mut groups: Vec<SelectOptionGroup> = Vec::new();
+
+        // Add recently used group if configured
+        if !config.recently_used.is_empty() {
+            let mut recently_used_options = Vec::new();
+            let mut seen_ids = std::collections::HashSet::new();
+
+            // Find models that match recently_used IDs
+            for recently_used_id in &config.recently_used {
+                for group in &filtered_groups {
+                    for model in &group.models {
+                        if &model.id == recently_used_id && !seen_ids.contains(&model.id) {
+                            let label = Self::format_model_label_static(model, config);
+                            recently_used_options.push(SelectOption::new(&model.id, &label));
+                            seen_ids.insert(model.id.clone());
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if !recently_used_options.is_empty() {
+                groups.push(SelectOptionGroup::new("Recently Used", recently_used_options));
+            }
+        }
+
+        // Add other groups
+        let other_groups: Vec<SelectOptionGroup> = filtered_groups
             .iter()
             .map(|group| {
                 // Deduplicate models within each group by model ID
@@ -607,6 +643,7 @@ impl ModelSelector {
             })
             .collect();
 
+        groups.extend(other_groups);
         groups
     }
 

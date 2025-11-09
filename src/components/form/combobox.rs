@@ -98,6 +98,8 @@ pub struct Combobox {
     /// When true: width is fixed, text and button stay in place (good with borders)
     /// When false: width adjusts with content, text and button move (good without borders)
     fixed_width: bool,
+    /// Text alignment in fixed width mode
+    text_alignment: TextAlign,
     /// Event subscriptions
     _subscriptions: Vec<Subscription>,
 }
@@ -137,6 +139,7 @@ impl Combobox {
             should_blur: false,
             focus_handle: cx.focus_handle(),
             fixed_width: false, // Default to dynamic width
+            text_alignment: gpui::TextAlign::Left, // Default to left alignment
             _subscriptions: Vec::new(),
         }
     }
@@ -297,6 +300,12 @@ impl Combobox {
     /// ```
     pub fn fixed_width(mut self, fixed: bool) -> Self {
         self.fixed_width = fixed;
+        self
+    }
+
+    /// Set text alignment for fixed width mode
+    pub fn text_alignment(mut self, alignment: gpui::TextAlign) -> Self {
+        self.text_alignment = alignment;
         self
     }
 
@@ -799,7 +808,7 @@ impl Render for Combobox {
                             let text_to_measure = if value.is_empty() {
                                 &this.placeholder
                             } else {
-                                &value
+                                value
                             };
                             
                             // Measure text width using TextRun API
@@ -975,8 +984,12 @@ impl Render for Combobox {
                                     .items_center()
                                     .w_full() // Always take full width of parent
                                     .when(self.fixed_width, |this| {
-                                        // Fixed width mode: use space-between to push icon to right
-                                        this.justify_between()
+                                        // Fixed width mode: layout based on text alignment
+                                        match self.text_alignment {
+                                            gpui::TextAlign::Right => this.justify_end().gap_0(),
+                                            gpui::TextAlign::Center => this.justify_center().gap_0(),
+                                            gpui::TextAlign::Left => this.justify_start().gap_0(),
+                                        }
                                     })
                                     .when(!self.fixed_width, |this| {
                                         // Dynamic width mode: no gap between text and icon
@@ -985,8 +998,12 @@ impl Render for Combobox {
                                     .child(
                                         div()
                                             .when(self.fixed_width, |this| {
-                                                // Fixed width mode: text container doesn't grow, stays at content size
-                                                this.flex_none().overflow_hidden().min_w(px(60.))
+                                                // Fixed width mode: text container with configured alignment
+                                                this.flex_none().overflow_hidden().min_w(px(60.)).map(|this| match self.text_alignment {
+                                                    gpui::TextAlign::Left => this.text_left(),
+                                                    gpui::TextAlign::Center => this.text_center(),
+                                                    gpui::TextAlign::Right => this.text_right(),
+                                                })
                                             })
                                             .when(!self.fixed_width, |this| {
                                                 // Dynamic width mode: text container only takes needed space
@@ -1025,8 +1042,8 @@ impl Render for Combobox {
                                             .items_center()
                                             .justify_center()
                                             .when(self.fixed_width, |this| {
-                                                // Fixed width mode: icon at right with padding
-                                                this.px(px(8.))
+                                                // Fixed width mode: icon at right with minimal padding
+                                                this.pl(px(2.)).pr(px(2.))
                                             })
                                             .when(!self.fixed_width, |this| {
                                                 // Dynamic width mode: icon close to text (text container has negative margin)

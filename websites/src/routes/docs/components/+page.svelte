@@ -4,15 +4,16 @@
 	import CodeBlock from '$lib/components/CodeBlock.svelte';
 	
 	const components = [
-		{ id: 'button', name: 'Button', demo: 'button_demo' },
-		{ id: 'icon', name: 'Icon', demo: 'icon_demo' },
-		{ id: 'textinput', name: 'TextInput', demo: 'text_input_demo' },
-		{ id: 'checkbox', name: 'Checkbox', demo: 'checkbox_demo' },
-		{ id: 'select', name: 'Select', demo: 'select_demo' },
-		{ id: 'combobox', name: 'Combobox', demo: 'combobox_demo' }
+		{ id: 'button', name: 'Button', demo: 'button_demo', category: 'ui' },
+		{ id: 'icon', name: 'Icon', demo: 'icon_demo', category: 'ui' },
+		{ id: 'textinput', name: 'TextInput', demo: 'text_input_demo', category: 'ui' },
+		{ id: 'checkbox', name: 'Checkbox', demo: 'checkbox_demo', category: 'ui' },
+		{ id: 'select', name: 'Select', demo: 'select_demo', category: 'ui' },
+		{ id: 'combobox', name: 'Combobox', demo: 'combobox_demo', category: 'ui' },
+		{ id: 'model_selector', name: 'Model Selector', demo: 'model_selector_demo', category: 'ai' }
 	];
 	
-	let selectedComponent = $state('components-list');
+	let selectedComponent = $state('components-overview');
 	let selectedDesignSystemSection = $state('overview');
 	let activeTab = $state<Record<string, 'preview' | 'code'>>({});
 	let copiedCode = $state<Record<string, boolean>>({});
@@ -542,6 +543,73 @@ let grouped_combobox = cx.new(|cx| {
         ])
 });`,
 					screenshot: 'combobox-fixed-width.png'
+				},
+				{
+					title: 'Right-Aligned Text',
+					description: 'Use text_alignment(TextAlign::Right) with fixed_width(true) to align text to the right edge',
+					code: `use gpui::TextAlign;
+
+let right_aligned_combobox = cx.new(|cx| {
+    Combobox::new(cx)
+        .placeholder("Select an option...")
+        .fixed_width(true)
+        .text_alignment(TextAlign::Right)  // Text aligns to right
+        .options(vec![
+            SelectOption::new("option1", "Short"),
+            SelectOption::new("option2", "Very Long Option Text"),
+            SelectOption::new("option3", "Medium"),
+        ])
+});`,
+					screenshot: 'combobox-right-aligned.png'
+				}
+			]
+		},
+		model_selector: {
+			description: 'AI model selection component with search, grouping, and right-alignment capabilities.',
+			installation: 'fluix = "0.1.24"',
+			usage: 'Import and use the ModelSelector component:',
+			usageCode: `use fluix::{ModelSelector, ModelInfo, ModelCapability};
+use gpui::*;
+
+let models = vec![
+    ModelInfo {
+        id: "gpt-4o".to_string(),
+        name: "GPT-4o".to_string(),
+        provider: "OpenAI".to_string(),
+        capabilities: vec![ModelCapability::TextGeneration],
+        // ... other fields
+    }
+];
+
+let selector = cx.new(|cx| {
+    ModelSelector::new(cx, models)
+});`,
+			examples: [
+				{
+					title: 'Default',
+					description: 'Basic model selector with default configuration',
+					code: `let selector = cx.new(|cx| {
+    ModelSelector::new(cx, models)
+});`,
+					screenshot: 'model-selector-default.png'
+				},
+				{
+					title: 'Right-Aligned',
+					description: 'Model selector with right-aligned text (expand button stays fixed at right edge)',
+					code: `let right_aligned_selector = cx.new(|cx| {
+    ModelSelector::new(cx, models)
+        .right_align_text(true)  // Text aligns to right
+});`,
+					screenshot: 'model-selector-right-aligned.png'
+				},
+				{
+					title: 'Grouped by Provider',
+					description: 'Organize models by provider with grouping',
+					code: `let grouped_selector = cx.new(|cx| {
+    ModelSelector::new(cx, models)
+        .group_by_provider(true)
+});`,
+					screenshot: 'model-selector-grouped.png'
 				}
 			]
 		}
@@ -604,6 +672,15 @@ let grouped_combobox = cx.new(|cx| {
 <div class="components-layout">
 	<!-- Sidebar Navigation -->
 	<aside class="sidebar">
+		<!-- Components Overview -->
+		<button 
+			class="nav-item nav-title"
+			class:active={selectedComponent === 'components-overview'}
+			onclick={() => selectedComponent = 'components-overview'}
+		>
+			Components Overview
+		</button>
+		
 		<!-- Design System -->
 		<button 
 			class="nav-item nav-title"
@@ -629,15 +706,36 @@ let grouped_combobox = cx.new(|cx| {
 			</button>
 		</nav>
 		
+		<!-- UI Components -->
 		<button 
 			class="nav-item nav-title"
-			class:active={selectedComponent === 'components-list'}
-			onclick={() => selectedComponent = 'components-list'}
+			class:active={selectedComponent === 'ui-components-list'}
+			onclick={() => selectedComponent = 'ui-components-list'}
 		>
-			Components
+			UI Components
 		</button>
 		<nav class="component-nav">
-			{#each components as component}
+			{#each components.filter(c => c.category === 'ui') as component}
+				<button 
+					class="nav-item sub-item"
+					class:active={selectedComponent === component.id}
+					onclick={() => selectedComponent = component.id}
+				>
+					{component.name}
+				</button>
+			{/each}
+		</nav>
+		
+		<!-- AI Components -->
+		<button 
+			class="nav-item nav-title"
+			class:active={selectedComponent === 'ai-components-list'}
+			onclick={() => selectedComponent = 'ai-components-list'}
+		>
+			AI Components
+		</button>
+		<nav class="component-nav">
+			{#each components.filter(c => c.category === 'ai') as component}
 				<button 
 					class="nav-item sub-item"
 					class:active={selectedComponent === component.id}
@@ -651,7 +749,68 @@ let grouped_combobox = cx.new(|cx| {
 	
 	<!-- Main Content -->
 	<main class="content">
-		{#if selectedComponent === 'design-system'}
+		{#if selectedComponent === 'components-overview'}
+			<!-- Components Overview -->
+			<div class="content-header">
+				<h1>Components Overview</h1>
+				<p class="component-description">Complete overview of all Fluix components, organized by category.</p>
+			</div>
+
+			<!-- Design System Section -->
+			<section class="section">
+				<h2>Design System</h2>
+				<p class="section-description">Unified size, color, and theme standards that apply to all Fluix components.</p>
+				
+				<div class="overview-grid">
+					<div class="overview-card clickable-card" onclick={() => { selectedComponent = 'design-system'; selectedDesignSystemSection = 'sizes'; }}>
+						<h3>Sizes</h3>
+						<p>Standardized component sizes (XSmall to XLarge) with consistent dimensions and spacing.</p>
+						<div class="card-arrow">→</div>
+					</div>
+					<div class="overview-card clickable-card" onclick={() => { selectedComponent = 'design-system'; selectedDesignSystemSection = 'colors'; }}>
+						<h3>Colors</h3>
+						<p>Unified color palette with primary, secondary, and semantic colors for consistent theming.</p>
+						<div class="card-arrow">→</div>
+					</div>
+				</div>
+			</section>
+
+			<!-- UI Components Section -->
+			<section class="section">
+				<h2>UI Components</h2>
+				<p class="section-description">Essential user interface components for building interactive applications.</p>
+				
+				<div class="overview-grid">
+					{#each components.filter(c => c.category === 'ui') as component}
+						<div class="overview-card clickable-card" onclick={() => selectedComponent = component.id}>
+							<h3>{component.name}</h3>
+							{#if componentData[component.id]}
+								<p>{componentData[component.id].description}</p>
+							{/if}
+							<div class="card-arrow">→</div>
+						</div>
+					{/each}
+				</div>
+			</section>
+
+			<!-- AI Components Section -->
+			<section class="section">
+				<h2>AI Components</h2>
+				<p class="section-description">Specialized components for AI-powered applications and model interactions.</p>
+				
+				<div class="overview-grid">
+					{#each components.filter(c => c.category === 'ai') as component}
+						<div class="overview-card clickable-card" onclick={() => selectedComponent = component.id}>
+							<h3>{component.name}</h3>
+							{#if componentData[component.id]}
+								<p>{componentData[component.id].description}</p>
+							{/if}
+							<div class="card-arrow">→</div>
+						</div>
+					{/each}
+				</div>
+			</section>
+		{:else if selectedComponent === 'design-system'}
 			{#if selectedDesignSystemSection === 'overview'}
 				<!-- Design System Content -->
 				<div class="content-header">
@@ -948,15 +1107,37 @@ let custom_theme = Theme::custom(custom_colors);`} language="rust" />
 				</div>
 				</section>
 			{/if}
-		{:else if selectedComponent === 'components-list'}
-			<!-- Components List -->
+		{:else if selectedComponent === 'ui-components-list'}
+			<!-- UI Components List -->
 			<div class="content-header">
-				<h1>Components</h1>
-				<p class="component-description">Browse all available Fluix components.</p>
+				<h1>UI Components</h1>
+				<p class="component-description">Essential user interface components for building interactive applications.</p>
 			</div>
 
 			<div class="components-grid">
-				{#each components as component}
+				{#each components.filter(c => c.category === 'ui') as component}
+					<div class="component-card-link" onclick={() => selectedComponent = component.id}>
+						<div class="component-card-header">
+							<h3>{component.name}</h3>
+							{#if componentData[component.id]}
+								<p class="component-card-description">{componentData[component.id].description}</p>
+							{/if}
+						</div>
+						<div class="component-card-footer">
+							<span class="component-card-link-text">View Details →</span>
+						</div>
+					</div>
+				{/each}
+			</div>
+		{:else if selectedComponent === 'ai-components-list'}
+			<!-- AI Components List -->
+			<div class="content-header">
+				<h1>AI Components</h1>
+				<p class="component-description">Specialized components for AI-powered applications and model interactions.</p>
+			</div>
+
+			<div class="components-grid">
+				{#each components.filter(c => c.category === 'ai') as component}
 					<div class="component-card-link" onclick={() => selectedComponent = component.id}>
 						<div class="component-card-header">
 							<h3>{component.name}</h3>
@@ -1684,6 +1865,7 @@ let combobox = cx.new(|cx| {
 									class:select-disabled-preview={selectedComponent === 'select' && example.title === 'Disabled'}
 									class:combobox-preview={selectedComponent === 'combobox' && example.title !== 'Disabled'}
 									class:combobox-disabled-preview={selectedComponent === 'combobox' && example.title === 'Disabled'}
+									class:model-selector-preview={selectedComponent === 'model_selector'}
 								>
 									<img 
 										src={getScreenshotPath(selectedComponent, example.screenshot)}
@@ -1697,6 +1879,7 @@ let combobox = cx.new(|cx| {
 										class:select-disabled-image={selectedComponent === 'select' && example.title === 'Disabled'}
 										class:combobox-image={selectedComponent === 'combobox' && example.title !== 'Disabled'}
 										class:combobox-disabled-image={selectedComponent === 'combobox' && example.title === 'Disabled'}
+										class:model-selector-image={selectedComponent === 'model_selector'}
 										onerror={(e) => {
 											const img = e.target as HTMLImageElement;
 											img.style.display = 'none';
@@ -2116,6 +2299,16 @@ let combobox = cx.new(|cx| {
 		height: auto !important;
 	}
 
+	.preview-container.model-selector-preview {
+		padding: 1.5rem;
+		min-height: 200px;
+	}
+
+	.preview-image.model-selector-image {
+		max-height: 300px !important;
+		height: auto !important;
+	}
+
 	.preview-container.all-icons-preview {
 		padding: 2rem;
 		min-height: auto;
@@ -2137,6 +2330,11 @@ let combobox = cx.new(|cx| {
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		background: var(--surface);
+		border: 1px solid var(--border);
+		border-radius: 8px;
+		color: var(--text_muted);
+		font-size: 0.875rem;
 	}
 
 	.placeholder-content {
@@ -2293,5 +2491,83 @@ let combobox = cx.new(|cx| {
 		.content-header h1 {
 			font-size: 2rem;
 		}
+	}
+
+	/* Overview Page Styles */
+	.section-description {
+		color: var(--text_muted);
+		margin-bottom: 1.5rem;
+		font-size: 1rem;
+		line-height: 1.6;
+	}
+
+	.overview-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+		gap: 1.5rem;
+		margin-top: 1.5rem;
+	}
+
+	.overview-card {
+		background: var(--surface);
+		border: 1px solid var(--border);
+		border-radius: 12px;
+		padding: 1.5rem;
+		transition: all 0.2s ease;
+		position: relative;
+	}
+
+	.overview-card:hover {
+		border-color: var(--primary);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+		transform: translateY(-2px);
+	}
+
+	.clickable-card {
+		cursor: pointer;
+	}
+
+	.clickable-card:hover .card-arrow {
+		transform: translateX(4px);
+	}
+
+	.overview-card h3 {
+		margin: 0 0 0.75rem 0;
+		font-size: 1.25rem;
+		font-weight: 600;
+		color: var(--text);
+	}
+
+	.overview-card p {
+		margin: 0 0 1rem 0;
+		color: var(--text_muted);
+		line-height: 1.5;
+		font-size: 0.875rem;
+	}
+
+	.card-arrow {
+		position: absolute;
+		bottom: 1.5rem;
+		right: 1.5rem;
+		color: var(--primary);
+		font-size: 1.25rem;
+		font-weight: bold;
+		transition: transform 0.2s ease;
+	}
+
+	.card-button {
+		background: var(--primary);
+		color: white;
+		border: none;
+		border-radius: 6px;
+		padding: 0.5rem 1rem;
+		font-size: 0.875rem;
+		font-weight: 500;
+		cursor: pointer;
+		transition: background-color 0.2s ease;
+	}
+
+	.card-button:hover {
+		background: var(--primary_hover);
 	}
 </style>

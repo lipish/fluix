@@ -457,12 +457,10 @@ impl Select {
                 cx.emit(SelectEvent::MultiChanged(vec![]));
                 cx.notify();
             }
-        } else {
-            if self.selected_value.is_some() {
-                self.selected_value = None;
-                cx.emit(SelectEvent::Changed("".to_string()));
-                cx.notify();
-            }
+        } else if self.selected_value.is_some() {
+            self.selected_value = None;
+            cx.emit(SelectEvent::Changed("".to_string()));
+            cx.notify();
         }
     }
 

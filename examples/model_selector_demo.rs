@@ -7,6 +7,8 @@ struct ModelSelectorDemo {
     model_selector: Entity<ModelSelector>,
     compact_model_selector: Entity<ModelSelector>,
     searchable_model_selector: Entity<ModelSelector>,
+    recently_used_model_selector: Entity<ModelSelector>,
+    right_aligned_model_selector: Entity<ModelSelector>,
     grouped_combobox: Entity<Combobox>,
     fixed_width_combobox: Entity<Combobox>,
     selected_model: String,
@@ -71,6 +73,7 @@ impl ModelSelectorDemo {
         model_config.clean_style = true;
         model_config.dropdown_direction = DropdownDirection::Down; // 下拉，不是上拉
         model_config.dropdown_alignment = DropdownAlignment::Left; // 改为左对齐，确保宽度足够
+        model_config.right_align_text = false; // 禁用右对齐
         
         let model_selector = cx.new(|cx| {
             ModelSelector::new_with_config(cx, models.clone(), model_config)
@@ -83,6 +86,7 @@ impl ModelSelectorDemo {
         compact_config.clean_style = true;
         compact_config.dropdown_direction = DropdownDirection::Up;
         compact_config.dropdown_alignment = DropdownAlignment::Right;
+        compact_config.right_align_text = false; // 禁用右对齐
         
         let compact_model_selector = cx.new(|cx| {
             ModelSelector::new_with_config(cx, models.clone(), compact_config)
@@ -154,11 +158,43 @@ impl ModelSelectorDemo {
         searchable_config.clean_style = true;
         searchable_config.dropdown_direction = DropdownDirection::Up;
         searchable_config.dropdown_alignment = DropdownAlignment::Right;
+        searchable_config.right_align_text = false; // 禁用右对齐
         // You can customize dropdown width here:
         // searchable_config.dropdown_width = DropdownWidth::MaxWidth(px(350.0));
         
         let searchable_model_selector = cx.new(|cx| {
-            ModelSelector::new_with_config(cx, searchable_models, searchable_config)
+            ModelSelector::new_with_config(cx, searchable_models.clone(), searchable_config)
+        });
+
+        // Create recently used model selector example (compact mode)
+        let mut recently_used_config = ModelSelectorConfig::default();
+        recently_used_config.group_by_provider = true;
+        recently_used_config.compact = true;
+        recently_used_config.clean_style = true;
+        recently_used_config.dropdown_direction = DropdownDirection::Down;
+        recently_used_config.dropdown_alignment = DropdownAlignment::Left;
+        recently_used_config.right_align_text = false; // 禁用右对齐
+        recently_used_config.recently_used = vec![
+            "gpt-4o".to_string(),
+            "claude-3-5-sonnet-20241022".to_string(),
+            "gemini-1.5-pro".to_string(),
+        ];
+
+        let recently_used_model_selector = cx.new(|cx| {
+            ModelSelector::new_with_config(cx, searchable_models, recently_used_config)
+        });
+
+        // Create right-aligned model selector example
+        let mut right_aligned_config = ModelSelectorConfig::default();
+        right_aligned_config.group_by_provider = false;
+        right_aligned_config.compact = true;
+        right_aligned_config.clean_style = true; // 使用清洁样式（无边框）
+        right_aligned_config.dropdown_direction = DropdownDirection::Down;
+        right_aligned_config.dropdown_alignment = DropdownAlignment::Right;
+        right_aligned_config.right_align_text = true; // 启用右对齐
+        
+        let right_aligned_model_selector = cx.new(|cx| {
+            ModelSelector::new_with_config(cx, models.clone(), right_aligned_config)
         });
 
         // Create grouped combobox example
@@ -185,7 +221,7 @@ impl ModelSelectorDemo {
                     ]),
                 ])
                 .dropdown_direction(DropdownDirection::Down)
-                .dropdown_alignment(DropdownAlignment::Left)
+                .dropdown_alignment(DropdownAlignment::Left) // 改回左对齐
                 .dropdown_max_width(px(300.0))
                 .fixed_width(true) // Use fixed width with border - text and button stay in place
         });
@@ -242,6 +278,8 @@ impl ModelSelectorDemo {
             model_selector,
             compact_model_selector,
             searchable_model_selector,
+            recently_used_model_selector,
+            right_aligned_model_selector,
             grouped_combobox,
             fixed_width_combobox,
             selected_model: String::new(),
@@ -394,6 +432,76 @@ impl Render for ModelSelectorDemo {
                                     .child(self.searchable_model_selector.clone())
                             )
                             .child(
+                                // Recently used model selector
+                                div()
+                                    .flex()
+                                    .flex_col()
+                                    .gap_2()
+                                    .p_4()
+                                    .bg(rgb(0xFFFFFF))
+                                    .rounded_lg()
+                                    .border_1()
+                                    .border_color(rgb(0xE0E0E0))
+                                    .child(
+                                        div()
+                                            .flex()
+                                            .flex_col()
+                                            .gap_1()
+                                            .mb_2()
+                                            .child(
+                                                div()
+                                                    .text_sm()
+                                                    .font_weight(FontWeight::SEMIBOLD)
+                                                    .text_color(rgb(0x374151))
+                                                    .child("Recently Used Model Selector:")
+                                            )
+                                            .child(
+                                                div()
+                                                    .text_xs()
+                                                    .text_color(rgb(0x6B7280))
+                                                    .child("Shows recently used models (GPT-4o, Claude 3.5 Sonnet, Gemini 1.5 Pro) at the top")
+                                            )
+                                    )
+                                    .child(self.recently_used_model_selector.clone())
+                            )
+                            .child(
+                                // Right-aligned model selector
+                                div()
+                                    .flex()
+                                    .flex_col()
+                                    .gap_2()
+                                    .p_4()
+                                    .bg(rgb(0xFFFFFF))
+                                    .rounded_lg()
+                                    .border_1()
+                                    .border_color(rgb(0xE0E0E0))
+                                    .child(
+                                        div()
+                                            .flex()
+                                            .flex_col()
+                                            .gap_1()
+                                            .mb_2()
+                                            .child(
+                                                div()
+                                                    .text_sm()
+                                                    .font_weight(FontWeight::SEMIBOLD)
+                                                    .text_color(rgb(0x374151))
+                                                    .child("Right-Aligned Model Selector:")
+                                            )
+                                            .child(
+                                                div()
+                                                    .text_xs()
+                                                    .text_color(rgb(0x6B7280))
+                                                    .child("Text aligns right, expand button stays fixed (right_align_text: true)")
+                                            )
+                                    )
+                                    .child(self.right_aligned_model_selector.clone())
+                            .child(
+                                // 添加更多空白间距方便截图
+                                div().h(px(150.)) // 150px 的空白高度
+                            )
+                            )
+                            .child(
                                 // Grouped combobox example
                                 div()
                                     .flex()
@@ -472,7 +580,12 @@ fn main() {
         .run(|cx| {
             cx.activate(true);
 
-            let bounds = Bounds::centered(None, size(px(800.0), px(900.0)), cx);
+            // 设置窗口在屏幕左边
+            let bounds = Bounds::new(
+                point(px(100.0), px(100.0)), // 左上角位置
+                size(px(800.0), px(900.0)),   // 窗口大小
+            );
+            
             let _ = cx.open_window(
                 WindowOptions {
                     window_bounds: Some(WindowBounds::Windowed(bounds)),
