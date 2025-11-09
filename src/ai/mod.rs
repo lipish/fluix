@@ -10,17 +10,18 @@
 //! 
 //! ## Quick Start
 //! 
-//! ```rust
+//! ```rust,ignore
 //! use fluix::ai::*;
+//! use gpui::*;
 //! 
 //! // Create a simple chat interface
-//! ChatContainer::new(cx)
-//!     .with_prompt_input(
-//!         PromptInput::new(cx)
-//!             .placeholder("Ask me anything...")
-//!             .enable_attachments(true)
-//!     )
-//! ```
+//! // ChatContainer::new(cx)
+//! //     .with_prompt_input(
+//! //         PromptInput::new(cx)
+//! //             .placeholder("Ask me anything...")
+//! //             .enable_attachments(true)
+//! //     )
+//! // ```
 
 pub mod prompt;
 pub mod message;

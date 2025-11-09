@@ -27,7 +27,7 @@
 	}> = {
 		button: {
 			description: 'Interactive button component with multiple variants and sizes.',
-			installation: 'fluix = "0.1.24"',
+			installation: 'fluix = "0.1.25"',
 			usage: 'Import and use the Button component:',
 			usageCode: `use fluix::{Button, ButtonVariant, ComponentSize};
 use gpui::*;
@@ -140,7 +140,7 @@ div()
 		},
 		icon: {
 			description: '31 built-in icons with customizable sizes and colors.',
-			installation: 'fluix = "0.1.24"',
+			installation: 'fluix = "0.1.25"',
 			usage: 'Import and use the Icon component:',
 			usageCode: `use fluix::{Icon, IconName, IconSize};
 use gpui::*;
@@ -242,7 +242,7 @@ Icon::new(IconName::Task)`,
 		},
 		textinput: {
 			description: 'Text input field with validation and event handling.',
-			installation: 'fluix = "0.1.24"',
+			installation: 'fluix = "0.1.25"',
 			usage: 'Import and use the TextInput component:',
 			usageCode: `use fluix::TextInput;
 use gpui::*;
@@ -300,7 +300,7 @@ let input = cx.new(|cx| {
 		},
 		checkbox: {
 			description: 'Checkbox component for boolean selections.',
-			installation: 'fluix = "0.1.24"',
+			installation: 'fluix = "0.1.25"',
 			usage: 'Import and use the Checkbox component:',
 			usageCode: `use fluix::Checkbox;
 use gpui::*;
@@ -375,7 +375,7 @@ let xlarge = cx.new(|cx| {
 		},
 		select: {
 			description: 'Dropdown selection component with single and multiple selection modes.',
-			installation: 'fluix = "0.1.24"',
+			installation: 'fluix = "0.1.25"',
 			usage: 'Import and use the Select component:',
 			usageCode: `use fluix::{Select, SelectOption};
 use gpui::*;
@@ -452,7 +452,7 @@ let grouped_select = cx.new(|cx| {
 		},
 		combobox: {
 			description: 'Combobox component with search and selection capabilities.',
-			installation: 'fluix = "0.1.24"',
+			installation: 'fluix = "0.1.25"',
 			usage: 'Import and use the Combobox component:',
 			usageCode: `use fluix::{Combobox, SelectOption};
 use gpui::*;
@@ -566,7 +566,7 @@ let right_aligned_combobox = cx.new(|cx| {
 		},
 		model_selector: {
 			description: 'AI model selection component with search, grouping, and right-alignment capabilities.',
-			installation: 'fluix = "0.1.24"',
+			installation: 'fluix = "0.1.25"',
 			usage: 'Import and use the ModelSelector component:',
 			usageCode: `use fluix::{ModelSelector, ModelInfo, ModelCapability};
 use gpui::*;
