@@ -16,7 +16,7 @@
 		
 		<div class="faq-item">
 			<h3>How do I get started?</h3>
-			<p>Check out our <a href="{base}/docs/getting-started">Getting Started guide</a>.</p>
+			<p>Check out our <a href="{base}/docs/components">Components documentation</a>.</p>
 		</div>
 		
 		<div class="faq-item">
@@ -49,7 +49,7 @@
 		
 		<div class="faq-item">
 			<h3>What are the requirements?</h3>
-			<p>Fluix requires Rust and GPUI 0.2. See the <a href="{base}/docs/getting-started">Getting Started guide</a> for details.</p>
+			<p>Fluix requires Rust and GPUI 0.2. See the <a href="{base}/docs/components">Components documentation</a> for details.</p>
 		</div>
 	</div>
 </div>

@@ -162,12 +162,12 @@ let password = cx.new(|cx| {
 						</div>
 					</a>
 
-					<a href="{base}/docs/getting-started" class="doc-link">
+					<a href="{base}/docs/components" class="doc-link">
 						<div class="doc-link-content">
 							<div class="doc-link-header">
-								<h3>Getting Started Guide</h3>
+								<h3>Components Documentation</h3>
 							</div>
-							<p>Step-by-step tutorial to set up your first Fluix application and understand the basics.</p>
+							<p>Complete overview of all Fluix components with examples, installation guides, and usage patterns.</p>
 						</div>
 					</a>
 

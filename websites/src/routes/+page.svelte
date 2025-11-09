@@ -9,7 +9,7 @@
 		Rust UI components for building fantastic cross-platform desktop applications by using GPUI 0.2.
 	</div>
 	<div class="actions">
-		<a href="{base}/docs/getting-started" class="btn-primary">Get Started</a>
+		<a href="{base}/docs/components" class="btn-primary">Get Started</a>
 		<a href="{base}/docs/components">
 			<Blocks />
 			Components

@@ -8,9 +8,9 @@
 	
 	<div class="tutorials-grid">
 		<div class="tutorial-card">
-			<h2>Getting Started</h2>
-			<p>Install Fluix and build your first application.</p>
-			<a href="{base}/docs/getting-started" class="link">Read Tutorial →</a>
+			<h2>Components Overview</h2>
+			<p>Complete overview of all Fluix components with examples and installation guides.</p>
+			<a href="{base}/docs/components" class="link">View Components →</a>
 		</div>
 		
 		<div class="tutorial-card">
